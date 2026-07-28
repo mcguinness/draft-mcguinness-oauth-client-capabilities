@@ -78,6 +78,7 @@ Table of Contents
      5.4.  Scope of a Signal
      5.5.  Precedence
    6.  Server Behavior
+     6.1.  Selecting Among Alternatives
    7.  Discovery
    8.  Guidance for Extension Specifications
    9.  Relationship to Existing Mechanisms
@@ -377,7 +378,11 @@ Table of Contents
 
    The OAuth-Client-Capabilities HTTP field allows a client to signal
    capabilities on a request that has no OAuth request parameter
-   surface, most importantly a protected resource request.
+   surface, most importantly a protected resource request.  A protected
+   resource is also where alternative challenge paths most often
+   coexist, so the field is where a capability set is most likely to
+   inform a choice among them rather than gate a single behavior; see
+   Section 6.1.
 
    Its value is a Structured Fields List ([RFC9651], Section 3.1).  Each
    member MUST be an Item whose bare item is a Token containing a
@@ -553,6 +558,31 @@ Table of Contents
    client metadata.  Client metadata persists according to the mechanism
    that provides it, but a subsequent request can override that default
    with a different set.
+
+6.1.  Selecting Among Alternatives
+
+   A server may have more than one way to obtain what a request lacks.
+   A protected resource that cannot authorize an operation from the
+   access token alone might return a transaction authorization
+   challenge, request step-up authentication, or refuse, and which of
+   those the client can act on differs.  The effective capability set
+   lets the server choose a path the client can complete rather than
+   choosing one and hoping.
+
+   This use carries one requirement.  A server MUST determine the
+   assurance a request requires without reference to the signaled
+   capability set.  It MAY then use the set to choose among paths that
+   meet that requirement, and MUST refuse the request where no signaled
+   path meets it.  Otherwise selection reintroduces the downgrade CAP-1
+   exists to prevent: removing a value would steer the server to a
+   different path, and where the alternatives are not equivalent for the
+   decision at hand, the weaker one is what the request gets.
+
+   Selection needs no capability values beyond those that gating already
+   requires.  A path a server can take safely whatever the client does,
+   such as an error a client either understands or reports as a failure,
+   never needed a signal; only the paths that would break an unprepared
+   client do.
 
 7.  Discovery
 
