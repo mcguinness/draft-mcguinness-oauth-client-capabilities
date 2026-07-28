@@ -109,6 +109,15 @@ this is exactly the gap the requirement is meant to catch.
 This tier matters more than tier 1. A registry that admits everything is worth
 nothing; the credibility of the mechanism rests on rejecting most candidates.
 
+A distinction worth keeping in view: **gating and selecting are different
+questions.** A resource server choosing which challenge to issue, where several
+paths exist, benefits from knowing the whole capability set, but that does not
+promote the safe paths into tier 1. A path the server can take regardless of what
+the client supports never needed a signal to be issued; it only needs to be known
+about when something else is being chosen instead. So selection consumes the
+values that gating already justified and adds none of its own. Step-up below is
+the case in point.
+
 - **Step-up authentication (RFC 9470).** `insufficient_user_authentication` is
   carried in `WWW-Authenticate` per RFC 6750. A client that does not recognize
   the error code sees a generic 401 and either re-authenticates or fails. It
