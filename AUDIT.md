@@ -155,6 +155,55 @@ tier 3 field crosses into tier 1 is a deployment question, not a specification
 question, and the draft's replacement semantics answer it without moving the
 field.
 
+## CIMD: no capability values, but a carrier that needs care
+
+Taking the direct question first: **CIMD needs no capability value.**
+
+CIMD introduces no new response behavior. The -02 draft does not define new
+response fields, error codes, or challenges beyond ordinary OAuth 2.0; the
+authorization server fetches metadata from the `client_id` URL and otherwise
+runs OAuth unchanged. There is nothing an authorization server might return to
+a CIMD-identified client that the client could fail to process, so there is
+nothing to gate.
+
+CIMD is also already self-signaling in the tier 2 sense. A `client_id` that is
+an `https` URL *is* the declaration that the client speaks CIMD, and the
+server-side half is advertised as `client_id_metadata_document_supported` in
+authorization server metadata. A capability value would duplicate the
+`client_id` itself. CIMD therefore belongs in tier 2.
+
+What is worth attention is CIMD as a *carrier* for other capabilities, where
+three of its properties cut against the client metadata field.
+
+- **Public by construction.** The Client Identifier URL "MUST use the `https`
+  URL scheme" and any authorization server fetches the document from it.
+  Publication is the mechanism, not a deployment choice. The draft's Privacy
+  Considerations advise that clients treating their capability set as sensitive
+  "SHOULD NOT publish the set in public client metadata"; for a CIMD client that
+  advice resolves to "use the request parameter," because the carrier has no
+  non-public variant.
+- **Uniform across instances by construction.** CIMD does not address
+  per-instance variation: each Client Identifier URL is one client identity and
+  its metadata applies uniformly to every use of that URL. The draft's
+  Section 5.3 already forbids declaring a capability unless every instance
+  covered by the metadata can process the enabled behavior, and recommends that
+  clients with heterogeneous instances omit the field. For CIMD that is not an
+  edge case — it is the default for any software deployed more than once, which
+  is the population the draft's Section 1.2 holds up as its motivation. The
+  metadata carrier is thus usually the wrong choice for precisely the clients
+  that motivate the mechanism.
+- **Stale by construction.** An authorization server "MAY cache the client
+  metadata" and "SHOULD respect HTTP cache headers ... but MAY define its own
+  upper and/or lower bounds on an acceptable cache lifetime as well." A client
+  that edits its document cannot know when the change takes effect and cannot
+  bound the delay.
+
+None of this breaks anything, because the request parameter is authoritative for
+each request. The conclusion is one of emphasis: **for CIMD-identified clients
+the request parameter is the primary carrier, and the metadata field is a narrow
+optimization** — appropriate only where a capability is non-sensitive and
+genuinely universal across every deployment of the software.
+
 ## What this changes in the draft
 
 Three findings, in descending order of consequence.

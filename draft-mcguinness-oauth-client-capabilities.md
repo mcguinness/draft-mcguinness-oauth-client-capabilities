@@ -422,6 +422,17 @@ behavior, or every less-capable instance will override the default on its
 requests. Clients with heterogeneous instances SHOULD omit the metadata field
 and signal capabilities on each request.
 
+Where the metadata is a client metadata document published at a Client
+Identifier URL {{CIMD}}, three properties of that carrier narrow its
+usefulness: the document is publicly retrievable, its content applies uniformly
+to every deployment that uses the URL, and an authorization server may cache it
+under bounds the client does not control. A capability declared there is
+therefore public, shared by every instance, and retractable only with unbounded
+delay. Clients identified this way SHOULD treat the request parameter in
+{{param}} as the primary carrier, and declare a capability in the document only
+when it is non-sensitive and every deployment of the software can process the
+enabled behavior.
+
 ## Scope of a Signal {#signal-scope}
 
 A capability signal in a request applies only to that request. It does not
