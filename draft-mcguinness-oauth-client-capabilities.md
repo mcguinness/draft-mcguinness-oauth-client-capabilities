@@ -229,8 +229,12 @@ capabilities beyond base OAuth. It exists so that a client can explicitly
 retract a statically declared set, as described in {{precedence}}.
 
 `none` MUST NOT appear together with any other capability value. A server that
-receives `none` alongside other values MUST reject the request with
-`invalid_request`.
+receives `none` alongside other values MUST treat the signaled set as empty.
+Resolving the conflict in favor of the empty set rather than rejecting the
+request keeps the semantics of a capability signal non-fatal, consistent with
+{{server-behavior}}, and errs toward the direction CAP-1 makes safe. The only
+condition under which this specification has a server reject a request on
+account of the signal is the resource guard in {{dos}}.
 
 # Capability Invariants {#invariants}
 
@@ -277,10 +281,15 @@ client_capabilities:
 
 The parameter is defined for use at the authorization endpoint, the token
 endpoint, the pushed authorization request endpoint {{RFC9126}}, the device
-authorization endpoint {{RFC8628}}, the authorization challenge endpoint
-{{FIRST-PARTY-APPS}}, and the client registration endpoint {{RFC7591}}. It MAY
-appear inside a request object {{RFC9101}}. An extension registering a
-capability value states the endpoints at which the value is meaningful.
+authorization endpoint {{RFC8628}}, and the authorization challenge endpoint
+{{FIRST-PARTY-APPS}}. It MAY appear inside a request object {{RFC9101}}. An
+extension registering a capability value states the endpoints at which the
+value is meaningful.
+
+The parameter is not defined for the client registration endpoint. A
+registration request carries a JSON body rather than form-encoded parameters,
+so a client declares capabilities there using the metadata field in
+{{metadata}}.
 
 A client MAY send `client_capabilities` to any authorization server without
 prior knowledge of whether the server implements this specification.
@@ -313,9 +322,9 @@ a capability value as defined in {{values}}:
 GET /transfers/42 HTTP/1.1
 Host: api.example.com
 Authorization: Bearer eyJhbGci...
-OAuth-Client-Capabilities: txn-challenge, step-up-retry
+OAuth-Client-Capabilities: txn-challenge
 ~~~
-{: title="Signaling capabilities on a protected resource request"}
+{: title="Signaling a capability on a protected resource request"}
 
 Members MUST NOT carry structured field parameters. A recipient MUST ignore any
 member it does not recognize, and MUST ignore any parameters present.
@@ -328,6 +337,11 @@ The field MAY also be used on a direct client-to-server request to an OAuth
 endpoint, but a client that can set a request parameter SHOULD use {{param}}
 rather than the field, so that the signal is covered by any signature over the
 request.
+
+A client MUST NOT send both the field and the `client_capabilities` parameter
+on the same request. If a server receives both, the parameter is authoritative
+and the field MUST be ignored, so that the carrier which can be
+integrity-protected wins.
 
 ## Client Metadata Declaration {#metadata}
 
@@ -346,6 +360,33 @@ constrained; see {{precedence}}.
 
 The array MUST NOT contain `none`; an absent field and an empty array both
 denote the empty set.
+
+## Scope of a Signal {#signal-scope}
+
+A capability signal applies to the request that carries it. It does not
+establish a property of the client that persists across the several requests of
+a grant.
+
+This matters most where the behavior a capability enables occurs at a different
+endpoint from the one at which a client first signals it. A client that signals
+a capability in a pushed authorization request has signaled it for the
+authorization request that the resulting `request_uri` stands in for, and for
+nothing else. Where the capability governs behavior at the token endpoint, the
+client MUST signal it again on the token request, and the authorization server
+MUST NOT infer it from an earlier request in the same grant.
+
+A concrete instance: an extension that permits the authorization server to
+return a deferred response instead of an access token affects the token
+response, so the capability must be present on the token request. Signaling it
+only through a pushed authorization request is not sufficient, and an extension
+whose capability behaves this way states so.
+
+The token request is a direct back-channel request, so the front-channel
+concerns described in {{param}} do not apply to it and repeating the signal
+there costs nothing.
+
+Where a capability is meaningful at more than one endpoint, its registration
+({{iana-registry}}) records which endpoints those are.
 
 ## Precedence {#precedence}
 
@@ -494,7 +535,7 @@ security property. An extension that would like to say "the client can perform
 a stronger check, so enable it" has inverted the requirement; the stronger
 check belongs in policy, negotiated through mechanisms that are authenticated.
 
-## Denial of Service
+## Denial of Service {#dos}
 
 A capability list is attacker-controllable in size. Servers MUST bound the
 number of values and the total length they will parse, and MUST reject
@@ -595,8 +636,8 @@ Parameter Name:
 : `client_capabilities`
 
 Parameter Usage Location:
-: authorization request, token request, device authorization request,
-  authorization challenge request
+: authorization request, token request, pushed authorization request, device
+  authorization request, authorization challenge request
 
 Change Controller:
 : IESG
@@ -677,7 +718,22 @@ Reference:
 
 # Examples
 
-A pushed authorization request signaling two capabilities:
+This document registers no capability value other than `none`. The values
+`accept-deferred-response` and `txn-challenge` appearing below are illustrative,
+and correspond to the behaviors described in {{existing-drafts}}.
+
+Authorization server metadata advertising what the server will act upon:
+
+~~~ json
+{
+  "issuer": "https://as.example.com",
+  "client_capabilities_supported": ["accept-deferred-response"]
+}
+~~~
+{: title="Server-side advertisement"}
+
+A pushed authorization request carrying the capability, keeping it off the
+authorization URI:
 
 ~~~ http-message
 POST /par HTTP/1.1
@@ -687,11 +743,28 @@ Content-Type: application/x-www-form-urlencoded
 response_type=code&client_id=https%3A%2F%2Fapp.example%2Fclient
 &redirect_uri=https%3A%2F%2Fapp.example%2Fcb
 &code_challenge=W6uP...&code_challenge_method=S256
-&client_capabilities=accept-deferred-response%20step-up-retry
+&client_capabilities=accept-deferred-response
 ~~~
-{: title="Capabilities carried in a pushed authorization request"}
+{: title="Capability carried in a pushed authorization request"}
 
-A token request from a deployment retracting a statically declared set:
+The same capability repeated on the token request. Because the behavior it
+enables affects the token response, the earlier signal does not carry over; see
+{{signal-scope}}:
+
+~~~ http-message
+POST /token HTTP/1.1
+Host: as.example.com
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=authorization_code&code=SplxlOB...
+&client_id=https%3A%2F%2Fapp.example%2Fclient
+&client_capabilities=accept-deferred-response
+~~~
+{: title="Signaling at the endpoint where the behavior occurs"}
+
+A different deployment of the same client software, whose published metadata
+declares `accept-deferred-response`, retracting it because this process cannot
+outlive the request:
 
 ~~~ http-message
 POST /token HTTP/1.1
@@ -704,20 +777,17 @@ grant_type=authorization_code&code=SplxlOB...
 ~~~
 {: title="Explicit retraction by a constrained deployment"}
 
-Authorization server metadata advertising what it will act upon:
+Client metadata declaring the software-level set, spanning both carriers:
 
 ~~~ json
 {
-  "issuer": "https://as.example.com",
-  "client_capabilities_supported": [
-    "accept-deferred-response",
-    "step-up-retry"
-  ]
+  "client_id": "https://app.example/client",
+  "client_capabilities": ["accept-deferred-response", "txn-challenge"]
 }
 ~~~
-{: title="Server-side advertisement"}
+{: title="Static declaration in client metadata"}
 
-# Applying This Specification to Existing Drafts
+# Applying This Specification to Existing Drafts {#existing-drafts}
 
 This appendix is informative and describes how the two extensions that motivated
 this work would use the mechanism. Neither is required to migrate.
@@ -731,7 +801,12 @@ Deferred Token Response:
   {{iana-registry}}. The draft's hint at the authorization, device
   authorization, and authorization challenge endpoints becomes ordinary
   front-channel carriage and inherits the recommendation in {{param}} to use a
-  pushed authorization request or request object.
+  pushed authorization request or request object. Because deferral occurs in
+  the token response, {{signal-scope}} requires the capability to be present on
+  the token request itself; this matches the draft's existing rule that the
+  client "signals opt-in to DTR by including `deferred` among the
+  `completion_mode` values on the originating grant's token endpoint request",
+  with the preceding-endpoint occurrence remaining an optional hint.
 
 Transaction Authorization Challenge:
 : `Accept-Txn-Challenge: ?1` becomes `OAuth-Client-Capabilities: txn-challenge`.
@@ -782,14 +857,22 @@ shape rather than by specification makes the gap visible.
   direction. TLS extensions, HTTP/2 and QUIC `SETTINGS`, and SASL mechanism
   lists all take the same form: one negotiation surface, extended by registry.
 
-- GNAP. {{RFC9635}} was designed from a blank sheet with negotiation in view
-  and still went per-feature: `interact.start` declares which interaction start
-  modes the client supports, alongside `interact.finish`,
-  `subject.sub_id_formats`, and `subject.assertion_formats`. There is no
-  `client.capabilities` field and no reciprocal server capability response.
-  This is an instructive negative result rather than prior art: per-feature is
-  the local optimum every designer reaches, and no one has yet paid the
-  one-time cost of the general case.
+- GNAP. {{RFC9635}} reproduces the same asymmetry from a blank sheet, which is
+  the most instructive data point available. GNAP names the concept
+  explicitly, describing the client instance as sending "information about the
+  actions the client software can take", and anticipates "any additional
+  capabilities defined by extensions of this protocol" ({{RFC9635}}, Section
+  4). Its server-to-client direction is generic and registry-backed: AS
+  discovery ({{RFC9635}}, Section 9) returns `key_proofs_supported`,
+  `sub_id_formats_supported`,
+  `assertion_formats_supported`, and `key_rotation_supported`, extensible
+  through the "GNAP Authorization Server Discovery Fields" registry. Its
+  client-to-server direction is not: capabilities are realized per feature, as
+  `interact.start`, `interact.finish`, `subject.sub_id_formats`, and
+  `subject.assertion_formats`, with no generic field and no capability
+  vocabulary an extension can register into. A protocol designed with
+  negotiation as a stated goal still built the generic surface in one direction
+  only.
 
 A review of the thirteen sub-registries in the IANA "OAuth Parameters" registry
 group finds no generic client capability parameter, field, or registry.
