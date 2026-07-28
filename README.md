@@ -8,6 +8,10 @@ OAuth extensions increasingly need the server to know, before it acts, whether t
 * [Editor's Copy (TXT)](https://mcguinness.github.io/draft-mcguinness-oauth-client-capabilities/draft-mcguinness-oauth-client-capabilities.txt)
 * [Datatracker Page](https://datatracker.ietf.org/doc/draft-mcguinness-oauth-client-capabilities/) (after first submission)
 
+## Companion Analysis
+
+* [Applying the Admission Test to Existing OAuth Behaviors](AUDIT.md) — runs the draft's admission criterion over existing specs. Finds that the test depends on how an extension frames what the capability unlocks, not on the feature: the DPoP nonce passes or fails CAP-1 depending on whether the signal gates the challenge or the reliance. Most candidates surveyed need no capability at all.
+
 ## Motivating Drafts
 
 Both define the same normative shape with different carriers. Either could adopt this mechanism; neither is required to.

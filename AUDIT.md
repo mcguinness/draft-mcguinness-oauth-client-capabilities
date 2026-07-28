@@ -1,0 +1,186 @@
+# Applying the Admission Test to Existing OAuth Behaviors
+
+Companion analysis to `draft-mcguinness-oauth-client-capabilities`. This is
+analysis, not a set of registration requests. The draft registers no capability
+values, and nothing here proposes amending another specification. The purpose is
+to test whether the admission criterion in the draft actually discriminates, by
+running it over behaviors that already exist.
+
+Requirement levels quoted below are from the cited RFC text, verified against
+the RFC rather than recalled.
+
+## The result that organizes this
+
+**The admission test is not a property of a feature. It is a property of how an
+extension frames what the capability unlocks.**
+
+The same mechanism can pass or fail CAP-1 depending on which side of the
+behavior the signal gates. DPoP nonces demonstrate both outcomes, which makes
+them the most useful worked example available — and the reason to lead with
+them rather than with a spec-by-spec sweep.
+
+So the question to ask of a candidate is not "is this capability-shaped." It is:
+
+> When the signal is absent, what does the server do — and is that the
+> conservative direction?
+
+### Worked example: the DPoP nonce
+
+RFC 9449 Section 8: an authorization server "MAY supply a nonce value," and
+responds to a request without one with HTTP 400 and `use_dpop_nonce`, supplying
+a `DPoP-Nonce` header. On the client side the RFC says only that the client
+"will typically retry the request with the new nonce value" and "is expected to
+retry." **There is no normative client requirement to implement nonce
+handling.**
+
+That makes it capability-shaped on both counts: a conforming DPoP client may
+legitimately not implement it, and the authorization server has no way to know
+before it challenges. There is no signal for it today.
+
+Now the two framings.
+
+**Framing A — gate the challenge.** *"The authorization server MUST NOT send
+`use_dpop_nonce` unless the client signaled nonce support."*
+
+Absent the signal, the server accepts nonce-less proofs. RFC 9449 Section 11.1
+is explicit about what nonces buy: "By providing new nonce values at times of
+its choosing, the server can limit the lifetime of DPoP proofs, preventing
+pre-generated DPoP proofs from being used." So removal of the signal weakens
+replay protection. **Violates CAP-1.**
+
+**Framing B — gate the reliance.** *"A client signaling nonce support permits
+the authorization server to rely on nonces, and therefore to issue longer-lived
+DPoP-bound access tokens."*
+
+Absent the signal, the server follows the guidance RFC 9449 Section 11.1
+already gives: "Deployments that do not utilize the nonce mechanism SHOULD NOT
+issue long-lived DPoP constrained access tokens, preferring instead to use
+short-lived access tokens and refresh tokens." The fallback is a more
+conservative issuance posture, and it is the fallback the RFC recommends
+independently of any capability mechanism. **Satisfies CAP-1.**
+
+Same mechanism. Opposite verdicts. The difference is entirely in what the
+extension says the signal unlocks.
+
+Worth noting that RFC 9449 Section 11.3, "DPoP Nonce Downgrade," already
+carries the same instinct at the protocol level: "A server MUST NOT accept any
+DPoP proofs without the nonce claim when a DPoP nonce has been provided to the
+client." The RFC protects against removal after commitment; CAP-1 generalizes
+that to removal before it.
+
+## Tier 1 — registry candidates
+
+Capability-shaped, no signal today, and a CAP-1-safe framing exists.
+
+| Behavior the server may exercise | Fallback when the signal is absent | Verdict |
+|---|---|---|
+| Return a deferred response in place of a token or error ([DTR]) | Ordinary error response — the pre-DTR behavior. No token issued. | Clean |
+| Return a transaction authorization challenge ([TXN-CHALLENGE]) | Deny the operation. | Clean in principle; see below |
+| Rely on DPoP nonces (RFC 9449, Framing B) | Short-lived access tokens plus refresh, per Section 11.1 | Clean under Framing B only |
+
+Two observations.
+
+DTR is the cleanest case in OAuth. The fallback is not merely conservative, it
+is literally the status quo the draft sets out to improve on — an error
+response instead of a deferral. Nothing is weakened by removal.
+
+The transaction authorization challenge draft **does not currently state its
+fallback.** It says a protected resource "MUST NOT return a transaction
+authorization challenge unless" the capability is signaled, but not what the
+resource does instead. Denying the operation is the obviously safe reading and
+almost certainly the intent, but the draft leaves it unwritten. Under the
+draft's Section 10.2 an extension must define a safe absent-signal fallback, so
+this is exactly the gap the requirement is meant to catch.
+
+## Tier 2 — needs no signal, and why
+
+This tier matters more than tier 1. A registry that admits everything is worth
+nothing; the credibility of the mechanism rests on rejecting most candidates.
+
+- **Step-up authentication (RFC 9470).** `insufficient_user_authentication` is
+  carried in `WWW-Authenticate` per RFC 6750. A client that does not recognize
+  the error code sees a generic 401 and either re-authenticates or fails. It
+  degrades gracefully and fails closed, so the resource server can challenge
+  unconditionally. No signal needed.
+- **Issuer identification (RFC 9207).** The authorization server adds `iss` to
+  the authorization response. A client that does not validate it ignores an
+  unrecognized parameter. Purely additive. No signal needed.
+- **Endpoint selection is already the signal.** Device authorization
+  (RFC 8628), pushed authorization requests (RFC 9126), the authorization
+  challenge endpoint, token exchange (RFC 8693). Calling the endpoint is proof
+  the client implements the flow. A capability value would be redundant with
+  the request itself.
+- **Client-initiated features.** `authorization_details` (RFC 9396), resource
+  indicators (RFC 8707), `response_mode`, and the OpenID Connect `prompt`,
+  `display`, and `ui_locales` parameters. The client asks for the behavior; a
+  server that responds within what was requested cannot surprise it.
+- **Presence is the signal.** The DPoP proof itself (RFC 9449), client
+  attestation headers. The artifact's presence proves the capability, which is
+  why DPoP needs a capability value for its *nonce* handling and not for DPoP.
+- **Mandatory-to-implement conformance.** Anything a specification requires
+  clients to support is not a capability; signaling it is redundant. This is
+  the test the DPoP nonce passes only because RFC 9449 declined to make client
+  nonce handling a MUST. Had it been normative, there would be nothing to
+  signal.
+
+## Tier 3 — capability-shaped but already served by static client metadata
+
+For these the question is not shape — they are all genuinely "what I can
+process" — but whether per-request or per-instance variation matters. Mostly it
+does not, and the existing static field is the right answer.
+
+- **Response and request encryption.** `id_token_encrypted_response_alg` and
+  `_enc`, `userinfo_encrypted_response_alg` and `_enc`,
+  `request_object_encryption_alg` and `_enc`; all registered client metadata in
+  the IANA OAuth Dynamic Client Registration Metadata registry. These are
+  algorithm and key properties of the client software, uniform across
+  instances. Static is correct.
+- **Logout.** `frontchannel_logout_uri`, `backchannel_logout_uri`,
+  `frontchannel_logout_session_required`,
+  `backchannel_logout_session_required`; also registered client metadata. These
+  carry endpoints, so they are inherently per-registration rather than
+  per-request.
+- **CIBA token delivery mode.** `backchannel_token_delivery_mode` (poll, ping,
+  push) is defined in the CIBA specification as client metadata. Note it is
+  *not* in the IANA OAuth Dynamic Client Registration Metadata registry — only
+  the server-side `backchannel_token_delivery_modes_supported` appears, in
+  authorization server metadata. Ping and push require a client notification
+  endpoint, so per-registration is correct here too.
+
+**The boundary case.** Variation matters when a single registered client has
+heterogeneous instances — which is precisely the retraction rationale in the
+draft's Section 5.5. If a deployment must retract a capability its published
+metadata declares, the request parameter exists for that. Whether any given
+tier 3 field crosses into tier 1 is a deployment question, not a specification
+question, and the draft's replacement semantics answer it without moving the
+field.
+
+## What this changes in the draft
+
+Three findings, in descending order of consequence.
+
+1. **The Section 10.2 fallback framing is load-bearing, not editorial.** It is
+   the entire difference between Framing A and Framing B above. Stating the
+   invariant as "the behavior enabled MUST NOT be necessary to enforce a
+   security property" would have excluded the DPoP nonce and the transaction
+   challenge both; stating it as "the absent-signal fallback must itself be
+   safe" admits both, correctly, and tells an extension author what to write.
+
+2. **Registry entries should record the absent-signal fallback, not only the
+   enabled behavior.** CAP-1 is unverifiable at registration time without it,
+   and a designated expert cannot apply the criterion to a description that
+   says only what the capability turns on. Adding this as a registry field
+   makes the invariant checkable rather than aspirational.
+
+3. **The transaction challenge draft's unstated fallback is the first thing
+   that field would have caught** — which is a reasonable argument that the
+   field belongs in the registry rather than in prose guidance.
+
+Finding 2 is applied to the draft as an `Absent-Signal Behavior` registry
+field. Findings 1 and 3 need no change: the former is already the current
+wording, and the latter is an observation about another document.
+
+---
+
+[DTR]: https://datatracker.ietf.org/doc/draft-gerber-oauth-deferred-token-response
+[TXN-CHALLENGE]: https://datatracker.ietf.org/doc/draft-rosomakho-oauth-txn-challenge

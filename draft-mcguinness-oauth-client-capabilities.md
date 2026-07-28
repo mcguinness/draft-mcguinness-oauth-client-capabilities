@@ -561,6 +561,9 @@ it in a policy decision, has misclassified it.
 Two further points of discipline:
 
 - Register a behavior, not a specification. See {{values}}.
+- State the absent-signal behavior, not only the behavior enabled. An extension
+  that cannot describe a fallback at least as conservative as the pre-extension
+  behavior has not satisfied CAP-1, whatever the value is named.
 - State, in the registration, the carriers and endpoints at which the value is
   meaningful. A value meaningful at the token endpoint is usually meaningless
   on a protected resource request, and a registry that says so prevents clients
@@ -700,6 +703,11 @@ Capability Value:
 Description:
 : A brief description of the client behavior signaled by the value.
 
+Absent-Signal Behavior:
+: What the server does when the value is not in the effective set. Recording
+  this makes CAP-1 in {{invariants}} checkable at registration time rather than
+  aspirational.
+
 Carriers:
 : The carriers in which the value is meaningful: any of "request parameter",
   "HTTP field", "client metadata".
@@ -722,6 +730,9 @@ Designated experts evaluating a registration request should:
 - confirm that the specification defines the precise optional behavior
   enabled by the value and identifies every applicable carrier and endpoint or
   request type;
+- confirm that the registered absent-signal behavior is at least as
+  conservative as what the server would apply had the value never been defined,
+  since a value whose fallback is more permissive cannot satisfy CAP-1;
 - consider the security, privacy, interoperability, and operational effects of
   both a false assertion and removal of the value;
 - reject a value that duplicates the semantics of an existing registration;
@@ -740,6 +751,9 @@ Capability Value:
 
 Description:
 : Reserved. Denotes the empty capability set.
+
+Absent-Signal Behavior:
+: Not applicable. `none` is a sentinel rather than a capability.
 
 Carriers:
 : request parameter
