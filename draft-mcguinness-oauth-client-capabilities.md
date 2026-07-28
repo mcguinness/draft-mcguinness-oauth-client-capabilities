@@ -508,10 +508,13 @@ CAP-1 exists to prevent: removing a value would steer the server to a different
 path, and where the alternatives are not equivalent for the decision at hand, the
 weaker one is what the request gets.
 
-Selection needs no capability values beyond those that gating already requires. A
-path a server can take safely whatever the client does, such as an error a client
-either understands or reports as a failure, never needed a signal; only the paths
-that would break an unprepared client do.
+Selection and gating ask different questions, and a value can be justified by
+either. Gating asks whether issuing a behavior would break an unprepared client
+or weaken a security property. Selection asks, among paths that all clear the
+required assurance, which one the client can carry to completion. A path that is
+safe to issue unconditionally needs no signal in order to be gated, and may still
+warrant one so that a server does not choose a path the client cannot finish.
+{{extension-guidance}} gives the criterion.
 
 # Discovery {#discovery}
 
@@ -572,6 +575,14 @@ Additional points of discipline:
   register no capability. A capability is for behavior that cannot be made
   mandatory, because it is genuinely optional for the client and the server
   therefore cannot discover conformance.
+
+A value may be justified on either of two grounds: that a server cannot safely
+exercise the behavior without it, or that a server choosing among several paths
+would otherwise select one the client cannot complete ({{selection}}). The second
+ground is narrower than it first appears. It requires that the server would choose
+differently and that the difference decides whether the operation can complete,
+not merely that the behavior is optional for the client. A value that would make
+an already-workable path more convenient does not qualify.
 - State, in the registration, the carriers and endpoints at which the value is
   meaningful. A value meaningful at the token endpoint is usually meaningless
   on a protected resource request, and a registry that says so prevents clients

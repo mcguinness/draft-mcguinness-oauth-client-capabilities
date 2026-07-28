@@ -104,25 +104,32 @@ almost certainly the intent, but the draft leaves it unwritten. Under the
 draft's Section 10.2 an extension must define a safe absent-signal fallback, so
 this is exactly the gap the requirement is meant to catch.
 
-## Tier 2: needs no signal, and why
+## Tier 2: needs no gating signal, and why
 
 This tier matters more than tier 1. A registry that admits everything is worth
 nothing; the credibility of the mechanism rests on rejecting most candidates.
 
-A distinction worth keeping in view: **gating and selecting are different
-questions.** A resource server choosing which challenge to issue, where several
-paths exist, benefits from knowing the whole capability set, but that does not
-promote the safe paths into tier 1. A path the server can take regardless of what
-the client supports never needed a signal to be issued; it only needs to be known
-about when something else is being chosen instead. So selection consumes the
-values that gating already justified and adds none of its own. Step-up below is
-the case in point.
+**Gating and selecting are different questions, and this tier answers only the
+first.** Gating asks whether issuing a behavior would break an unprepared client
+or weaken a security property. Selection asks, among paths that all clear the
+required assurance, which one the client can carry to completion. Everything
+below is safe to issue unconditionally, which settles the gating question and
+leaves the selection question open. Step-up is where that matters; see
+[Selection candidates](#selection-candidates) after this tier.
 
 - **Step-up authentication (RFC 9470).** `insufficient_user_authentication` is
-  carried in `WWW-Authenticate` per RFC 6750. A client that does not recognize
-  the error code sees a generic 401 and either re-authenticates or fails. It
-  degrades gracefully and fails closed, so the resource server can challenge
-  unconditionally. No signal needed.
+  carried in `WWW-Authenticate` per RFC 6750, so a client that does not recognize
+  the error code sees a generic 401. It fails closed, and the resource server can
+  challenge unconditionally, so **no signal is needed for gating.** It does not,
+  however, degrade gracefully, which an earlier version of this note claimed. RFC
+  9470 anticipates the failure itself: its recommended behavior "will help prevent
+  clients getting stuck in a loop where the authorization server keeps returning
+  tokens that the resource server already identified as not meeting its
+  requirements." That mitigation is authorization-server side and engages only
+  where the client relayed `acr_values` from the challenge into its authorization
+  request, which is exactly what a non-implementing client does not do. So the
+  loop is real for precisely the clients that cannot handle the challenge. See
+  [Selection candidates](#selection-candidates).
 - **Issuer identification (RFC 9207).** The authorization server adds `iss` to
   the authorization response. A client that does not validate it ignores an
   unrecognized parameter. Purely additive. No signal needed.
@@ -143,6 +150,33 @@ the case in point.
   the test the DPoP nonce passes only because RFC 9449 declined to make client
   nonce handling a MUST. Had it been normative, there would be nothing to
   signal.
+
+## Selection candidates {#selection-candidates}
+
+A behavior can be safe to issue unconditionally, and therefore need no gating
+signal, while still being one a server should not pick blind. That is the case
+your resource server hits when several challenge paths are open to it: all of them
+clear the assurance bar, and the question is which one the client can finish.
+
+**Step-up authentication (RFC 9470)** is the first such candidate. Issuing
+`insufficient_user_authentication` is always safe. But a client that does not
+relay `acr_values` back into an authorization request loops, per RFC 9470's own
+warning quoted above, and the specification's mitigation does not reach it. A
+resource server deciding between a step-up and a transaction authorization
+challenge therefore has a real reason to know, and it is not a convenience: the
+difference decides whether the operation completes at all.
+
+It passes the other filters, which is why it is a candidate and not a near miss.
+CAP-1 holds, since absence means the server picks another qualifying path or
+refuses, and nothing is weakened. CAP-2 buys nothing. And discovery-first cannot
+rescue it, because whether to demand a stronger authentication event is a
+per-request risk decision rather than a static posture, the same reason discovery
+could not rescue the DPoP nonce.
+
+Note the carrier consequence. A protected resource does not hold client metadata,
+so selection at a resource server can only read the HTTP field. A client that
+wants its paths chosen well has to send the field on resource requests; a metadata
+default cannot serve this use.
 
 ## Tier 3: capability-shaped but already served by static client metadata
 
@@ -339,11 +373,16 @@ verdicts are not all equally well-evidenced.
 | `rfc8725bis` | Best current practice | Not applicable | Triage on scope |
 | `sd-jwt-vc` | Credential format | Not applicable | Triage on scope |
 
-**One of sixteen** yields a new capability candidate. That ratio is the answer to
+**One of sixteen** yields a new gating candidate. That ratio is the answer to
 "won't you end up registering everything." The mechanism is narrow because the
 qualifying conditions are narrow: the behavior has to change what the client
-receives, be genuinely optional for the client, and be undiscoverable from
-server metadata.
+receives, be genuinely optional for the client, and be undiscoverable from server
+metadata.
+
+The ratio measures gating only, and so understates the candidate set. Selection
+admits values for behaviors that are safe to issue but may not complete, and
+step-up is the first of those; see [Selection candidates](#selection-candidates). The sweep was not
+re-run against the selection criterion, so that count is not established here.
 
 ### The candidate: `redirect_to_web`
 

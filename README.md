@@ -10,7 +10,7 @@ OAuth extensions increasingly need the server to know, before it acts, whether t
 
 ## Companion Analysis
 
-* [Applying the Admission Test to Existing OAuth Behaviors](AUDIT.md): runs the draft's admission criterion over existing specs. Finds that admissibility turns on framing but that framing alone is not enough: a candidate can satisfy CAP-1 and still be barred by CAP-2. DPoP nonce enforcement fails at both steps and is outside the model. Most candidates surveyed need no capability at all.
+* [Applying the Admission Test to Existing OAuth Behaviors](AUDIT.md): runs the draft's admission criterion over existing specs. Finds that admissibility turns on framing but that framing alone is not enough: a candidate can satisfy CAP-1 and still be barred by CAP-2. DPoP nonce enforcement fails at both steps and is outside the model. Also separates gating from selection: a behavior can be safe to issue unconditionally and still warrant a signal, so that a resource server choosing among challenge paths does not pick one the client cannot complete. Most candidates surveyed need no capability at all.
 
 ## Motivating Drafts
 
