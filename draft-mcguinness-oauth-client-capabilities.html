@@ -1872,10 +1872,18 @@ that cannot describe a fallback at least as conservative as the pre-extension
 behavior has not satisfied CAP-1, whatever the value is named.<a href="#section-8-6.2.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-8-6.3">
-          <p id="section-8-6.3.1">State, in the registration, the carriers and endpoints at which the value is
+          <p id="section-8-6.3.1">Prefer server-side discovery where it works. If the client-side behavior can
+be specified as a requirement conditioned on something the server advertises
+in its own metadata (<span>[<a href="#RFC8414" class="cite xref">RFC8414</a>]</span> or <span>[<a href="#RFC9728" class="cite xref">RFC9728</a>]</span>), specify it that way and
+register no capability. A capability is for behavior that cannot be made
+mandatory, because it is genuinely optional for the client and the server
+therefore cannot discover conformance.<a href="#section-8-6.3.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-8-6.4">
+          <p id="section-8-6.4.1">State, in the registration, the carriers and endpoints at which the value is
 meaningful. A value meaningful at the token endpoint is usually meaningless
 on a protected resource request, and a registry that says so prevents clients
-from signaling noise.<a href="#section-8-6.3.1" class="pilcrow">¶</a></p>
+from signaling noise.<a href="#section-8-6.4.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
 </section>
