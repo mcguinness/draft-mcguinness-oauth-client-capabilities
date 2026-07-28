@@ -123,8 +123,7 @@ minimum that covers OAuth's actual topology.
 ## Why Open-World Deployment Makes This Urgent {#open-world}
 
 Classic OAuth had one place to establish what a client could do: registration.
-The client metadata of {{RFC7591}} is already a capability declaration —
-`grant_types`, `response_types`, `token_endpoint_auth_method`,
+The client metadata of {{RFC7591}} is already a capability declaration: `grant_types`, `response_types`, `token_endpoint_auth_method`,
 `dpop_bound_access_tokens` {{RFC9449}}, and
 `require_pushed_authorization_requests` {{RFC9126}} all describe client
 behavior. It is a static declaration, agreed once.
@@ -137,9 +136,26 @@ server needs to know about the client's processing ability must be carried in
 that request, or discoverable from a document the client publishes rather than
 one the server issued.
 
+DPoP {{RFC9449}} shows the gap inside a single specification. An authorization
+server takes a first request from a client it has never seen, identified by a
+metadata document URL, and its policy calls for a DPoP nonce on this request. If
+the client implements the `use_dpop_nonce` retry, challenging costs one round
+trip. If it does not, the challenge is a hard failure that the client surfaces as
+an authentication error. Nothing obliges the client to implement it;
+{{RFC9449}} observes only that the client "will typically retry".
+
+Nothing available to the server settles the question. The
+`dpop_bound_access_tokens` field above says whether the client uses DPoP, not
+whether it handles a nonce challenge. Server metadata runs the wrong way. And no
+static posture can be published in its place, because {{RFC9449}} puts "the logic
+through which the server makes that determination" out of scope: demanding a
+nonce is a per-request risk decision. A closed deployment would have settled this
+out of band before the first request; here the first request is the only place it
+can be settled.
+
 Per-extension parameters remain workable where a small number of extensions are
-deployed between parties with a prior arrangement. Two things break as
-extensions accumulate against an unbounded client population.
+deployed between parties with a prior arrangement. What breaks is accumulation
+against an unbounded client population.
 
 Per-extension signals accumulate in both directions. Each capability relevant
 before the token request adds a parameter to the authorization URI, which travels
@@ -153,8 +169,8 @@ registration.
 
 Four behaviors are capability-shaped in the current corpus ({{corpus}}), and they
 face both ways: some are signaled to an authorization server, some to a resource
-server. A per-extension design pays the cost in both places at once — the
-asymmetry in {{asymmetry}}, seen from the cost side.
+server. A per-extension design pays the cost in both places at once, which is the
+asymmetry in {{asymmetry}} seen from the cost side.
 
 ## What This Specification Does Not Change
 
@@ -274,9 +290,8 @@ one it lacks can receive a response it cannot process; CAP-2 and CAP-3 keep a
 false claim from being accepted as authorization, authentication, or proof of a
 security-relevant property, though an extension must still analyze its
 operational cost ({{dos}}). And an adversary able to modify a request, including
-the user agent on the front channel, can remove values and degrade the client to
-base OAuth — under CAP-1 the safe direction, at the cost of optional
-functionality.
+the user agent on the front channel, can remove values and degrade the client to base OAuth. Under CAP-1 that is the
+safe direction, at the cost of optional functionality.
 
 These invariants also serve as the admission criterion for the registry; see
 {{extension-guidance}}.
@@ -610,7 +625,7 @@ authorized. Removal costs the client functionality, never the server a security
 property.
 
 The inverted form to avoid is an extension whose enabled behavior is what
-applies a check the server would otherwise skip — "the client can perform a
+applies a check the server would otherwise skip: "the client can perform a
 stronger check, so enable it". There, removing the signal removes the check.
 Such a check belongs in policy, negotiated through mechanisms that are
 authenticated.
@@ -633,9 +648,8 @@ does not authorize the client to consume unbounded work.
 ## Interaction with Signed Requests
 
 Where a Request Object {{RFC9101}} or software statement carries a capability
-set, the signature protects the assertion from modification. This does not
-make the values proof of implementation — a signature attests to the
-assertion, not its truth. The distinct precedence rules for Request Objects and
+set, the signature protects the assertion from modification. This does not make the values proof of implementation; a signature attests to
+the assertion, not its truth. The distinct precedence rules for Request Objects and
 software statements are specified in {{precedence}}.
 
 # Privacy Considerations {#privacy-considerations}
@@ -910,8 +924,7 @@ This appendix is informative.
 Capability signaling in and around OAuth takes five shapes. Registration-time
 static declaration in client metadata {{RFC7591}} serves the closed world but
 cannot express per-request or per-instance variation and has no analogue where
-there is no registration. Server-to-client discovery {{RFC8414}} {{RFC9728}} is
-fully generic — in one direction only. The remaining three are per-extension: a
+there is no registration. Server-to-client discovery {{RFC8414}} {{RFC9728}} is fully generic, though in one direction only. The remaining three are per-extension: a
 dedicated request parameter, a dedicated HTTP field, or a capability implied by
 construction, as with the presence of a DPoP proof {{RFC9449}} or the choice of
 one endpoint over another.

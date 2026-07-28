@@ -16,12 +16,12 @@ extension frames what the capability unlocks.**
 
 The same mechanism can pass or fail CAP-1 depending on which side of the
 behavior the signal gates. DPoP nonces demonstrate both outcomes, which makes
-them the most useful worked example available — and the reason to lead with
+them the most useful worked example available, and the reason to lead with
 them rather than with a spec-by-spec sweep.
 
 So the question to ask of a candidate is not "is this capability-shaped." It is:
 
-> When the signal is absent, what does the server do — and is that the
+> When the signal is absent, what does the server do, and is that the
 > conservative direction?
 
 ### Worked example: the DPoP nonce
@@ -39,7 +39,7 @@ before it challenges. There is no signal for it today.
 
 Now the two framings.
 
-**Framing A — gate the challenge.** *"The authorization server MUST NOT send
+**Framing A: gate the challenge.** *"The authorization server MUST NOT send
 `use_dpop_nonce` unless the client signaled nonce support."*
 
 Absent the signal, the server accepts nonce-less proofs. RFC 9449 Section 11.2
@@ -48,7 +48,7 @@ its choosing, the server can limit the lifetime of DPoP proofs, preventing
 pre-generated DPoP proofs from being used." So removal of the signal weakens
 replay protection. **Violates CAP-1.**
 
-**Framing B — gate the reliance.** *"A client signaling nonce support permits
+**Framing B: gate the reliance.** *"A client signaling nonce support permits
 the authorization server to rely on nonces, and therefore to issue longer-lived
 DPoP-bound access tokens."*
 
@@ -68,13 +68,13 @@ DPoP proofs without the nonce claim when a DPoP nonce has been provided to the
 client." The RFC protects against removal after commitment; CAP-1 generalizes
 that to removal before it.
 
-## Tier 1 — registry candidates
+## Tier 1: registry candidates
 
 Capability-shaped, no signal today, and a CAP-1-safe framing exists.
 
 | Behavior the server may exercise | Fallback when the signal is absent | Verdict |
 |---|---|---|
-| Return a deferred response in place of a token or error ([DTR]) | Ordinary error response — the pre-DTR behavior. No token issued. | Clean |
+| Return a deferred response in place of a token or error ([DTR]) | Ordinary error response, the pre-DTR behavior. No token issued. | Clean |
 | Return a transaction authorization challenge ([TXN-CHALLENGE]) | Deny the operation. | Clean in principle; see below |
 | Rely on DPoP nonces (RFC 9449, Framing B) | Short-lived access tokens plus refresh, per Section 11.2 | Clean under Framing B only |
 | Return `redirect_to_web` at the authorization challenge endpoint ([FIRST-PARTY-APPS]) | Refuse the authorization; see the sweep below | Clean only under the deny framing, which the draft does not state |
@@ -82,7 +82,7 @@ Capability-shaped, no signal today, and a CAP-1-safe framing exists.
 Two observations.
 
 DTR is the cleanest case in OAuth. The fallback is not merely conservative, it
-is literally the status quo the draft sets out to improve on — an error
+is literally the status quo the draft sets out to improve on: an error
 response instead of a deferral. Nothing is weakened by removal.
 
 The transaction authorization challenge draft **does not currently state its
@@ -93,7 +93,7 @@ almost certainly the intent, but the draft leaves it unwritten. Under the
 draft's Section 10.2 an extension must define a safe absent-signal fallback, so
 this is exactly the gap the requirement is meant to catch.
 
-## Tier 2 — needs no signal, and why
+## Tier 2: needs no signal, and why
 
 This tier matters more than tier 1. A registry that admits everything is worth
 nothing; the credibility of the mechanism rests on rejecting most candidates.
@@ -124,10 +124,10 @@ nothing; the credibility of the mechanism rests on rejecting most candidates.
   nonce handling a MUST. Had it been normative, there would be nothing to
   signal.
 
-## Tier 3 — capability-shaped but already served by static client metadata
+## Tier 3: capability-shaped but already served by static client metadata
 
-For these the question is not shape — they are all genuinely "what I can
-process" — but whether per-request or per-instance variation matters. Mostly it
+For these the question is not shape (they are all genuinely "what I can
+process") but whether per-request or per-instance variation matters. Mostly it
 does not, and the existing static field is the right answer.
 
 - **Response and request encryption.** `id_token_encrypted_response_alg` and
@@ -143,13 +143,13 @@ does not, and the existing static field is the right answer.
   per-request.
 - **CIBA token delivery mode.** `backchannel_token_delivery_mode` (poll, ping,
   push) is defined in the CIBA specification as client metadata. Note it is
-  *not* in the IANA OAuth Dynamic Client Registration Metadata registry — only
+  *not* in the IANA OAuth Dynamic Client Registration Metadata registry; only
   the server-side `backchannel_token_delivery_modes_supported` appears, in
   authorization server metadata. Ping and push require a client notification
   endpoint, so per-registration is correct here too.
 
 **The boundary case.** Variation matters when a single registered client has
-heterogeneous instances — which is precisely the retraction rationale in the
+heterogeneous instances, which is precisely the retraction rationale in the
 draft's Section 5.5. If a deployment must retract a capability its published
 metadata declares, the request parameter exists for that. Whether any given
 tier 3 field crosses into tier 1 is a deployment question, not a specification
@@ -189,7 +189,7 @@ three of its properties cut against the client metadata field.
   Section 5.3 already forbids declaring a capability unless every instance
   covered by the metadata can process the enabled behavior, and recommends that
   clients with heterogeneous instances omit the field. For CIMD that is not an
-  edge case — it is the default for any software deployed more than once, which
+  edge case; it is the default for any software deployed more than once, which
   is the population the draft's Section 1.2 holds up as its motivation. The
   metadata carrier is thus usually the wrong choice for precisely the clients
   that motivate the mechanism.
@@ -202,7 +202,7 @@ three of its properties cut against the client metadata field.
 None of this breaks anything, because the request parameter is authoritative for
 each request. The conclusion is one of emphasis: **for CIMD-identified clients
 the request parameter is the primary carrier, and the metadata field is a narrow
-optimization** — appropriate only where a capability is non-sensitive and
+optimization**, appropriate only where a capability is non-sensitive and
 genuinely universal across every deployment of the software.
 
 ## Client attestation: not a capability, and a counter-example worth copying
@@ -216,14 +216,14 @@ per-request presence of the `OAuth-Client-Attestation` and
 `OAuth-Client-Attestation-PoP` fields is self-signaling. Tier 2.
 
 The interesting part is ABCA's **challenge**, because it is the same mechanism
-shape as the DPoP nonce — a server-issued freshness value the client must echo
-in a proof — and it needs no capability value. ABCA drafted it differently.
+shape as the DPoP nonce (a server-issued freshness value the client must echo
+in a proof) and it needs no capability value. ABCA drafted it differently.
 
 | | DPoP nonce (RFC 9449) | ABCA challenge ([ABCA]) |
 |---|---|---|
 | Server advertises that it uses the mechanism | No; the server challenges reactively | Yes; `challenge_endpoint` in RFC 8414 metadata, which the AS "MUST signal" |
 | Client-side requirement | Non-normative: "will typically retry", "is expected to retry" | Normative but conditional: "If the Authorization Server offers a challenge endpoint, the Client MUST retrieve a challenge and MUST use this challenge" |
-| Can the server know in advance whether the client will cope? | No | Yes — it published the endpoint, and client conformance follows from that |
+| Can the server know in advance whether the client will cope? | No | Yes; it published the endpoint, and client conformance follows from that |
 | Capability value needed? | Yes, under Framing B | **No** |
 
 Version -10 extends the pattern in two directions that matter here. The
@@ -232,7 +232,7 @@ through protected resource metadata (RFC 9728 is registered alongside
 RFC 8414 for `challenge_endpoint`), and the conditional client MUST now covers
 "the Client Attestation PoP JWT **or DPoP Proof**." So for the
 attestation-combined case ABCA is supplying exactly the discoverable-challenge
-mechanism RFC 9449 lacks — which both validates the discovery-first rule and
+mechanism RFC 9449 lacks, which both validates the discovery-first rule and
 narrows the DPoP nonce candidate, leaving it open for plain DPoP without
 attestation rather than for DPoP generally.
 
@@ -251,8 +251,8 @@ itself, because it bounds the registry:
 > metadata, it should do that instead of registering a capability.
 
 A capability is what remains when the client-side behavior cannot be made
-mandatory — because it is genuinely optional for the client on grounds of
-platform, cost, or deployment shape — and the server therefore cannot discover
+mandatory, because it is genuinely optional for the client on grounds of
+platform, cost, or deployment shape, and the server therefore cannot discover
 conformance. ABCA could make its challenge mandatory because fetching one is
 cheap and universally implementable. RFC 9449 could not take the same route for
 nonces, because whether to demand a nonce is a per-request risk decision rather
@@ -262,22 +262,22 @@ challenge is not.
 
 ### Attestation as a carrier for capabilities
 
-The Client Attestation JWT permits extension claims — "The JWT MAY contain
+The Client Attestation JWT permits extension claims ("The JWT MAY contain
 other claims. All claims that are not understood by implementations MUST be
-ignored" — so nothing stops an implementer from putting a capability set in one.
+ignored"), so nothing stops an implementer from putting a capability set in one.
 The draft's admission test already answers this: a value one would want attested
 is not a capability. It is worth stating why, because there is a real argument
 on the other side.
 
 The argument for it is granularity. An attestation carries `cnf`, the Client
-Instance Key, so it is instance-scoped — and instance-level variation is exactly
+Instance Key, so it is instance-scoped, and instance-level variation is exactly
 what the draft's replacement semantics exist to handle. An instance-scoped
 signed carrier looks like the right shape.
 
 It is the right granularity and the wrong lifetime, and the signature buys
 nothing. An attestation is minted by an issuer at a point in time and reused
 across requests for its validity period, so a capability inside it is immutable
-for that window — which defeats retraction, the very thing instance-level
+for that window, which defeats retraction, the very thing instance-level
 signaling is for. And CAP-3 forbids a server relying on a capability signal
 being truthful, so the signature adds no license to trust it. The attestation
 issuer is also poorly placed to vouch for a runtime processing property of a
@@ -302,10 +302,10 @@ verdicts are not all equally well-evidenced.
 
 | Draft | New client-facing server behavior? | Verdict | Basis |
 |---|---|---|---|
-| `attestation-based-client-auth` | Challenge, but with a conditional client MUST and metadata advertisement | No capability needed — see the attestation section | Targeted read at -10 |
+| `attestation-based-client-auth` | Challenge, but with a conditional client MUST and metadata advertisement | No capability needed; see the attestation section | Targeted read at -10 |
 | `client-id-metadata-document` | None; an `https` `client_id` self-signals | No | Targeted read at -02 |
-| `first-party-apps` | **`redirect_to_web`**, client fallback non-normative, no AS guidance if the client cannot | **Tier 1 candidate** — see below | Targeted read at -04 |
-| `refresh-token-expiration` | `refresh_token_timeout`, `authorization_expires_in` — additive, no client MUST to process | No; additive and ignorable | Targeted read at -03 |
+| `first-party-apps` | **`redirect_to_web`**, client fallback non-normative, no AS guidance if the client cannot | **Tier 1 candidate**; see below | Targeted read at -04 |
+| `refresh-token-expiration` | `refresh_token_timeout`, `authorization_expires_in`; additive, no client MUST to process | No; additive and ignorable | Targeted read at -03 |
 | `status-list` | None; token format plus verifier-side status resolution | No | Targeted read at -21 |
 | `identity-assertion-authz-grant` | Assertion grant; client-initiated | No | Triage on scope |
 | `identity-chaining` | Cross-domain token exchange; client-initiated | No | Triage on scope |
@@ -329,14 +329,14 @@ server metadata.
 
 At the authorization challenge endpoint an authorization server may return
 `error: redirect_to_web`, optionally with a `request_uri` and `expires_in`, when
-it needs to interact with the user directly — "based on a risk assessment, the
+it needs to interact with the user directly: "based on a risk assessment, the
 introduction of a new authentication method not supported in the application, or
 to handle an exception flow such as account recovery."
 
 The client-side requirement is non-normative: "If no `request_uri` is returned,
 the client is expected to initiate a new OAuth Authorization Code flow with
 PKCE." And the capability is genuinely optional in a way the earlier examples
-are not — a client with no usable browser (a kiosk, a headless deployment, an
+are not: a client with no usable browser (a kiosk, a headless deployment, an
 autonomous agent with no interactive surface) cannot perform the fallback at
 all, however well written it is.
 
@@ -353,7 +353,7 @@ The two framings behave as before:
 
 What makes the omission striking is that the error's own definition nearly
 forces the safe answer. `redirect_to_web` means "The request is not able to be
-fulfilled with any further direct interaction with the user" — the server has
+fulfilled with any further direct interaction with the user". The server has
 already concluded that in-app interaction is insufficient. If it may not send the
 error and cannot finish in-app, refusing is the only CAP-1-safe move left. The
 draft never says so. Verified against the -04 text: the only client-side
@@ -364,9 +364,9 @@ client that cannot reach a browser.
 
 Three independent documents now specify the gate and omit the fallback:
 
-- `txn-challenge` — "MUST NOT return a transaction authorization challenge
+- `txn-challenge`: "MUST NOT return a transaction authorization challenge
   unless" signaled, with no statement of what the resource server does instead.
-- `first-party-apps` — `redirect_to_web`, with no guidance if the client cannot
+- `first-party-apps`: `redirect_to_web`, with no guidance if the client cannot
   fall back.
 - `attestation-based-client-auth` avoided the problem only by making the
   client-side requirement normative and conditioning it on a metadata
@@ -375,7 +375,7 @@ Three independent documents now specify the gate and omit the fallback:
 This is the strongest available argument for the `Absent-Signal Behavior`
 registry field. It is not process overhead: it catches an omission that
 extension authors make consistently. Authors specify what the capability turns
-*on* and leave what happens when it is *off* implicit — and the implicit answer
+*on* and leave what happens when it is *off* implicit, and the implicit answer
 is nearly always "proceed without it," which is the CAP-1-violating direction in
 both cases above. Requiring the fallback at registration time forces the
 question while there is still a designated expert reading the answer.
@@ -399,7 +399,7 @@ Three findings, in descending order of consequence.
 
 3. **Unstated fallbacks are systematic, not incidental.** Three drafts specify
    the gate and omit the absent case; see the sweep. The transaction challenge
-   draft's unstated fallback is the first thing the field would have caught — which is a reasonable argument that the
+   draft's unstated fallback is the first thing the field would have caught, which is a reasonable argument that the
    field belongs in the registry rather than in prose guidance.
 
 Finding 2 is applied to the draft as an `Absent-Signal Behavior` registry
