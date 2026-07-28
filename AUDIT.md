@@ -226,6 +226,16 @@ in a proof — and it needs no capability value. ABCA drafted it differently.
 | Can the server know in advance whether the client will cope? | No | Yes — it published the endpoint, and client conformance follows from that |
 | Capability value needed? | Yes, under Framing B | **No** |
 
+Version -10 extends the pattern in two directions that matter here. The
+challenge endpoint may now be offered by a resource server as well, advertised
+through protected resource metadata (RFC 9728 is registered alongside
+RFC 8414 for `challenge_endpoint`), and the conditional client MUST now covers
+"the Client Attestation PoP JWT **or DPoP Proof**." So for the
+attestation-combined case ABCA is supplying exactly the discoverable-challenge
+mechanism RFC 9449 lacks — which both validates the discovery-first rule and
+narrows the DPoP nonce candidate, leaving it open for plain DPoP without
+attestation rather than for DPoP generally.
+
 ABCA also keeps this coherent for the reactive case: a fresh challenge may
 arrive on any response in the `OAuth-Client-Attestation-Challenge` field, and
 "The Client MUST use this new Challenge for the next
@@ -282,12 +292,17 @@ server or resource server returns *to a client* that a non-implementing client
 could fail to process, with a client-side requirement weak enough that the
 server cannot assume conformance?
 
+The frame is the OAuth *client* specifically. A draft can define plenty of new
+behavior between other parties and still be "no" here: `transaction-tokens`, for
+example, concerns a resource server calling a token service, which is real
+surface but not client-facing.
+
 The `Basis` column records how far the draft was actually read, because the
 verdicts are not all equally well-evidenced.
 
 | Draft | New client-facing server behavior? | Verdict | Basis |
 |---|---|---|---|
-| `attestation-based-client-auth` | Challenge, but with a conditional client MUST and metadata advertisement | No capability needed — see the attestation section | Targeted read at -07; -10 is current |
+| `attestation-based-client-auth` | Challenge, but with a conditional client MUST and metadata advertisement | No capability needed — see the attestation section | Targeted read at -10 |
 | `client-id-metadata-document` | None; an `https` `client_id` self-signals | No | Targeted read at -02 |
 | `first-party-apps` | **`redirect_to_web`**, client fallback non-normative, no AS guidance if the client cannot | **Tier 1 candidate** — see below | Targeted read at -04 |
 | `refresh-token-expiration` | `refresh_token_timeout`, `authorization_expires_in` — additive, no client MUST to process | No; additive and ignorable | Targeted read at -03 |
@@ -336,8 +351,14 @@ The two framings behave as before:
   returns a terminal error: it cannot perform the interaction it requires, so it
   declines to authorize. **Satisfies CAP-1.**
 
-The draft gives no guidance on what the authorization server should do when the
-client cannot perform the fallback, so the safe framing is the unwritten one.
+What makes the omission striking is that the error's own definition nearly
+forces the safe answer. `redirect_to_web` means "The request is not able to be
+fulfilled with any further direct interaction with the user" — the server has
+already concluded that in-app interaction is insufficient. If it may not send the
+error and cannot finish in-app, refusing is the only CAP-1-safe move left. The
+draft never says so. Verified against the -04 text: the only client-side
+normative statements near `redirect_to_web` concern PKCE, and nothing addresses a
+client that cannot reach a browser.
 
 ### The systematic finding
 
