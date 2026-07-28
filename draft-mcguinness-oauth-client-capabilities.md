@@ -152,7 +152,9 @@ Front-channel accumulation. Every capability relevant before the token request
 must ride the authorization request. If each extension defines its own
 parameter, the authorization URI carries several separate declarations through
 a redirect that the user agent can read, log, truncate, and modify, even though
-the declarations collectively convey one set.
+the declarations collectively convey one set. The cost is linear in the number
+of extensions a client supports, is paid on every authorization request, and
+falls on the component of the protocol least able to absorb growth.
 
 Field accumulation. The `Accept-*` family — `Accept`, `Accept-Encoding`,
 `Accept-Language`, `Accept-Patch`, and `Accept-Signature` {{RFC9421}} — is one
@@ -218,7 +220,8 @@ For the request parameter, `capability-list` is applied after
 omitted, as required by {{RFC6749}}. A non-empty value that does not match this
 production, including a value with leading, trailing, or repeated spaces, is
 invalid. A recipient MUST treat an invalid value as signaling the empty set and
-MUST NOT reject the request solely because the value is invalid.
+MUST NOT reject the request solely because the value is invalid, except as
+permitted by {{dos}}.
 
 Capability values MUST NOT carry parameters. An extension that needs structured
 detail alongside a capability defines a companion request parameter, or uses
@@ -371,15 +374,21 @@ A server whose response varies with the field MUST include
 `OAuth-Client-Capabilities` in the `Vary` field of the response, or use
 `Vary: *`, per {{RFC9110}}, Section 12.5.5.
 
-The field MAY also be used on a direct client-to-server request to an OAuth
-endpoint, but a client that can set a request parameter SHOULD use {{param}}
-rather than the field. The request parameter participates in the OAuth
-endpoint's normal parameter processing and can be protected by mechanisms such
-as a Request Object or pushed authorization request.
+The field is defined only for requests that have no OAuth request parameter
+surface. A client MUST NOT use the field on a request at an endpoint where the
+`client_capabilities` parameter is defined; it uses {{param}} there instead. An
+authorization server MUST ignore the field on any request to such an endpoint.
 
-A client MUST NOT send both the field and the `client_capabilities` parameter
-on the same request. If a server receives both, the parameter is authoritative
-and the field MUST be ignored.
+This restriction removes an attack surface that would otherwise exist for no
+benefit. Every authorization endpoint request is issued by a user agent rather
+than by the client, so a field on that request cannot have come from the
+client, and honoring it would let the user agent replace the client's effective
+capability set. Meanwhile any endpoint that accepts a direct request from the
+client already accepts the request parameter, which participates in the
+endpoint's normal parameter processing and can be integrity-protected by a
+Request Object or a pushed authorization request.
+
+An empty List and an absent field are equivalent: both signal the empty set.
 
 ## Client Metadata Declaration {#metadata}
 
@@ -425,10 +434,11 @@ endpoint from the one at which a client first signals it. A client that signals
 a capability in a pushed authorization request has signaled it for the
 authorization request that the resulting `request_uri` stands in for, and for
 nothing else. Where the capability governs behavior at the token endpoint, the
-client MUST signal it again on the token request unless client metadata
-supplies the applicable default. In either case, the capability MUST be in the
-effective set for the token request, and the authorization server MUST NOT
-infer it from an earlier request in the same grant.
+capability MUST be in the effective set for the token request, and the
+authorization server MUST NOT infer it from an earlier request in the same
+grant. A client cannot reliably determine which metadata an authorization
+server treats as authoritative, so a client SHOULD signal such a capability
+explicitly on the token request rather than relying on a metadata default.
 
 A concrete instance: an extension that permits the authorization server to
 return a deferred response instead of an access token affects the token
@@ -450,12 +460,14 @@ is determined as follows:
 
 1. If the request's OAuth parameters contain `client_capabilities`, its value
    is the effective set.
-2. Otherwise, if the request contains a valid `OAuth-Client-Capabilities`
-   field, its value is the effective set.
-3. Otherwise, the `client_capabilities` value from the client metadata that the
+2. Otherwise, the `client_capabilities` value from the client metadata that the
    authorization server considers authoritative for that client is the
    effective set.
-4. If none of these is present, the effective set is empty.
+3. If neither is present, the effective set is empty.
+
+The `OAuth-Client-Capabilities` field plays no part in this determination. As
+specified in {{field}}, an authorization server ignores the field at any
+endpoint where the request parameter is defined.
 
 The rule is replacement rather than union because retraction is a requirement.
 A client whose registered metadata declares a capability may have a deployment
@@ -606,11 +618,20 @@ client software version, or client trustworthiness.
 
 ## Downgrade
 
-Because capability signals may be removed by an adversary, the behavior
-enabled by a capability MUST NOT be necessary to enforce a security property.
-An extension that would like to say "the client can perform a stronger check,
-so enable it" has inverted the requirement; the stronger check belongs in
-policy, negotiated through mechanisms that are authenticated.
+Because capability signals may be removed by an adversary, an extension MUST
+define an absent-signal fallback that is itself safe. Where the enabled
+behavior is how a server obtains something it requires, the fallback is to
+refuse the operation rather than to proceed without it. A resource server that
+cannot issue a transaction authorization challenge because the client did not
+signal the capability denies the request; it does not treat the transaction as
+authorized. Removal costs the client functionality, never the server a security
+property.
+
+The inverted form to avoid is an extension whose enabled behavior is what
+applies a check the server would otherwise skip — "the client can perform a
+stronger check, so enable it". There, removing the signal removes the check.
+Such a check belongs in policy, negotiated through mechanisms that are
+authenticated.
 
 ## Denial of Service {#dos}
 
