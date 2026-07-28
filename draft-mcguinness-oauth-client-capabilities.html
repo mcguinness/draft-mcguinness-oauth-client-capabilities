@@ -1812,10 +1812,13 @@ where no signaled path meets it. Otherwise selection reintroduces the downgrade
 CAP-1 exists to prevent: removing a value would steer the server to a different
 path, and where the alternatives are not equivalent for the decision at hand, the
 weaker one is what the request gets.<a href="#section-6.1-2" class="pilcrow">¶</a></p>
-<p id="section-6.1-3">Selection needs no capability values beyond those that gating already requires. A
-path a server can take safely whatever the client does, such as an error a client
-either understands or reports as a failure, never needed a signal; only the paths
-that would break an unprepared client do.<a href="#section-6.1-3" class="pilcrow">¶</a></p>
+<p id="section-6.1-3">Selection and gating ask different questions, and a value can be justified by
+either. Gating asks whether issuing a behavior would break an unprepared client
+or weaken a security property. Selection asks, among paths that all clear the
+required assurance, which one the client can carry to completion. A path that is
+safe to issue unconditionally needs no signal in order to be gated, and may still
+warrant one so that a server does not choose a path the client cannot finish.
+<a href="#extension-guidance" class="auto internal xref">Section 8</a> gives the criterion.<a href="#section-6.1-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -1892,13 +1895,18 @@ register no capability. A capability is for behavior that cannot be made
 mandatory, because it is genuinely optional for the client and the server
 therefore cannot discover conformance.<a href="#section-8-6.3.1" class="pilcrow">¶</a></p>
 </li>
-        <li class="normal" id="section-8-6.4">
-          <p id="section-8-6.4.1">State, in the registration, the carriers and endpoints at which the value is
-meaningful. A value meaningful at the token endpoint is usually meaningless
-on a protected resource request, and a registry that says so prevents clients
-from signaling noise.<a href="#section-8-6.4.1" class="pilcrow">¶</a></p>
-</li>
       </ul>
+<p id="section-8-7">A value may be justified on either of two grounds: that a server cannot safely
+exercise the behavior without it, or that a server choosing among several paths
+would otherwise select one the client cannot complete (<a href="#selection" class="auto internal xref">Section 6.1</a>). The second
+ground is narrower than it first appears. It requires that the server would choose
+differently and that the difference decides whether the operation can complete,
+not merely that the behavior is optional for the client. A value that would make
+an already-workable path more convenient does not qualify.
+- State, in the registration, the carriers and endpoints at which the value is
+  meaningful. A value meaningful at the token endpoint is usually meaningless
+  on a protected resource request, and a registry that says so prevents clients
+  from signaling noise.<a href="#section-8-7" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="relationships">
