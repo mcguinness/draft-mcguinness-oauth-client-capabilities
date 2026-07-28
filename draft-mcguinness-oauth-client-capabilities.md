@@ -162,6 +162,14 @@ field per feature by construction, and `Accept-Txn-Challenge` follows it
 correctly. Each additional extension of that shape adds another field to
 protected resource requests for the life of the deployment.
 
+These counts are not hypothetical. Applying the criterion in
+{{extension-guidance}} across deployed specifications and the active working
+group drafts identifies four behaviors that are capability-shaped today, listed
+in {{corpus}}, and they do not all face the same way: some are signaled to an
+authorization server and some to a resource server. A per-extension design pays
+the accumulation cost in both places at once, which is the same asymmetry
+{{asymmetry}} describes, seen from the cost side.
+
 Each per-extension signal also costs, individually, an OAuth Parameters
 registration, usually a client metadata registration, usually an authorization
 server metadata `*_supported` registration, and sometimes an HTTP field
@@ -1040,6 +1048,47 @@ shape rather than by specification makes the gap visible.
 
 The IANA "OAuth Parameters" registry group currently contains no generic
 client capability parameter, field, or registry {{IANA-OAUTH}}.
+
+## Candidate Behaviors in the Current Corpus {#corpus}
+
+Applying the criterion in {{extension-guidance}} to deployed specifications and
+to the active working group drafts identifies four behaviors that are
+capability-shaped. Each is given as the behavior a server may exercise together
+with the fallback when the signal is absent, because {{invariants}} makes the
+second half the deciding one. This document registers none of them.
+
+- **Deferred token response** {{DTR}}. The server may return a deferral in place
+  of a token or an error. Fallback: an ordinary error response, which is the
+  pre-extension behavior.
+- **Transaction authorization challenge** {{TXN-CHALLENGE}}. A resource server
+  may return a challenge. Fallback: deny the operation.
+- **DPoP nonce handling** {{RFC9449}}. The server may rely on nonces and
+  therefore issue longer-lived DPoP-bound access tokens. Fallback: short-lived
+  access tokens with refresh tokens, per Section 11.2 of {{RFC9449}}. The
+  framing carries the verdict here: gating the *challenge* rather than the
+  *reliance* would make the fallback acceptance of nonce-less proofs, which
+  CAP-1 forbids.
+- **Web fallback at the authorization challenge endpoint**
+  {{FIRST-PARTY-APPS}}. The server may direct the client to complete
+  authorization in a browser. Fallback: refuse the authorization, since the
+  error already reports that further direct interaction with the user cannot
+  fulfill the request.
+
+Two observations from the same exercise are worth more than the list.
+
+The criterion rejects most things. Client authentication methods, endpoint
+selection, client-initiated request parameters, additive response fields, and any
+behavior a specification makes mandatory to implement all need no signal, and the
+majority of current work falls into those groups. Where a client-side behavior
+can instead be specified as a requirement conditioned on something the server
+advertises in its own metadata, that route is preferable and leaves nothing to
+register.
+
+Two of the four documents above state when a server may exercise the behavior
+but not what it does otherwise. That is why {{iana-registry}} records an
+absent-signal behavior as a registry field rather than leaving it to prose:
+authors describe what a capability turns on and leave the other case implicit,
+and the implicit reading — proceed without it — is the one CAP-1 rules out.
 
 ## Why No Mandatory-to-Understand Semantics
 

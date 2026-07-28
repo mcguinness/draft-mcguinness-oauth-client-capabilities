@@ -42,7 +42,7 @@ Now the two framings.
 **Framing A — gate the challenge.** *"The authorization server MUST NOT send
 `use_dpop_nonce` unless the client signaled nonce support."*
 
-Absent the signal, the server accepts nonce-less proofs. RFC 9449 Section 11.1
+Absent the signal, the server accepts nonce-less proofs. RFC 9449 Section 11.2
 is explicit about what nonces buy: "By providing new nonce values at times of
 its choosing, the server can limit the lifetime of DPoP proofs, preventing
 pre-generated DPoP proofs from being used." So removal of the signal weakens
@@ -52,7 +52,7 @@ replay protection. **Violates CAP-1.**
 the authorization server to rely on nonces, and therefore to issue longer-lived
 DPoP-bound access tokens."*
 
-Absent the signal, the server follows the guidance RFC 9449 Section 11.1
+Absent the signal, the server follows the guidance RFC 9449 Section 11.2
 already gives: "Deployments that do not utilize the nonce mechanism SHOULD NOT
 issue long-lived DPoP constrained access tokens, preferring instead to use
 short-lived access tokens and refresh tokens." The fallback is a more
@@ -76,7 +76,7 @@ Capability-shaped, no signal today, and a CAP-1-safe framing exists.
 |---|---|---|
 | Return a deferred response in place of a token or error ([DTR]) | Ordinary error response — the pre-DTR behavior. No token issued. | Clean |
 | Return a transaction authorization challenge ([TXN-CHALLENGE]) | Deny the operation. | Clean in principle; see below |
-| Rely on DPoP nonces (RFC 9449, Framing B) | Short-lived access tokens plus refresh, per Section 11.1 | Clean under Framing B only |
+| Rely on DPoP nonces (RFC 9449, Framing B) | Short-lived access tokens plus refresh, per Section 11.2 | Clean under Framing B only |
 | Return `redirect_to_web` at the authorization challenge endpoint ([FIRST-PARTY-APPS]) | Refuse the authorization; see the sweep below | Clean only under the deny framing, which the draft does not state |
 
 Two observations.
