@@ -1085,6 +1085,7 @@ svg {
 <dd class="authors">
 <div class="author">
       <div class="author-name">K. McGuinness</div>
+<div class="org">Independent</div>
 </div>
 </dd>
 </dl>
@@ -1285,7 +1286,7 @@ only optional server behavior, so that their absence is always safe.<a href="#se
                 <p id="section-toc.1-1.16.2.1.1"><a href="#appendix-C.1" class="auto internal xref">C.1</a>.  <a href="#name-survey-of-existing-mechanis" class="internal xref">Survey of Existing Mechanisms</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.16.2.2">
-                <p id="section-toc.1-1.16.2.2.1"><a href="#appendix-C.2" class="auto internal xref">C.2</a>.  <a href="#name-candidate-behaviors-in-the-" class="internal xref">Candidate Behaviors in the Current Corpus</a></p>
+                <p id="section-toc.1-1.16.2.2.1"><a href="#appendix-C.2" class="auto internal xref">C.2</a>.  <a href="#name-applying-the-admission-crit" class="internal xref">Applying the Admission Criterion</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.16.2.3">
                 <p id="section-toc.1-1.16.2.3.1"><a href="#appendix-C.3" class="auto internal xref">C.3</a>.  <a href="#name-why-no-mandatory-to-underst" class="internal xref">Why No Mandatory-to-Understand Semantics</a></p>
@@ -1357,7 +1358,8 @@ minimum that covers OAuth's actual topology.<a href="#section-1.1-4" class="pilc
 <a href="#section-1.2" class="section-number selfRef">1.2. </a><a href="#name-why-open-world-deployment-m" class="section-name selfRef">Why Open-World Deployment Makes This Urgent</a>
         </h3>
 <p id="section-1.2-1">Classic OAuth had one place to establish what a client could do: registration.
-The client metadata of <span>[<a href="#RFC7591" class="cite xref">RFC7591</a>]</span> is already a capability declaration: <code>grant_types</code>, <code>response_types</code>, <code>token_endpoint_auth_method</code>,
+The client metadata of <span>[<a href="#RFC7591" class="cite xref">RFC7591</a>]</span> is already a capability declaration:
+<code>grant_types</code>, <code>response_types</code>, <code>token_endpoint_auth_method</code>,
 <code>dpop_bound_access_tokens</code> <span>[<a href="#RFC9449" class="cite xref">RFC9449</a>]</span>, and
 <code>require_pushed_authorization_requests</code> <span>[<a href="#RFC9126" class="cite xref">RFC9126</a>]</span> all describe client
 behavior. It is a static declaration, agreed once.<a href="#section-1.2-1" class="pilcrow">¶</a></p>
@@ -1368,25 +1370,10 @@ handshake in which to negotiate. The first message is the request. What the
 server needs to know about the client's processing ability must be carried in
 that request, or discoverable from a document the client publishes rather than
 one the server issued.<a href="#section-1.2-2" class="pilcrow">¶</a></p>
-<p id="section-1.2-3">DPoP <span>[<a href="#RFC9449" class="cite xref">RFC9449</a>]</span> shows the gap inside a single specification. An authorization
-server takes a first request from a client it has never seen, identified by a
-metadata document URL, and its policy calls for a DPoP nonce on this request. If
-the client implements the <code>use_dpop_nonce</code> retry, challenging costs one round
-trip. If it does not, the challenge is a hard failure that the client surfaces as
-an authentication error. Nothing obliges the client to implement it;
-<span>[<a href="#RFC9449" class="cite xref">RFC9449</a>]</span> observes only that the client "will typically retry".<a href="#section-1.2-3" class="pilcrow">¶</a></p>
-<p id="section-1.2-4">Nothing available to the server settles the question. The
-<code>dpop_bound_access_tokens</code> field above says whether the client uses DPoP, not
-whether it handles a nonce challenge. Server metadata runs the wrong way. And no
-static posture can be published in its place, because <span>[<a href="#RFC9449" class="cite xref">RFC9449</a>]</span> puts "the logic
-through which the server makes that determination" out of scope: demanding a
-nonce is a per-request risk decision. A closed deployment would have settled this
-out of band before the first request; here the first request is the only place it
-can be settled.<a href="#section-1.2-4" class="pilcrow">¶</a></p>
-<p id="section-1.2-5">Per-extension parameters remain workable where a small number of extensions are
+<p id="section-1.2-3">Per-extension parameters remain workable where a small number of extensions are
 deployed between parties with a prior arrangement. What breaks is accumulation
-against an unbounded client population.<a href="#section-1.2-5" class="pilcrow">¶</a></p>
-<p id="section-1.2-6">Per-extension signals accumulate in both directions. Each capability relevant
+against an unbounded client population.<a href="#section-1.2-3" class="pilcrow">¶</a></p>
+<p id="section-1.2-4">Per-extension signals accumulate in both directions. Each capability relevant
 before the token request adds a parameter to the authorization URI, which travels
 through a redirect the user agent can read, log, truncate, and modify. Each
 capability relevant at a resource adds a field to every protected resource
@@ -1394,11 +1381,11 @@ request for the life of the deployment; the <code>Accept-*</code> family, which
 <code>Accept-Txn-Challenge</code> correctly follows, is one field per feature by
 construction. Each signal separately costs a parameter registration, usually
 client and server metadata registrations, and sometimes an HTTP field
-registration.<a href="#section-1.2-6" class="pilcrow">¶</a></p>
-<p id="section-1.2-7">Four behaviors are capability-shaped in the current corpus (<a href="#corpus" class="auto internal xref">Appendix C.2</a>), and they
-face both ways: some are signaled to an authorization server, some to a resource
-server. A per-extension design pays the cost in both places at once, which is the
-asymmetry in <a href="#asymmetry" class="auto internal xref">Section 1.1</a> seen from the cost side.<a href="#section-1.2-7" class="pilcrow">¶</a></p>
+registration.<a href="#section-1.2-4" class="pilcrow">¶</a></p>
+<p id="section-1.2-5">The motivating behaviors face both ways: one is signaled to an authorization
+server and one to a resource server. A per-extension design therefore pays the
+cost in both places at once, which is the asymmetry in <a href="#asymmetry" class="auto internal xref">Section 1.1</a> seen from
+the cost side.<a href="#section-1.2-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="what-this-specification-does-not-change">
@@ -1659,11 +1646,12 @@ duplicate values <span class="bcp14">MUST</span> be ignored.<a href="#section-5.
 surface. A client <span class="bcp14">MUST NOT</span> use the field on a request at an endpoint where the
 <code>client_capabilities</code> parameter is defined; it uses <a href="#param" class="auto internal xref">Section 5.1</a> there instead. An
 authorization server <span class="bcp14">MUST</span> ignore the field on any request to such an endpoint.<a href="#section-5.2-7" class="pilcrow">¶</a></p>
-<p id="section-5.2-8">The restriction costs nothing and closes a gap: an authorization endpoint request
-is issued by a user agent, so a field on it cannot have come from the client, and
-honoring it would let the user agent replace the effective set. Any endpoint
-taking a direct request already takes the parameter, which a Request Object or
-pushed authorization request can integrity-protect.<a href="#section-5.2-8" class="pilcrow">¶</a></p>
+<p id="section-5.2-8">At the authorization endpoint, the HTTP request is issued by a user agent, so a
+field on it cannot be attributed to the client. At authorization server
+endpoints where the parameter is defined, using one carrier gives the request
+one unambiguous effective set and allows the signal to receive the protections
+of a Request Object or pushed authorization request where those mechanisms
+apply.<a href="#section-5.2-8" class="pilcrow">¶</a></p>
 <p id="section-5.2-9">An empty List and an absent field are equivalent: both signal the empty set.<a href="#section-5.2-9" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -1704,10 +1692,11 @@ requests. Clients with heterogeneous instances <span class="bcp14">SHOULD</span>
 and signal capabilities on each request.<a href="#section-5.3-5" class="pilcrow">¶</a></p>
 <p id="section-5.3-6">A client metadata document published at a Client Identifier URL <span>[<a href="#CIMD" class="cite xref">CIMD</a>]</span> is
 publicly retrievable, applies uniformly to every deployment using the URL, and
-may be cached by an authorization server under bounds the client does not
-control. A capability declared there is therefore public, shared by every
-instance, and retractable only with unbounded delay. Clients identified this way
-<span class="bcp14">SHOULD</span> treat the request parameter in <a href="#param" class="auto internal xref">Section 5.1</a> as the primary carrier.<a href="#section-5.3-6" class="pilcrow">¶</a></p>
+may be cached by an authorization server. A capability declared there is
+therefore public and shared by every instance, and a change might not take
+effect until each authorization server refreshes its cached copy according to
+HTTP caching and any locally imposed bounds. Clients identified this way <span class="bcp14">SHOULD</span>
+treat the request parameter in <a href="#param" class="auto internal xref">Section 5.1</a> as the primary carrier.<a href="#section-5.3-6" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="signal-scope">
@@ -1726,9 +1715,10 @@ authorization request that the resulting <code>request_uri</code> stands in for,
 nothing else. Where the capability governs behavior at the token endpoint, the
 capability <span class="bcp14">MUST</span> be in the effective set for the token request, and the
 authorization server <span class="bcp14">MUST NOT</span> infer it from an earlier request in the same
-grant. A client cannot reliably determine which metadata an authorization
-server treats as authoritative, so a client <span class="bcp14">SHOULD</span> signal such a capability
-explicitly on the token request rather than relying on a metadata default.<a href="#section-5.4-2" class="pilcrow">¶</a></p>
+grant. Where metadata can be cached or obtained from more than one source, a
+client might not know which value the authorization server currently applies.
+A client <span class="bcp14">SHOULD</span> therefore signal such a capability explicitly on the token
+request rather than relying on a metadata default.<a href="#section-5.4-2" class="pilcrow">¶</a></p>
 <p id="section-5.4-3">Where a capability is meaningful at more than one endpoint, its registration
 (<a href="#iana-registry" class="auto internal xref">Section 12.1</a>) records which endpoints those are.<a href="#section-5.4-3" class="pilcrow">¶</a></p>
 </section>
@@ -1818,9 +1808,10 @@ The array <span class="bcp14">MUST NOT</span> contain <code>none</code>. Order i
 ignore duplicate and unrecognized values. If any element is not a string or
 does not conform to the <code>capability</code> production, the metadata field is invalid
 and <span class="bcp14">MUST</span> be ignored in its entirety.<a href="#section-7-3" class="pilcrow">¶</a></p>
-<p id="section-7-4">The direction follows Client Hints <span>[<a href="#RFC8942" class="cite xref">RFC8942</a>]</span>: the server advertises what it
-wants and the client sends only that, which bounds front-channel growth
-(<a href="#open-world" class="auto internal xref">Section 1.2</a>) and the fingerprinting surface (<a href="#privacy-considerations" class="auto internal xref">Section 11</a>).<a href="#section-7-4" class="pilcrow">¶</a></p>
+<p id="section-7-4">The direction follows a pattern used by Client Hints <span>[<a href="#RFC8942" class="cite xref">RFC8942</a>]</span>: the server
+advertises what it recognizes so that the client can avoid sending unsupported
+values. This bounds front-channel growth (<a href="#open-world" class="auto internal xref">Section 1.2</a>) and the fingerprinting
+surface (<a href="#privacy-considerations" class="auto internal xref">Section 11</a>).<a href="#section-7-4" class="pilcrow">¶</a></p>
 <p id="section-7-5">Clients <span class="bcp14">SHOULD</span> signal only capability values that appear in
 <code>client_capabilities_supported</code>, where the server publishes it. A client <span class="bcp14">MAY</span>
 signal values absent from the list, and <span class="bcp14">MAY</span> signal values to a server that
@@ -1851,7 +1842,7 @@ equivalent signed structure. Capabilities are assertions rather than
 assurances. The invariants in <a href="#invariants" class="auto internal xref">Section 4</a> are what make that acceptable. An
 extension that finds itself wanting to bind a capability to a key, or to trust
 it in a policy decision, has misclassified it.<a href="#section-8-4" class="pilcrow">¶</a></p>
-<p id="section-8-5">Two further points of discipline:<a href="#section-8-5" class="pilcrow">¶</a></p>
+<p id="section-8-5">Additional points of discipline:<a href="#section-8-5" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-8-6.1">
           <p id="section-8-6.1.1">Register a behavior, not a specification. See <a href="#values" class="auto internal xref">Section 3</a>.<a href="#section-8-6.1.1" class="pilcrow">¶</a></p>
@@ -1991,9 +1982,10 @@ does not authorize the client to consume unbounded work.<a href="#section-10.3-2
 <a href="#section-10.4" class="section-number selfRef">10.4. </a><a href="#name-interaction-with-signed-req" class="section-name selfRef">Interaction with Signed Requests</a>
         </h3>
 <p id="section-10.4-1">Where a Request Object <span>[<a href="#RFC9101" class="cite xref">RFC9101</a>]</span> or software statement carries a capability
-set, the signature protects the assertion from modification. This does not make the values proof of implementation; a signature attests to
-the assertion, not its truth. The distinct precedence rules for Request Objects and
-software statements are specified in <a href="#precedence" class="auto internal xref">Section 5.5</a>.<a href="#section-10.4-1" class="pilcrow">¶</a></p>
+set, the signature protects the assertion from modification. This does not make
+the values proof of implementation; a signature attests to the assertion, not
+its truth. The distinct precedence rules for Request Objects and software
+statements are specified in <a href="#precedence" class="auto internal xref">Section 5.5</a>.<a href="#section-10.4-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -2090,11 +2082,15 @@ value never been defined;<a href="#section-12.1-5.1.1" class="pilcrow">¶</a></p
 </li>
           <li class="normal" id="section-12.1-5.2">
             <p id="section-12.1-5.2.1">confirm that the specification defines the optional behavior enabled and
-identifies every applicable carrier and endpoint; and<a href="#section-12.1-5.2.1" class="pilcrow">¶</a></p>
+identifies every applicable carrier and endpoint;<a href="#section-12.1-5.2.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-12.1-5.3">
-            <p id="section-12.1-5.3.1">reject values that duplicate the semantics of an existing registration or
-differ from one only in letter case.<a href="#section-12.1-5.3.1" class="pilcrow">¶</a></p>
+            <p id="section-12.1-5.3.1">consider the security, privacy, interoperability, and operational effects of
+false assertion and signal removal; and<a href="#section-12.1-5.3.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-12.1-5.4">
+            <p id="section-12.1-5.4.1">reject values that duplicate the semantics of an existing registration or
+differ from one only in letter case.<a href="#section-12.1-5.4.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 <p id="section-12.1-6">The designated experts should presume that a registration is acceptable when
@@ -2428,7 +2424,8 @@ upon<a href="#section-12.5-2.4.1" class="pilcrow">¶</a></p>
 <a href="#appendix-A" class="section-number selfRef">Appendix A. </a><a href="#name-examples" class="section-name selfRef">Examples</a>
       </h2>
 <p id="appendix-A-1">This document registers no capability values. <code>accept-deferred-response</code> below is
-illustrative, corresponding to a behavior described in <a href="#existing-drafts" class="auto internal xref">Appendix B</a>.<a href="#appendix-A-1" class="pilcrow">¶</a></p>
+illustrative, corresponding to a behavior described in <a href="#existing-drafts" class="auto internal xref">Appendix B</a>.
+Line breaks in the form-encoded request bodies are for display only.<a href="#appendix-A-1" class="pilcrow">¶</a></p>
 <p id="appendix-A-2">A pushed authorization request carrying the capability, keeping it off the
 authorization URI:<a href="#appendix-A-2" class="pilcrow">¶</a></p>
 <span id="name-capability-carried-in-a-pus"></span><figure id="figure-3">
@@ -2531,10 +2528,12 @@ from the list is the only way to express it.<a href="#appendix-B-2.4.1" class="p
 <p id="appendix-C.1-1">Capability signaling in and around OAuth takes five shapes. Registration-time
 static declaration in client metadata <span>[<a href="#RFC7591" class="cite xref">RFC7591</a>]</span> serves the closed world but
 cannot express per-request or per-instance variation and has no analogue where
-there is no registration. Server-to-client discovery <span>[<a href="#RFC8414" class="cite xref">RFC8414</a>]</span> <span>[<a href="#RFC9728" class="cite xref">RFC9728</a>]</span> is fully generic, though in one direction only. The remaining three are per-extension: a
-dedicated request parameter, a dedicated HTTP field, or a capability implied by
-construction, as with the presence of a DPoP proof <span>[<a href="#RFC9449" class="cite xref">RFC9449</a>]</span> or the choice of
-one endpoint over another.<a href="#appendix-C.1-1" class="pilcrow">¶</a></p>
+there is no registration. Authorization server and protected resource metadata
+<span>[<a href="#RFC8414" class="cite xref">RFC8414</a>]</span> <span>[<a href="#RFC9728" class="cite xref">RFC9728</a>]</span> provide extensible server-to-client discovery, but each
+extension ordinarily defines its own metadata member. The remaining three are
+per-extension: a dedicated request parameter, a dedicated HTTP field, or a
+capability implied by construction, as with the presence of a DPoP proof
+<span>[<a href="#RFC9449" class="cite xref">RFC9449</a>]</span> or the choice of one endpoint over another.<a href="#appendix-C.1-1" class="pilcrow">¶</a></p>
 <p id="appendix-C.1-2">Adjacent protocols generalized where OAuth did not. SIP option tags <span>[<a href="#RFC3261" class="cite xref">RFC3261</a>]</span>
 pair <code>Supported</code> with <code>Require</code> over an IANA registry, the closest structural
 match. The HTTP <code>Prefer</code> field <span>[<a href="#RFC7240" class="cite xref">RFC7240</a>]</span> carries <code>respond-async</code>, which is
@@ -2555,43 +2554,38 @@ designed with negotiation as a goal still built the generic surface one way only
 capability parameter, field, or registry <span>[<a href="#IANA-OAUTH" class="cite xref">IANA-OAUTH</a>]</span>.<a href="#appendix-C.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="corpus">
+<div id="applying-the-admission-criterion">
 <section id="appendix-C.2">
-        <h3 id="name-candidate-behaviors-in-the-">
-<a href="#appendix-C.2" class="section-number selfRef">C.2. </a><a href="#name-candidate-behaviors-in-the-" class="section-name selfRef">Candidate Behaviors in the Current Corpus</a>
+        <h3 id="name-applying-the-admission-crit">
+<a href="#appendix-C.2" class="section-number selfRef">C.2. </a><a href="#name-applying-the-admission-crit" class="section-name selfRef">Applying the Admission Criterion</a>
         </h3>
-<p id="appendix-C.2-1">Applying the criterion in <a href="#extension-guidance" class="auto internal xref">Section 8</a> to deployed specifications and
-to the active working group drafts identifies four capability-shaped behaviors.
-Two are the extensions in <a href="#existing-drafts" class="auto internal xref">Appendix B</a>: a deferred token response, whose
-fallback is an ordinary error, and a transaction authorization challenge, whose
-fallback is to deny the operation. The other two are:<a href="#appendix-C.2-1" class="pilcrow">¶</a></p>
-<ul class="normal">
-<li class="normal" id="appendix-C.2-2.1">
-            <p id="appendix-C.2-2.1.1"><strong>DPoP nonce handling</strong> <span>[<a href="#RFC9449" class="cite xref">RFC9449</a>]</span>. The server may rely on nonces and
-therefore issue longer-lived DPoP-bound access tokens. Fallback: short-lived
-access tokens with refresh tokens, per Section 11.2 of <span>[<a href="#RFC9449" class="cite xref">RFC9449</a>]</span>. The framing
-carries the verdict: gating the <em>challenge</em> rather than the <em>reliance</em> would
-make the fallback acceptance of nonce-less proofs, which CAP-1 forbids.<a href="#appendix-C.2-2.1.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="appendix-C.2-2.2">
-            <p id="appendix-C.2-2.2.1"><strong>Web fallback at the authorization challenge endpoint</strong> <span>[<a href="#FIRST-PARTY-APPS" class="cite xref">FIRST-PARTY-APPS</a>]</span>.
-The server may direct the client to complete authorization in a browser.
-Fallback: refuse the authorization, since the error already reports that
-further direct interaction with the user cannot fulfill the request.<a href="#appendix-C.2-2.2.1" class="pilcrow">¶</a></p>
-</li>
-        </ul>
-<p id="appendix-C.2-3">Each is given as the behavior a server may exercise together with the fallback
-when the signal is absent, because <a href="#invariants" class="auto internal xref">Section 4</a> makes the second half the
-deciding one. This document registers none of them.<a href="#appendix-C.2-3" class="pilcrow">¶</a></p>
-<p id="appendix-C.2-4">The criterion rejects most things. Client authentication methods, endpoint
-selection, client-initiated request parameters, additive response fields, and any
-behavior a specification makes mandatory to implement all need no signal. Where a
-client-side behavior can instead be specified as a requirement conditioned on
-something the server advertises in its own metadata, that route is preferable and
-leaves nothing to register.<a href="#appendix-C.2-4" class="pilcrow">¶</a></p>
-<p id="appendix-C.2-5">Two of the four documents above state when a server may exercise the behavior but
-not what it does otherwise. That is why <a href="#iana-registry" class="auto internal xref">Section 12.1</a> records an absent-signal
-behavior as a registry field rather than leaving it to prose.<a href="#appendix-C.2-5" class="pilcrow">¶</a></p>
+<p id="appendix-C.2-1">The two behaviors in <a href="#existing-drafts" class="auto internal xref">Appendix B</a> illustrate the intended use. An
+extension adopting this mechanism would also need to state its absent-signal
+behavior explicitly. For deferred token response, that behavior is the
+synchronous response or error that the server would otherwise return. For a
+transaction authorization challenge, it is refusal of the operation without
+returning the optional challenge. In each case, removal of the signal suppresses
+optional behavior rather than weakening a security check.<a href="#appendix-C.2-1" class="pilcrow">¶</a></p>
+<p id="appendix-C.2-2">Similar-looking behaviors do not necessarily qualify. DPoP nonce enforcement
+<span>[<a href="#RFC9449" class="cite xref">RFC9449</a>]</span> is one example. If server policy requires a nonce, a capability
+signal cannot safely determine whether that requirement is enforced: removing the
+signal would otherwise weaken replay protection. Section 11.3 of <span>[<a href="#RFC9449" class="cite xref">RFC9449</a>]</span>
+requires a server that has provided a nonce not to accept a proof without the
+nonce. Nor is the difficulty avoided by framing the signal as permission to rely
+on nonces and so to issue longer-lived tokens, because CAP-2 forbids extending
+token lifetimes on the basis of a signaled capability however conservative the
+fallback appears. Such a requirement is outside this specification's capability
+model.<a href="#appendix-C.2-2" class="pilcrow">¶</a></p>
+<p id="appendix-C.2-3">Likewise, a browser fallback such as <code>redirect_to_web</code> in
+<span>[<a href="#FIRST-PARTY-APPS" class="cite xref">FIRST-PARTY-APPS</a>]</span> would qualify only if an adopting specification defines it
+as genuinely optional server behavior and states a safe absent-signal outcome.
+If the client behavior can instead be required when server metadata advertises
+the feature, server-side discovery is preferable.<a href="#appendix-C.2-3" class="pilcrow">¶</a></p>
+<p id="appendix-C.2-4">The criterion rejects client authentication methods, endpoint selection,
+client-initiated request parameters, additive response fields, and behavior a
+specification makes mandatory to implement. This is why <a href="#iana-registry" class="auto internal xref">Section 12.1</a>
+records the absent-signal behavior as a registry field rather than leaving the
+admission decision implicit.<a href="#appendix-C.2-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="why-no-mandatory-to-understand-semantics">
@@ -2682,6 +2676,7 @@ made the general problem visible.<a href="#appendix-D-1" class="pilcrow">¶</a><
       </h2>
 <address class="vcard">
         <div dir="auto" class="left"><span class="fn nameRole">Karl McGuinness</span></div>
+<div dir="auto" class="left"><span class="org">Independent</span></div>
 <div class="email">
 <span>Email:</span>
 <a href="mailto:public@karlmcguinness.com" class="email">public@karlmcguinness.com</a>
