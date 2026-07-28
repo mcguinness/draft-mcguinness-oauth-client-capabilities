@@ -10,7 +10,7 @@ OAuth extensions increasingly need the server to know, before it acts, whether t
 
 ## Companion Analysis
 
-* [Applying the Admission Test to Existing OAuth Behaviors](AUDIT.md): runs the draft's admission criterion over existing specs. Finds that the test depends on how an extension frames what the capability unlocks, not on the feature: the DPoP nonce passes or fails CAP-1 depending on whether the signal gates the challenge or the reliance. Most candidates surveyed need no capability at all.
+* [Applying the Admission Test to Existing OAuth Behaviors](AUDIT.md): runs the draft's admission criterion over existing specs. Finds that admissibility turns on framing but that framing alone is not enough: a candidate can satisfy CAP-1 and still be barred by CAP-2. DPoP nonce enforcement fails at both steps and is outside the model. Most candidates surveyed need no capability at all.
 
 ## Motivating Drafts
 

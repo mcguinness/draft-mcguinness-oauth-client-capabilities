@@ -22,6 +22,7 @@ author:
  -
     ins: K. McGuinness
     name: Karl McGuinness
+    org: Independent
     email: public@karlmcguinness.com
 
 normative:
@@ -123,7 +124,8 @@ minimum that covers OAuth's actual topology.
 ## Why Open-World Deployment Makes This Urgent {#open-world}
 
 Classic OAuth had one place to establish what a client could do: registration.
-The client metadata of {{RFC7591}} is already a capability declaration: `grant_types`, `response_types`, `token_endpoint_auth_method`,
+The client metadata of {{RFC7591}} is already a capability declaration:
+`grant_types`, `response_types`, `token_endpoint_auth_method`,
 `dpop_bound_access_tokens` {{RFC9449}}, and
 `require_pushed_authorization_requests` {{RFC9126}} all describe client
 behavior. It is a static declaration, agreed once.
@@ -135,23 +137,6 @@ handshake in which to negotiate. The first message is the request. What the
 server needs to know about the client's processing ability must be carried in
 that request, or discoverable from a document the client publishes rather than
 one the server issued.
-
-DPoP {{RFC9449}} shows the gap inside a single specification. An authorization
-server takes a first request from a client it has never seen, identified by a
-metadata document URL, and its policy calls for a DPoP nonce on this request. If
-the client implements the `use_dpop_nonce` retry, challenging costs one round
-trip. If it does not, the challenge is a hard failure that the client surfaces as
-an authentication error. Nothing obliges the client to implement it;
-{{RFC9449}} observes only that the client "will typically retry".
-
-Nothing available to the server settles the question. The
-`dpop_bound_access_tokens` field above says whether the client uses DPoP, not
-whether it handles a nonce challenge. Server metadata runs the wrong way. And no
-static posture can be published in its place, because {{RFC9449}} puts "the logic
-through which the server makes that determination" out of scope: demanding a
-nonce is a per-request risk decision. A closed deployment would have settled this
-out of band before the first request; here the first request is the only place it
-can be settled.
 
 Per-extension parameters remain workable where a small number of extensions are
 deployed between parties with a prior arrangement. What breaks is accumulation
@@ -167,10 +152,10 @@ construction. Each signal separately costs a parameter registration, usually
 client and server metadata registrations, and sometimes an HTTP field
 registration.
 
-Four behaviors are capability-shaped in the current corpus ({{corpus}}), and they
-face both ways: some are signaled to an authorization server, some to a resource
-server. A per-extension design pays the cost in both places at once, which is the
-asymmetry in {{asymmetry}} seen from the cost side.
+The motivating behaviors face both ways: one is signaled to an authorization
+server and one to a resource server. A per-extension design therefore pays the
+cost in both places at once, which is the asymmetry in {{asymmetry}} seen from
+the cost side.
 
 ## What This Specification Does Not Change
 
@@ -377,11 +362,12 @@ surface. A client MUST NOT use the field on a request at an endpoint where the
 `client_capabilities` parameter is defined; it uses {{param}} there instead. An
 authorization server MUST ignore the field on any request to such an endpoint.
 
-The restriction costs nothing and closes a gap: an authorization endpoint request
-is issued by a user agent, so a field on it cannot have come from the client, and
-honoring it would let the user agent replace the effective set. Any endpoint
-taking a direct request already takes the parameter, which a Request Object or
-pushed authorization request can integrity-protect.
+At the authorization endpoint, the HTTP request is issued by a user agent, so a
+field on it cannot be attributed to the client. At authorization server
+endpoints where the parameter is defined, using one carrier gives the request
+one unambiguous effective set and allows the signal to receive the protections
+of a Request Object or pushed authorization request where those mechanisms
+apply.
 
 An empty List and an absent field are equivalent: both signal the empty set.
 
@@ -419,10 +405,11 @@ and signal capabilities on each request.
 
 A client metadata document published at a Client Identifier URL {{CIMD}} is
 publicly retrievable, applies uniformly to every deployment using the URL, and
-may be cached by an authorization server under bounds the client does not
-control. A capability declared there is therefore public, shared by every
-instance, and retractable only with unbounded delay. Clients identified this way
-SHOULD treat the request parameter in {{param}} as the primary carrier.
+may be cached by an authorization server. A capability declared there is
+therefore public and shared by every instance, and a change might not take
+effect until each authorization server refreshes its cached copy according to
+HTTP caching and any locally imposed bounds. Clients identified this way SHOULD
+treat the request parameter in {{param}} as the primary carrier.
 
 ## Scope of a Signal {#signal-scope}
 
@@ -438,9 +425,10 @@ authorization request that the resulting `request_uri` stands in for, and for
 nothing else. Where the capability governs behavior at the token endpoint, the
 capability MUST be in the effective set for the token request, and the
 authorization server MUST NOT infer it from an earlier request in the same
-grant. A client cannot reliably determine which metadata an authorization
-server treats as authoritative, so a client SHOULD signal such a capability
-explicitly on the token request rather than relying on a metadata default.
+grant. Where metadata can be cached or obtained from more than one source, a
+client might not know which value the authorization server currently applies.
+A client SHOULD therefore signal such a capability explicitly on the token
+request rather than relying on a metadata default.
 
 Where a capability is meaningful at more than one endpoint, its registration
 ({{iana-registry}}) records which endpoints those are.
@@ -515,9 +503,10 @@ ignore duplicate and unrecognized values. If any element is not a string or
 does not conform to the `capability` production, the metadata field is invalid
 and MUST be ignored in its entirety.
 
-The direction follows Client Hints {{RFC8942}}: the server advertises what it
-wants and the client sends only that, which bounds front-channel growth
-({{open-world}}) and the fingerprinting surface ({{privacy-considerations}}).
+The direction follows a pattern used by Client Hints {{RFC8942}}: the server
+advertises what it recognizes so that the client can avoid sending unsupported
+values. This bounds front-channel growth ({{open-world}}) and the fingerprinting
+surface ({{privacy-considerations}}).
 
 Clients SHOULD signal only capability values that appear in
 `client_capabilities_supported`, where the server publishes it. A client MAY
@@ -546,7 +535,7 @@ assurances. The invariants in {{invariants}} are what make that acceptable. An
 extension that finds itself wanting to bind a capability to a key, or to trust
 it in a policy decision, has misclassified it.
 
-Two further points of discipline:
+Additional points of discipline:
 
 - Register a behavior, not a specification. See {{values}}.
 - State the absent-signal behavior, not only the behavior enabled. An extension
@@ -648,9 +637,10 @@ does not authorize the client to consume unbounded work.
 ## Interaction with Signed Requests
 
 Where a Request Object {{RFC9101}} or software statement carries a capability
-set, the signature protects the assertion from modification. This does not make the values proof of implementation; a signature attests to
-the assertion, not its truth. The distinct precedence rules for Request Objects and
-software statements are specified in {{precedence}}.
+set, the signature protects the assertion from modification. This does not make
+the values proof of implementation; a signature attests to the assertion, not
+its truth. The distinct precedence rules for Request Objects and software
+statements are specified in {{precedence}}.
 
 # Privacy Considerations {#privacy-considerations}
 
@@ -720,7 +710,9 @@ Designated experts evaluating a registration request should:
   behavior is at least as conservative as what the server would apply had the
   value never been defined;
 - confirm that the specification defines the optional behavior enabled and
-  identifies every applicable carrier and endpoint; and
+  identifies every applicable carrier and endpoint;
+- consider the security, privacy, interoperability, and operational effects of
+  false assertion and signal removal; and
 - reject values that duplicate the semantics of an existing registration or
   differ from one only in letter case.
 
@@ -846,6 +838,7 @@ Reference:
 
 This document registers no capability values. `accept-deferred-response` below is
 illustrative, corresponding to a behavior described in {{existing-drafts}}.
+Line breaks in the form-encoded request bodies are for display only.
 
 A pushed authorization request carrying the capability, keeping it off the
 authorization URI:
@@ -924,10 +917,12 @@ This appendix is informative.
 Capability signaling in and around OAuth takes five shapes. Registration-time
 static declaration in client metadata {{RFC7591}} serves the closed world but
 cannot express per-request or per-instance variation and has no analogue where
-there is no registration. Server-to-client discovery {{RFC8414}} {{RFC9728}} is fully generic, though in one direction only. The remaining three are per-extension: a
-dedicated request parameter, a dedicated HTTP field, or a capability implied by
-construction, as with the presence of a DPoP proof {{RFC9449}} or the choice of
-one endpoint over another.
+there is no registration. Authorization server and protected resource metadata
+{{RFC8414}} {{RFC9728}} provide extensible server-to-client discovery, but each
+extension ordinarily defines its own metadata member. The remaining three are
+per-extension: a dedicated request parameter, a dedicated HTTP field, or a
+capability implied by construction, as with the presence of a DPoP proof
+{{RFC9449}} or the choice of one endpoint over another.
 
 Adjacent protocols generalized where OAuth did not. SIP option tags {{RFC3261}}
 pair `Supported` with `Require` over an IANA registry, the closest structural
@@ -950,38 +945,38 @@ designed with negotiation as a goal still built the generic surface one way only
 The IANA "OAuth Parameters" registry group currently contains no generic client
 capability parameter, field, or registry {{IANA-OAUTH}}.
 
-## Candidate Behaviors in the Current Corpus {#corpus}
+## Applying the Admission Criterion
 
-Applying the criterion in {{extension-guidance}} to deployed specifications and
-to the active working group drafts identifies four capability-shaped behaviors.
-Two are the extensions in {{existing-drafts}}: a deferred token response, whose
-fallback is an ordinary error, and a transaction authorization challenge, whose
-fallback is to deny the operation. The other two are:
+The two behaviors in {{existing-drafts}} illustrate the intended use. An
+extension adopting this mechanism would also need to state its absent-signal
+behavior explicitly. For deferred token response, that behavior is the
+synchronous response or error that the server would otherwise return. For a
+transaction authorization challenge, it is refusal of the operation without
+returning the optional challenge. In each case, removal of the signal suppresses
+optional behavior rather than weakening a security check.
 
-- **DPoP nonce handling** {{RFC9449}}. The server may rely on nonces and
-  therefore issue longer-lived DPoP-bound access tokens. Fallback: short-lived
-  access tokens with refresh tokens, per Section 11.2 of {{RFC9449}}. The framing
-  carries the verdict: gating the *challenge* rather than the *reliance* would
-  make the fallback acceptance of nonce-less proofs, which CAP-1 forbids.
-- **Web fallback at the authorization challenge endpoint** {{FIRST-PARTY-APPS}}.
-  The server may direct the client to complete authorization in a browser.
-  Fallback: refuse the authorization, since the error already reports that
-  further direct interaction with the user cannot fulfill the request.
+Similar-looking behaviors do not necessarily qualify. DPoP nonce enforcement
+{{RFC9449}} is one example. If server policy requires a nonce, a capability
+signal cannot safely determine whether that requirement is enforced: removing the
+signal would otherwise weaken replay protection. Section 11.3 of {{RFC9449}}
+requires a server that has provided a nonce not to accept a proof without the
+nonce. Nor is the difficulty avoided by framing the signal as permission to rely
+on nonces and so to issue longer-lived tokens, because CAP-2 forbids extending
+token lifetimes on the basis of a signaled capability however conservative the
+fallback appears. Such a requirement is outside this specification's capability
+model.
 
-Each is given as the behavior a server may exercise together with the fallback
-when the signal is absent, because {{invariants}} makes the second half the
-deciding one. This document registers none of them.
+Likewise, a browser fallback such as `redirect_to_web` in
+{{FIRST-PARTY-APPS}} would qualify only if an adopting specification defines it
+as genuinely optional server behavior and states a safe absent-signal outcome.
+If the client behavior can instead be required when server metadata advertises
+the feature, server-side discovery is preferable.
 
-The criterion rejects most things. Client authentication methods, endpoint
-selection, client-initiated request parameters, additive response fields, and any
-behavior a specification makes mandatory to implement all need no signal. Where a
-client-side behavior can instead be specified as a requirement conditioned on
-something the server advertises in its own metadata, that route is preferable and
-leaves nothing to register.
-
-Two of the four documents above state when a server may exercise the behavior but
-not what it does otherwise. That is why {{iana-registry}} records an absent-signal
-behavior as a registry field rather than leaving it to prose.
+The criterion rejects client authentication methods, endpoint selection,
+client-initiated request parameters, additive response fields, and behavior a
+specification makes mandatory to implement. This is why {{iana-registry}}
+records the absent-signal behavior as a registry field rather than leaving the
+admission decision implicit.
 
 ## Why No Mandatory-to-Understand Semantics
 

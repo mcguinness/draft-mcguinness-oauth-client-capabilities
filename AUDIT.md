@@ -11,18 +11,20 @@ the RFC rather than recalled.
 
 ## The result that organizes this
 
-**The admission test is not a property of a feature. It is a property of how an
-extension frames what the capability unlocks.**
+**Admissibility turns on how an extension frames what the capability unlocks,
+and framing alone is not enough to save one.**
 
-The same mechanism can pass or fail CAP-1 depending on which side of the
-behavior the signal gates. DPoP nonces demonstrate both outcomes, which makes
-them the most useful worked example available, and the reason to lead with
-them rather than with a spec-by-spec sweep.
+Two questions have to be asked in order, and the invariants are not redundant:
 
-So the question to ask of a candidate is not "is this capability-shaped." It is:
+> 1. When the signal is absent, what does the server do, and is that the
+>    conservative direction? (CAP-1)
+> 2. Does the framing buy the signal a security-relevant concession, such as
+>    scope, relaxed consent, or a longer token lifetime? (CAP-2)
 
-> When the signal is absent, what does the server do, and is that the
-> conservative direction?
+A candidate can pass the first and still fail the second. DPoP nonces are the
+worked example, because they fail at each step under a different framing and are
+therefore inadmissible under every framing. That makes them more instructive as
+a rejection than they were as a candidate.
 
 ### Worked example: the DPoP nonce
 
@@ -57,10 +59,19 @@ already gives: "Deployments that do not utilize the nonce mechanism SHOULD NOT
 issue long-lived DPoP constrained access tokens, preferring instead to use
 short-lived access tokens and refresh tokens." The fallback is a more
 conservative issuance posture, and it is the fallback the RFC recommends
-independently of any capability mechanism. **Satisfies CAP-1.**
+independently of any capability mechanism. **Satisfies CAP-1, and violates
+CAP-2.**
 
-Same mechanism. Opposite verdicts. The difference is entirely in what the
-extension says the signal unlocks.
+CAP-2 is explicit: "Servers MUST NOT grant scope, relax consent requirements, or
+extend token lifetimes on the basis of a signaled capability." Framing B is
+precisely an extended token lifetime bought with a signal. A conservative
+fallback does not rescue it, because CAP-2 constrains what the signal may
+purchase rather than what happens in its absence.
+
+So both framings fail, for different reasons, and DPoP nonce enforcement is
+outside the capability model. The lesson is not that framing decides the verdict;
+it is that framing decides the CAP-1 question and CAP-2 then does independent
+work. An author who satisfies only the first has not finished.
 
 Worth noting that RFC 9449 Section 11.3, "DPoP Nonce Downgrade," already
 carries the same instinct at the protocol level: "A server MUST NOT accept any
@@ -70,13 +81,13 @@ that to removal before it.
 
 ## Tier 1: registry candidates
 
-Capability-shaped, no signal today, and a CAP-1-safe framing exists.
+Capability-shaped, no signal today, and a framing exists that satisfies both
+CAP-1 and CAP-2.
 
 | Behavior the server may exercise | Fallback when the signal is absent | Verdict |
 |---|---|---|
 | Return a deferred response in place of a token or error ([DTR]) | Ordinary error response, the pre-DTR behavior. No token issued. | Clean |
 | Return a transaction authorization challenge ([TXN-CHALLENGE]) | Deny the operation. | Clean in principle; see below |
-| Rely on DPoP nonces (RFC 9449, Framing B) | Short-lived access tokens plus refresh, per Section 11.2 | Clean under Framing B only |
 | Return `redirect_to_web` at the authorization challenge endpoint ([FIRST-PARTY-APPS]) | Refuse the authorization; see the sweep below | Clean only under the deny framing, which the draft does not state |
 
 Two observations.
@@ -224,17 +235,16 @@ in a proof) and it needs no capability value. ABCA drafted it differently.
 | Server advertises that it uses the mechanism | No; the server challenges reactively | Yes; `challenge_endpoint` in RFC 8414 metadata, which the AS "MUST signal" |
 | Client-side requirement | Non-normative: "will typically retry", "is expected to retry" | Normative but conditional: "If the Authorization Server offers a challenge endpoint, the Client MUST retrieve a challenge and MUST use this challenge" |
 | Can the server know in advance whether the client will cope? | No | Yes; it published the endpoint, and client conformance follows from that |
-| Capability value needed? | Yes, under Framing B | **No** |
+| Capability value needed? | No; barred by CAP-2, see above | No; discovery plus a conditional MUST |
 
 Version -10 extends the pattern in two directions that matter here. The
 challenge endpoint may now be offered by a resource server as well, advertised
 through protected resource metadata (RFC 9728 is registered alongside
 RFC 8414 for `challenge_endpoint`), and the conditional client MUST now covers
-"the Client Attestation PoP JWT **or DPoP Proof**." So for the
-attestation-combined case ABCA is supplying exactly the discoverable-challenge
-mechanism RFC 9449 lacks, which both validates the discovery-first rule and
-narrows the DPoP nonce candidate, leaving it open for plain DPoP without
-attestation rather than for DPoP generally.
+"the Client Attestation PoP JWT **or DPoP Proof**." So for the attestation-combined case ABCA supplies exactly the
+discoverable-challenge mechanism RFC 9449 lacks, which is the strongest
+validation of the discovery-first rule available: the gap is closable, and ABCA
+closed it without a capability value.
 
 ABCA also keeps this coherent for the reactive case: a fresh challenge may
 arrive on any response in the `OAuth-Client-Attestation-Challenge` field, and
@@ -257,8 +267,9 @@ conformance. ABCA could make its challenge mandatory because fetching one is
 cheap and universally implementable. RFC 9449 could not take the same route for
 nonces, because whether to demand a nonce is a per-request risk decision rather
 than a static posture, and advertising it in metadata would not describe the
-behavior. That is why the DPoP nonce is a capability candidate and the ABCA
-challenge is not.
+behavior. That is why ABCA could close its gap by discovery. RFC 9449 cannot, which leaves
+the DPoP nonce neither discoverable nor admissible as a capability, and so
+outside this mechanism's reach entirely.
 
 ### Attestation as a carrier for capabilities
 
@@ -304,7 +315,7 @@ verdicts are not all equally well-evidenced.
 |---|---|---|---|
 | `attestation-based-client-auth` | Challenge, but with a conditional client MUST and metadata advertisement | No capability needed; see the attestation section | Targeted read at -10 |
 | `client-id-metadata-document` | None; an `https` `client_id` self-signals | No | Targeted read at -02 |
-| `first-party-apps` | **`redirect_to_web`**, client fallback non-normative, no AS guidance if the client cannot | **Tier 1 candidate**; see below | Targeted read at -04 |
+| `first-party-apps` | **`redirect_to_web`**, client fallback non-normative, no AS guidance if the client cannot | **Tier 1 candidate**, conditionally; see below | Targeted read at -04 |
 | `refresh-token-expiration` | `refresh_token_timeout`, `authorization_expires_in`; additive, no client MUST to process | No; additive and ignorable | Targeted read at -03 |
 | `status-list` | None; token format plus verifier-side status resolution | No | Targeted read at -21 |
 | `identity-assertion-authz-grant` | Assertion grant; client-initiated | No | Triage on scope |
@@ -384,12 +395,12 @@ question while there is still a designated expert reading the answer.
 
 Three findings, in descending order of consequence.
 
-1. **The Section 10.2 fallback framing is load-bearing, not editorial.** It is
-   the entire difference between Framing A and Framing B above. Stating the
-   invariant as "the behavior enabled MUST NOT be necessary to enforce a
-   security property" would have excluded the DPoP nonce and the transaction
-   challenge both; stating it as "the absent-signal fallback must itself be
-   safe" admits both, correctly, and tells an extension author what to write.
+1. **The Section 10.2 fallback framing is load-bearing, not editorial.** Stating
+   the invariant as "the behavior enabled MUST NOT be necessary to enforce a
+   security property" would have excluded the transaction challenge, which is a
+   sound candidate; stating it as "the absent-signal fallback must itself be
+   safe" admits it correctly and tells an extension author what to write. CAP-2
+   then removes what CAP-1 alone would let through, as the DPoP nonce shows.
 
 2. **Registry entries should record the absent-signal fallback, not only the
    enabled behavior.** CAP-1 is unverifiable at registration time without it,
