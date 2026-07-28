@@ -1357,8 +1357,7 @@ minimum that covers OAuth's actual topology.<a href="#section-1.1-4" class="pilc
 <a href="#section-1.2" class="section-number selfRef">1.2. </a><a href="#name-why-open-world-deployment-m" class="section-name selfRef">Why Open-World Deployment Makes This Urgent</a>
         </h3>
 <p id="section-1.2-1">Classic OAuth had one place to establish what a client could do: registration.
-The client metadata of <span>[<a href="#RFC7591" class="cite xref">RFC7591</a>]</span> is already a capability declaration —
-<code>grant_types</code>, <code>response_types</code>, <code>token_endpoint_auth_method</code>,
+The client metadata of <span>[<a href="#RFC7591" class="cite xref">RFC7591</a>]</span> is already a capability declaration: <code>grant_types</code>, <code>response_types</code>, <code>token_endpoint_auth_method</code>,
 <code>dpop_bound_access_tokens</code> <span>[<a href="#RFC9449" class="cite xref">RFC9449</a>]</span>, and
 <code>require_pushed_authorization_requests</code> <span>[<a href="#RFC9126" class="cite xref">RFC9126</a>]</span> all describe client
 behavior. It is a static declaration, agreed once.<a href="#section-1.2-1" class="pilcrow">¶</a></p>
@@ -1369,10 +1368,25 @@ handshake in which to negotiate. The first message is the request. What the
 server needs to know about the client's processing ability must be carried in
 that request, or discoverable from a document the client publishes rather than
 one the server issued.<a href="#section-1.2-2" class="pilcrow">¶</a></p>
-<p id="section-1.2-3">Per-extension parameters remain workable where a small number of extensions are
-deployed between parties with a prior arrangement. Two things break as
-extensions accumulate against an unbounded client population.<a href="#section-1.2-3" class="pilcrow">¶</a></p>
-<p id="section-1.2-4">Per-extension signals accumulate in both directions. Each capability relevant
+<p id="section-1.2-3">DPoP <span>[<a href="#RFC9449" class="cite xref">RFC9449</a>]</span> shows the gap inside a single specification. An authorization
+server takes a first request from a client it has never seen, identified by a
+metadata document URL, and its policy calls for a DPoP nonce on this request. If
+the client implements the <code>use_dpop_nonce</code> retry, challenging costs one round
+trip. If it does not, the challenge is a hard failure that the client surfaces as
+an authentication error. Nothing obliges the client to implement it;
+<span>[<a href="#RFC9449" class="cite xref">RFC9449</a>]</span> observes only that the client "will typically retry".<a href="#section-1.2-3" class="pilcrow">¶</a></p>
+<p id="section-1.2-4">Nothing available to the server settles the question. The
+<code>dpop_bound_access_tokens</code> field above says whether the client uses DPoP, not
+whether it handles a nonce challenge. Server metadata runs the wrong way. And no
+static posture can be published in its place, because <span>[<a href="#RFC9449" class="cite xref">RFC9449</a>]</span> puts "the logic
+through which the server makes that determination" out of scope: demanding a
+nonce is a per-request risk decision. A closed deployment would have settled this
+out of band before the first request; here the first request is the only place it
+can be settled.<a href="#section-1.2-4" class="pilcrow">¶</a></p>
+<p id="section-1.2-5">Per-extension parameters remain workable where a small number of extensions are
+deployed between parties with a prior arrangement. What breaks is accumulation
+against an unbounded client population.<a href="#section-1.2-5" class="pilcrow">¶</a></p>
+<p id="section-1.2-6">Per-extension signals accumulate in both directions. Each capability relevant
 before the token request adds a parameter to the authorization URI, which travels
 through a redirect the user agent can read, log, truncate, and modify. Each
 capability relevant at a resource adds a field to every protected resource
@@ -1380,11 +1394,11 @@ request for the life of the deployment; the <code>Accept-*</code> family, which
 <code>Accept-Txn-Challenge</code> correctly follows, is one field per feature by
 construction. Each signal separately costs a parameter registration, usually
 client and server metadata registrations, and sometimes an HTTP field
-registration.<a href="#section-1.2-4" class="pilcrow">¶</a></p>
-<p id="section-1.2-5">Four behaviors are capability-shaped in the current corpus (<a href="#corpus" class="auto internal xref">Appendix C.2</a>), and they
+registration.<a href="#section-1.2-6" class="pilcrow">¶</a></p>
+<p id="section-1.2-7">Four behaviors are capability-shaped in the current corpus (<a href="#corpus" class="auto internal xref">Appendix C.2</a>), and they
 face both ways: some are signaled to an authorization server, some to a resource
-server. A per-extension design pays the cost in both places at once — the
-asymmetry in <a href="#asymmetry" class="auto internal xref">Section 1.1</a>, seen from the cost side.<a href="#section-1.2-5" class="pilcrow">¶</a></p>
+server. A per-extension design pays the cost in both places at once, which is the
+asymmetry in <a href="#asymmetry" class="auto internal xref">Section 1.1</a> seen from the cost side.<a href="#section-1.2-7" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="what-this-specification-does-not-change">
@@ -1550,9 +1564,8 @@ one it lacks can receive a response it cannot process; CAP-2 and CAP-3 keep a
 false claim from being accepted as authorization, authentication, or proof of a
 security-relevant property, though an extension must still analyze its
 operational cost (<a href="#dos" class="auto internal xref">Section 10.3</a>). And an adversary able to modify a request, including
-the user agent on the front channel, can remove values and degrade the client to
-base OAuth — under CAP-1 the safe direction, at the cost of optional
-functionality.<a href="#section-4-3" class="pilcrow">¶</a></p>
+the user agent on the front channel, can remove values and degrade the client to base OAuth. Under CAP-1 that is the
+safe direction, at the cost of optional functionality.<a href="#section-4-3" class="pilcrow">¶</a></p>
 <p id="section-4-4">These invariants also serve as the admission criterion for the registry; see
 <a href="#extension-guidance" class="auto internal xref">Section 8</a>.<a href="#section-4-4" class="pilcrow">¶</a></p>
 </section>
@@ -1948,7 +1961,7 @@ signal the capability denies the request; it does not treat the transaction as
 authorized. Removal costs the client functionality, never the server a security
 property.<a href="#section-10.2-1" class="pilcrow">¶</a></p>
 <p id="section-10.2-2">The inverted form to avoid is an extension whose enabled behavior is what
-applies a check the server would otherwise skip — "the client can perform a
+applies a check the server would otherwise skip: "the client can perform a
 stronger check, so enable it". There, removing the signal removes the check.
 Such a check belongs in policy, negotiated through mechanisms that are
 authenticated.<a href="#section-10.2-2" class="pilcrow">¶</a></p>
@@ -1978,9 +1991,8 @@ does not authorize the client to consume unbounded work.<a href="#section-10.3-2
 <a href="#section-10.4" class="section-number selfRef">10.4. </a><a href="#name-interaction-with-signed-req" class="section-name selfRef">Interaction with Signed Requests</a>
         </h3>
 <p id="section-10.4-1">Where a Request Object <span>[<a href="#RFC9101" class="cite xref">RFC9101</a>]</span> or software statement carries a capability
-set, the signature protects the assertion from modification. This does not
-make the values proof of implementation — a signature attests to the
-assertion, not its truth. The distinct precedence rules for Request Objects and
+set, the signature protects the assertion from modification. This does not make the values proof of implementation; a signature attests to
+the assertion, not its truth. The distinct precedence rules for Request Objects and
 software statements are specified in <a href="#precedence" class="auto internal xref">Section 5.5</a>.<a href="#section-10.4-1" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -2519,8 +2531,7 @@ from the list is the only way to express it.<a href="#appendix-B-2.4.1" class="p
 <p id="appendix-C.1-1">Capability signaling in and around OAuth takes five shapes. Registration-time
 static declaration in client metadata <span>[<a href="#RFC7591" class="cite xref">RFC7591</a>]</span> serves the closed world but
 cannot express per-request or per-instance variation and has no analogue where
-there is no registration. Server-to-client discovery <span>[<a href="#RFC8414" class="cite xref">RFC8414</a>]</span> <span>[<a href="#RFC9728" class="cite xref">RFC9728</a>]</span> is
-fully generic — in one direction only. The remaining three are per-extension: a
+there is no registration. Server-to-client discovery <span>[<a href="#RFC8414" class="cite xref">RFC8414</a>]</span> <span>[<a href="#RFC9728" class="cite xref">RFC9728</a>]</span> is fully generic, though in one direction only. The remaining three are per-extension: a
 dedicated request parameter, a dedicated HTTP field, or a capability implied by
 construction, as with the presence of a DPoP proof <span>[<a href="#RFC9449" class="cite xref">RFC9449</a>]</span> or the choice of
 one endpoint over another.<a href="#appendix-C.1-1" class="pilcrow">¶</a></p>

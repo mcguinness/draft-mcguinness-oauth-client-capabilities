@@ -160,7 +160,7 @@ Table of Contents
 
    Classic OAuth had one place to establish what a client could do:
    registration.  The client metadata of [RFC7591] is already a
-   capability declaration — grant_types, response_types,
+   capability declaration: grant_types, response_types,
    token_endpoint_auth_method, dpop_bound_access_tokens [RFC9449], and
    require_pushed_authorization_requests [RFC9126] all describe client
    behavior.  It is a static declaration, agreed once.
@@ -174,10 +174,28 @@ Table of Contents
    discoverable from a document the client publishes rather than one the
    server issued.
 
+   DPoP [RFC9449] shows the gap inside a single specification.  An
+   authorization server takes a first request from a client it has never
+   seen, identified by a metadata document URL, and its policy calls for
+   a DPoP nonce on this request.  If the client implements the
+   use_dpop_nonce retry, challenging costs one round trip.  If it does
+   not, the challenge is a hard failure that the client surfaces as an
+   authentication error.  Nothing obliges the client to implement it;
+   [RFC9449] observes only that the client "will typically retry".
+
+   Nothing available to the server settles the question.  The
+   dpop_bound_access_tokens field above says whether the client uses
+   DPoP, not whether it handles a nonce challenge.  Server metadata runs
+   the wrong way.  And no static posture can be published in its place,
+   because [RFC9449] puts "the logic through which the server makes that
+   determination" out of scope: demanding a nonce is a per-request risk
+   decision.  A closed deployment would have settled this out of band
+   before the first request; here the first request is the only place it
+   can be settled.
+
    Per-extension parameters remain workable where a small number of
    extensions are deployed between parties with a prior arrangement.
-   Two things break as extensions accumulate against an unbounded client
-   population.
+   What breaks is accumulation against an unbounded client population.
 
    Per-extension signals accumulate in both directions.  Each capability
    relevant before the token request adds a parameter to the
@@ -193,8 +211,8 @@ Table of Contents
    Four behaviors are capability-shaped in the current corpus
    (Appendix C.2), and they face both ways: some are signaled to an
    authorization server, some to a resource server.  A per-extension
-   design pays the cost in both places at once — the asymmetry in
-   Section 1.1, seen from the cost side.
+   design pays the cost in both places at once, which is the asymmetry
+   in Section 1.1 seen from the cost side.
 
 1.3.  What This Specification Does Not Change
 
@@ -322,8 +340,8 @@ Table of Contents
    property, though an extension must still analyze its operational cost
    (Section 10.3).  And an adversary able to modify a request, including
    the user agent on the front channel, can remove values and degrade
-   the client to base OAuth — under CAP-1 the safe direction, at the
-   cost of optional functionality.
+   the client to base OAuth.  Under CAP-1 that is the safe direction, at
+   the cost of optional functionality.
 
    These invariants also serve as the admission criterion for the
    registry; see Section 8.
@@ -690,9 +708,9 @@ Table of Contents
    server a security property.
 
    The inverted form to avoid is an extension whose enabled behavior is
-   what applies a check the server would otherwise skip — "the client
-   can perform a stronger check, so enable it".  There, removing the
-   signal removes the check.  Such a check belongs in policy, negotiated
+   what applies a check the server would otherwise skip: "the client can
+   perform a stronger check, so enable it".  There, removing the signal
+   removes the check.  Such a check belongs in policy, negotiated
    through mechanisms that are authenticated.
 
 10.3.  Denial of Service
@@ -716,8 +734,8 @@ Table of Contents
 
    Where a Request Object [RFC9101] or software statement carries a
    capability set, the signature protects the assertion from
-   modification.  This does not make the values proof of implementation
-   — a signature attests to the assertion, not its truth.  The distinct
+   modification.  This does not make the values proof of implementation;
+   a signature attests to the assertion, not its truth.  The distinct
    precedence rules for Request Objects and software statements are
    specified in Section 5.5.
 
@@ -1095,10 +1113,10 @@ C.1.  Survey of Existing Mechanisms
    serves the closed world but cannot express per-request or per-
    instance variation and has no analogue where there is no
    registration.  Server-to-client discovery [RFC8414] [RFC9728] is
-   fully generic — in one direction only.  The remaining three are per-
-   extension: a dedicated request parameter, a dedicated HTTP field, or
-   a capability implied by construction, as with the presence of a DPoP
-   proof [RFC9449] or the choice of one endpoint over another.
+   fully generic, though in one direction only.  The remaining three are
+   per-extension: a dedicated request parameter, a dedicated HTTP field,
+   or a capability implied by construction, as with the presence of a
+   DPoP proof [RFC9449] or the choice of one endpoint over another.
 
    Adjacent protocols generalized where OAuth did not.  SIP option tags
    [RFC3261] pair Supported with Require over an IANA registry, the
