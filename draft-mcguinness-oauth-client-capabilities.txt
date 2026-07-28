@@ -470,6 +470,18 @@ Table of Contents
    instances SHOULD omit the metadata field and signal capabilities on
    each request.
 
+   Where the metadata is a client metadata document published at a
+   Client Identifier URL [CIMD], three properties of that carrier narrow
+   its usefulness: the document is publicly retrievable, its content
+   applies uniformly to every deployment that uses the URL, and an
+   authorization server may cache it under bounds the client does not
+   control.  A capability declared there is therefore public, shared by
+   every instance, and retractable only with unbounded delay.  Clients
+   identified this way SHOULD treat the request parameter in Section 5.1
+   as the primary carrier, and declare a capability in the document only
+   when it is non-sensitive and every deployment of the software can
+   process the enabled behavior.
+
 5.4.  Scope of a Signal
 
    A capability signal in a request applies only to that request.  It
