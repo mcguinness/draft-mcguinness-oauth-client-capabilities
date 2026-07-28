@@ -97,8 +97,9 @@ authorization server "MUST NOT defer a response to a request whose
 `completion_mode` does not include `deferred`". {{TXN-CHALLENGE}} defines an
 `Accept-Txn-Challenge` HTTP field and requires that a protected resource "MUST
 NOT return a transaction authorization challenge unless the request includes an
-`Accept-Txn-Challenge` header field with a true value, or the protected resource
-has out-of-band knowledge that the client supports this specification".
+`Accept-Txn-Challenge` header field with a true value, or the protected
+resource has out-of-band knowledge that the client supports this
+specification".
 
 The requirements are structurally identical. The carriers are not.
 
@@ -143,9 +144,9 @@ deployed between parties with a prior arrangement. What breaks is accumulation
 against an unbounded client population.
 
 Per-extension signals accumulate in both directions. Each capability relevant
-before the token request adds a parameter to the authorization URI, which travels
-through a redirect the user agent can read, log, truncate, and modify. Each
-capability relevant at a resource adds a field to every protected resource
+before the token request adds a parameter to the authorization URI, which
+travels through a redirect the user agent can read, log, truncate, and modify.
+Each capability relevant at a resource adds a field to every protected resource
 request for the life of the deployment; the `Accept-*` family, which
 `Accept-Txn-Challenge` correctly follows, is one field per feature by
 construction. Each signal separately costs a parameter registration, usually
@@ -186,8 +187,8 @@ Terms not otherwise defined are used as in {{RFC6749}} and {{RFC9110}}.
 
 ## Syntax
 
-A capability value is a bare token. The syntax uses ABNF {{RFC5234}},
-including its `ALPHA`, `DIGIT`, and `SP` core rules:
+A capability value is a bare token. The syntax uses ABNF {{RFC5234}}, including
+its `ALPHA`, `DIGIT`, and `SP` core rules:
 
 ~~~ abnf
 capability        = ALPHA *( ALPHA / DIGIT / "-" / "_" / "." / ":" )
@@ -274,9 +275,10 @@ Two consequences follow. Capabilities are self-asserted, and a client claiming
 one it lacks can receive a response it cannot process; CAP-2 and CAP-3 keep a
 false claim from being accepted as authorization, authentication, or proof of a
 security-relevant property, though an extension must still analyze its
-operational cost ({{dos}}). And an adversary able to modify a request, including
-the user agent on the front channel, can remove values and degrade the client to base OAuth. Under CAP-1 that is the
-safe direction, at the cost of optional functionality.
+operational cost ({{dos}}). And an adversary able to modify a request,
+including the user agent on the front channel, can remove values and degrade
+the client to base OAuth. Under CAP-1 that is the safe direction, at the cost
+of optional functionality.
 
 These invariants also serve as the admission criterion for the registry; see
 {{extension-guidance}}.
@@ -326,12 +328,12 @@ undesirable.
 
 ## The `OAuth-Client-Capabilities` HTTP Field {#field}
 
-The `OAuth-Client-Capabilities` HTTP field allows a client to signal capabilities
-on a request that has no OAuth request parameter surface, most importantly a
-protected resource request. A protected resource is also where alternative
-challenge paths most often coexist, so the field is where a capability set is most
-likely to inform a choice among them rather than gate a single behavior; see
-{{selection}}.
+The `OAuth-Client-Capabilities` HTTP field allows a client to signal
+capabilities on a request that has no OAuth request parameter surface, most
+importantly a protected resource request. A protected resource is also where
+alternative challenge paths most often coexist, so the field is where a
+capability set is most likely to inform a choice among them rather than gate a
+single behavior; see {{selection}}.
 
 Its value is a Structured Fields List ({{RFC9651}}, Section 3.1). Each member
 MUST be an Item whose bare item is a Token containing a capability value as
@@ -357,8 +359,8 @@ MUST NOT be sent in this field. A recipient MUST ignore a member whose value is
 `none`.
 
 A server whose response varies with the field MUST include
-`OAuth-Client-Capabilities` in the `Vary` field of the response, or use
-`Vary: *`, per {{RFC9110}}, Section 12.5.5.
+`OAuth-Client-Capabilities` in the `Vary` field of the response, or use `Vary:
+*`, per {{RFC9110}}, Section 12.5.5.
 
 The field is defined only for requests that have no OAuth request parameter
 surface. A client MUST NOT use the field on a request at an endpoint where the
@@ -429,8 +431,8 @@ nothing else. Where the capability governs behavior at the token endpoint, the
 capability MUST be in the effective set for the token request, and the
 authorization server MUST NOT infer it from an earlier request in the same
 grant. Where metadata can be cached or obtained from more than one source, a
-client might not know which value the authorization server currently applies.
-A client SHOULD therefore signal such a capability explicitly on the token
+client might not know which value the authorization server currently applies. A
+client SHOULD therefore signal such a capability explicitly on the token
 request rather than relying on a metadata default.
 
 Where a capability is meaningful at more than one endpoint, its registration
@@ -452,8 +454,8 @@ The `OAuth-Client-Capabilities` field plays no part in this determination. As
 specified in {{field}}, an authorization server ignores the field at any
 endpoint where the request parameter is defined.
 
-The rule is replacement rather than union because retraction is a requirement: a
-deployment may lack a capability its metadata declares, as a batch-job client
+The rule is replacement rather than union because retraction is a requirement:
+a deployment may lack a capability its metadata declares, as a batch-job client
 cannot return in six hours for a deferred response. Under union it could never
 say so. To retract everything, a client sends `client_capabilities=none`.
 
@@ -495,26 +497,23 @@ but a subsequent request can override that default with a different set.
 
 A server may have more than one way to obtain what a request lacks. A protected
 resource that cannot authorize an operation from the access token alone might
-return a transaction authorization challenge, request step-up authentication, or
-refuse, and which of those the client can act on differs. The effective
-capability set lets the server choose a path the client can complete rather than
-choosing one and hoping.
+return a transaction authorization challenge, request step-up authentication,
+or refuse, and which of those the client can act on differs. The effective
+capability set lets the server choose a path the client can complete rather
+than choosing one and hoping.
 
-This use carries one requirement. A server MUST determine the assurance a request
-requires without reference to the signaled capability set. It MAY then use the set
-to choose among paths that meet that requirement, and MUST refuse the request
-where no signaled path meets it. Otherwise selection reintroduces the downgrade
-CAP-1 exists to prevent: removing a value would steer the server to a different
-path, and where the alternatives are not equivalent for the decision at hand, the
-weaker one is what the request gets.
+This use carries one requirement. A server MUST determine the assurance a
+request requires without reference to the signaled capability set. It MAY then
+use the set to choose among paths that meet that requirement, and MUST refuse
+the request where no signaled path meets it. Otherwise selection reintroduces
+the downgrade CAP-1 exists to prevent: removing a value would steer the server
+to a different path, and where the alternatives are not equivalent for the
+decision at hand, the weaker one is what the request gets.
 
-Selection and gating ask different questions, and a value can be justified by
-either. Gating asks whether issuing a behavior would break an unprepared client
-or weaken a security property. Selection asks, among paths that all clear the
-required assurance, which one the client can carry to completion. A path that is
-safe to issue unconditionally needs no signal in order to be gated, and may still
-warrant one so that a server does not choose a path the client cannot finish.
-{{extension-guidance}} gives the criterion.
+A path that is safe to issue unconditionally needs no signal in order to be
+gated, and may still warrant one so that a server does not choose a path the
+client cannot finish. {{extension-guidance}} treats that as a distinct ground
+for registering a value.
 
 # Discovery {#discovery}
 
@@ -522,8 +521,8 @@ client_capabilities_supported:
 : OPTIONAL. A JSON array of strings containing the capability values that the
   server recognizes and may act upon.
 
-The field is defined for authorization server metadata {{RFC8414}} and for
-protected resource metadata {{RFC9728}}.
+This metadata member is defined for authorization server metadata {{RFC8414}}
+and for protected resource metadata {{RFC9728}}.
 
 Every array element MUST conform to the `capability` production in {{values}}.
 The array MUST NOT contain `none`. Order is not significant, and clients MUST
@@ -533,8 +532,8 @@ and MUST be ignored in its entirety.
 
 The direction follows a pattern used by Client Hints {{RFC8942}}: the server
 advertises what it recognizes so that the client can avoid sending unsupported
-values. This bounds front-channel growth ({{open-world}}) and the fingerprinting
-surface ({{privacy-considerations}}).
+values. This bounds front-channel growth ({{open-world}}) and the
+fingerprinting surface ({{privacy-considerations}}).
 
 Clients SHOULD signal only capability values that appear in
 `client_capabilities_supported`, where the server publishes it. A client MAY
@@ -550,8 +549,8 @@ An extension that needs a client to signal a processing capability SHOULD
 register a value in the registry established in {{iana-registry}} rather than
 define a dedicated parameter or field.
 
-The admission criterion follows from {{invariants}} and is best applied as a
-single test:
+The invariants in {{invariants}} decide admission. One heuristic catches most
+misclassifications:
 
 > If an implementer would want the value to be attested, it is not a
 > capability.
@@ -576,17 +575,18 @@ Additional points of discipline:
   mandatory, because it is genuinely optional for the client and the server
   therefore cannot discover conformance.
 
-A value may be justified on either of two grounds: that a server cannot safely
-exercise the behavior without it, or that a server choosing among several paths
-would otherwise select one the client cannot complete ({{selection}}). The second
-ground is narrower than it first appears. It requires that the server would choose
-differently and that the difference decides whether the operation can complete,
-not merely that the behavior is optional for the client. A value that would make
-an already-workable path more convenient does not qualify.
 - State, in the registration, the carriers and endpoints at which the value is
   meaningful. A value meaningful at the token endpoint is usually meaningless
   on a protected resource request, and a registry that says so prevents clients
   from signaling noise.
+
+A value may be justified on either of two grounds: that a server cannot safely
+exercise the behavior without it, or that a server choosing among several paths
+would otherwise select one the client cannot complete ({{selection}}). The
+second ground is narrower than it first appears. It requires that the server
+would choose differently and that the difference decides whether the operation
+can complete, not merely that the behavior is optional for the client. A value
+that would make an already-workable path more convenient does not qualify.
 
 # Relationship to Existing Mechanisms {#relationships}
 
@@ -622,11 +622,10 @@ than any single deployment. This section describes what follows from them.
 
 ## Signals Are Not Proof
 
-A capability signal is a client assertion, not proof that the client
-implements the capability. Transport security, client authentication, a
-Request Object, or a signed software statement can establish who made the
-assertion and protect its integrity. None of those mechanisms proves that the
-assertion is true.
+A capability signal is a client assertion, not proof that the client implements
+the capability. Transport security, client authentication, a Request Object, or
+a signed software statement can establish who made the assertion and protect
+its integrity. None of those mechanisms proves that the assertion is true.
 
 On the front channel, a bare request parameter is modifiable by the user agent
 and by anything else able to alter the authorization request. Injection of a
@@ -636,18 +635,18 @@ neither action is accepted as a reason to weaken a security property, grant
 authorization, or skip evidence required by the enabled behavior.
 
 Servers MUST NOT treat a capability signal as evidence of client identity,
-client software version, or client trustworthiness.
+client software version, or client trustworthiness. Where a Request Object
+{{RFC9101}} or software statement carries a set, the signature prevents
+third-party modification without making the values proof of implementation; the
+precedence rules for both are in {{precedence}}.
 
 ## Downgrade
 
 Because capability signals may be removed by an adversary, an extension MUST
 define an absent-signal fallback that is itself safe. Where the enabled
 behavior is how a server obtains something it requires, the fallback is to
-refuse the operation rather than to proceed without it. A resource server that
-cannot issue a transaction authorization challenge because the client did not
-signal the capability denies the request; it does not treat the transaction as
-authorized. Removal costs the client functionality, never the server a security
-property.
+refuse the operation rather than to proceed without it. Removal costs the
+client functionality, never the server a security property.
 
 The inverted form to avoid is an extension whose enabled behavior is what
 applies a check the server would otherwise skip: "the client can perform a
@@ -670,13 +669,7 @@ extension specification MUST analyze this cost and define any necessary
 rate-limiting, state-allocation, or replay protections. A capability signal
 does not authorize the client to consume unbounded work.
 
-## Interaction with Signed Requests
 
-Where a Request Object {{RFC9101}} or software statement carries a capability
-set, the signature protects the assertion from modification. This does not make
-the values proof of implementation; a signature attests to the assertion, not
-its truth. The distinct precedence rules for Request Objects and software
-statements are specified in {{precedence}}.
 
 # Privacy Considerations {#privacy-considerations}
 
@@ -687,13 +680,13 @@ publicly retrievable client metadata document it is visible to anyone.
 Three factors reduce the exposure. The authorization server already receives a
 `client_id`, which often identifies the software, though a capability set can
 still add information. {{discovery}} lets a client send only values the server
-will act upon. And the recommendation in {{param}} to use a pushed authorization
-request keeps the set out of the authorization URI and away from the user agent;
-a signed but unencrypted Request Object does not, since it provides integrity
-rather than confidentiality.
+will act upon. And the recommendation in {{param}} to use a pushed
+authorization request keeps the set out of the authorization URI and away from
+the user agent; a signed but unencrypted Request Object does not, since it
+provides integrity rather than confidentiality.
 
-Clients that consider their capability set sensitive SHOULD use {{RFC9126}} or an
-encrypted Request Object as defined in {{RFC9101}}, SHOULD restrict signaled
+Clients that consider their capability set sensitive SHOULD use {{RFC9126}} or
+an encrypted Request Object as defined in {{RFC9101}}, SHOULD restrict signaled
 values to those advertised in `client_capabilities_supported`, and SHOULD NOT
 publish the set in public client metadata.
 
@@ -872,8 +865,8 @@ Reference:
 
 # Examples
 
-This document registers no capability values. `accept-deferred-response` below is
-illustrative, corresponding to a behavior described in {{existing-drafts}}.
+This document registers no capability values. `accept-deferred-response` below
+is illustrative, corresponding to a behavior described in {{existing-drafts}}.
 Line breaks in the form-encoded request bodies are for display only.
 
 A pushed authorization request carrying the capability, keeping it off the
@@ -891,8 +884,8 @@ response_type=code&client_id=https%3A%2F%2Fapp.example%2Fclient
 ~~~
 {: title="Capability carried in a pushed authorization request"}
 
-The same capability on the token request. Because the behavior affects the token
-response, the earlier signal does not carry over; see {{signal-scope}}:
+The same capability on the token request. Because the behavior affects the
+token response, the earlier signal does not carry over; see {{signal-scope}}:
 
 ~~~ http-message
 POST /token HTTP/1.1
@@ -921,8 +914,8 @@ grant_type=authorization_code&code=SplxlOB...
 
 # Applying This Specification to Existing Drafts {#existing-drafts}
 
-This appendix is informative and describes how the two extensions that motivated
-this work would use the mechanism. Neither is required to migrate.
+This appendix is informative and describes how the two extensions that
+motivated this work would use the mechanism. Neither is required to migrate.
 
 Deferred Token Response:
 : `completion_mode=deferred` becomes `client_capabilities` containing
@@ -965,18 +958,19 @@ pair `Supported` with `Require` over an IANA registry, the closest structural
 match. The HTTP `Prefer` field {{RFC7240}} carries `respond-async`, which is
 semantically what a deferred-completion parameter reinvents, with
 `Preference-Applied` and a registry of its own. Client Hints {{RFC8942}}
-contributes the pull-based direction adopted in {{discovery}}. TLS extensions and
-HTTP/2 `SETTINGS` take the same form: one negotiation surface, extended by
+contributes the pull-based direction adopted in {{discovery}}. TLS extensions
+and HTTP/2 `SETTINGS` take the same form: one negotiation surface, extended by
 registry.
 
 GNAP {{RFC9635}} is the instructive case, because it reproduces the asymmetry
 from a blank sheet. It names the concept, describing the client instance as
 sending "information about the actions the client software can take" and
 anticipating "any additional capabilities defined by extensions of this
-protocol", and its server-to-client discovery is generic and registry-backed. Its
-client-to-server direction is not: capabilities appear per feature, with no
+protocol", and its server-to-client discovery is generic and registry-backed.
+Its client-to-server direction is not: capabilities appear per feature, with no
 generic field and no vocabulary an extension can register into. A protocol
-designed with negotiation as a goal still built the generic surface one way only.
+designed with negotiation as a goal still built the generic surface one way
+only.
 
 The IANA "OAuth Parameters" registry group currently contains no generic client
 capability parameter, field, or registry {{IANA-OAUTH}}.
@@ -988,25 +982,30 @@ extension adopting this mechanism would also need to state its absent-signal
 behavior explicitly. For deferred token response, that behavior is the
 synchronous response or error that the server would otherwise return. For a
 transaction authorization challenge, it is refusal of the operation without
-returning the optional challenge. In each case, removal of the signal suppresses
-optional behavior rather than weakening a security check.
+returning the optional challenge. In each case, removal of the signal
+suppresses optional behavior rather than weakening a security check.
 
 Similar-looking behaviors do not necessarily qualify. DPoP nonce enforcement
 {{RFC9449}} is one example. If server policy requires a nonce, a capability
-signal cannot safely determine whether that requirement is enforced: removing the
-signal would otherwise weaken replay protection. Section 11.3 of {{RFC9449}}
-requires a server that has provided a nonce not to accept a proof without the
-nonce. Nor is the difficulty avoided by framing the signal as permission to rely
-on nonces and so to issue longer-lived tokens, because CAP-2 forbids extending
-token lifetimes on the basis of a signaled capability however conservative the
-fallback appears. Such a requirement is outside this specification's capability
-model.
+signal cannot safely determine whether that requirement is enforced: removing
+the signal would otherwise weaken replay protection. Section 11.3 of
+{{RFC9449}} requires a server that has provided a nonce not to accept a proof
+without the nonce. Nor is the difficulty avoided by framing the signal as
+permission to rely on nonces and so to issue longer-lived tokens, because CAP-2
+forbids extending token lifetimes on the basis of a signaled capability however
+conservative the fallback appears. Such a requirement is outside this
+specification's capability model.
 
 Likewise, a browser fallback such as `redirect_to_web` in
 {{FIRST-PARTY-APPS}} would qualify only if an adopting specification defines it
 as genuinely optional server behavior and states a safe absent-signal outcome.
 If the client behavior can instead be required when server metadata advertises
 the feature, server-side discovery is preferable.
+
+A second ground is narrower but real. A behavior safe to issue unconditionally
+needs no signal to be gated, yet a server choosing among several such paths can
+still pick one the client cannot carry to completion; {{selection}} governs
+that use and {{extension-guidance}} bounds when it justifies a value.
 
 The criterion rejects client authentication methods, endpoint selection,
 client-initiated request parameters, additive response fields, and behavior a
@@ -1018,23 +1017,25 @@ admission decision implicit.
 
 SIP {{RFC3261}} pairs `Supported` with `Require`, letting a client insist an
 extension be understood or the request fail. This specification omits the
-analogue: `Require` answers a different question, whether the client insists the
-server implement something, while a capability states that the client can process
-optional server behavior the server remains free not to exercise. Mixing the two
-would make some values mandatory and undermine the advisory model. Extensions
-needing hard failure define their own error conditions, where removal causes an
-availability failure but CAP-1 still rules out weaker security.
+analogue: `Require` answers a different question, whether the client insists
+the server implement something, while a capability states that the client can
+process optional server behavior the server remains free not to exercise.
+Mixing the two would make some values mandatory and undermine the advisory
+model. Extensions needing hard failure define their own error conditions, where
+removal causes an availability failure but CAP-1 still rules out weaker
+security.
 
 ## Trade-offs
 
 Three costs are worth stating plainly.
 
-Cache keys become coarser. A protected resource whose responses vary by capability
-sends `Vary: OAuth-Client-Capabilities`, keying the cache on the whole list, so an
-unrelated capability invalidates entries a per-feature `Vary` would have kept.
-Per-feature fields are strictly more precise here. The practical cost is small,
-because OAuth-protected responses are authenticated and typically not
-shared-cacheable, but the mechanism is genuinely worse on this axis.
+Cache keys become coarser. A protected resource whose responses vary by
+capability sends `Vary: OAuth-Client-Capabilities`, keying the cache on the
+whole list, so an unrelated capability invalidates entries a per-feature `Vary`
+would have kept. Per-feature fields are strictly more precise here. The
+practical cost is small, because OAuth-protected responses are authenticated
+and typically not shared-cacheable, but the mechanism is genuinely worse on
+this axis.
 
 Coordination replaces autonomy. Registering a dedicated parameter requires
 agreement with no one; a shared registry requires a vocabulary, naming
@@ -1042,8 +1043,8 @@ discipline, and agreement on CAP-1 through CAP-3 as admission criteria.
 
 The count is small. The argument rests on the trend rather than the present
 number of extensions. The counter is that a registry is cheaper to establish
-before many extensions have shipped incompatible carriers than after, and the two
-already in flight have shipped incompatible carriers.
+before many extensions have shipped incompatible carriers than after, and the
+two already in flight have shipped incompatible carriers.
 
 ## Open Issues
 
@@ -1056,8 +1057,8 @@ already in flight have shipped incompatible carriers.
   {{ABCA}}. `Accept-OAuth-Capabilities` would match the `Accept-*` family. The
   former is preferred here because the field declares client behavior rather
   than performing content negotiation, but this is not settled.
-- Whether capability values need versioning within the token, or whether a new
-  version registers a new token. The latter is assumed; the `.` and `:`
+- Whether capability values need internal versioning, or whether a new version
+  registers a new value. The latter is assumed; the `.` and `:`
   characters remain available in the syntax if that changes.
 - Whether client software capabilities and running instance capabilities are
   adequately separated by the replacement rule in {{precedence}}, or whether
