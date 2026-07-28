@@ -575,6 +575,12 @@ Two further points of discipline:
 - State the absent-signal behavior, not only the behavior enabled. An extension
   that cannot describe a fallback at least as conservative as the pre-extension
   behavior has not satisfied CAP-1, whatever the value is named.
+- Prefer server-side discovery where it works. If the client-side behavior can
+  be specified as a requirement conditioned on something the server advertises
+  in its own metadata ({{RFC8414}} or {{RFC9728}}), specify it that way and
+  register no capability. A capability is for behavior that cannot be made
+  mandatory, because it is genuinely optional for the client and the server
+  therefore cannot discover conformance.
 - State, in the registration, the carriers and endpoints at which the value is
   meaningful. A value meaningful at the token endpoint is usually meaningless
   on a protected resource request, and a registry that says so prevents clients

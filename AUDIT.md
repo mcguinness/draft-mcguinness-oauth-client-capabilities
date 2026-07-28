@@ -204,6 +204,75 @@ the request parameter is the primary carrier, and the metadata field is a narrow
 optimization** — appropriate only where a capability is non-sensitive and
 genuinely universal across every deployment of the software.
 
+## Client attestation: not a capability, and a counter-example worth copying
+
+Attestation-based client authentication ([ABCA]) is not a capability candidate,
+for the ordinary reason: it is a client authentication method. It is negotiated
+by `token_endpoint_auth_method` on the client side and discovered through
+`token_endpoint_auth_methods_supported` containing `attest_jwt_client_auth` on
+the server side. Both directions are already covered by existing mechanisms, and
+per-request presence of the `OAuth-Client-Attestation` and
+`OAuth-Client-Attestation-PoP` fields is self-signaling. Tier 2.
+
+The interesting part is ABCA's **challenge**, because it is the same mechanism
+shape as the DPoP nonce — a server-issued freshness value the client must echo
+in a proof — and it needs no capability value. ABCA drafted it differently.
+
+| | DPoP nonce (RFC 9449) | ABCA challenge ([ABCA]) |
+|---|---|---|
+| Server advertises that it uses the mechanism | No; the server challenges reactively | Yes; `challenge_endpoint` in RFC 8414 metadata, which the AS "MUST signal" |
+| Client-side requirement | Non-normative: "will typically retry", "is expected to retry" | Normative but conditional: "If the Authorization Server offers a challenge endpoint, the Client MUST retrieve a challenge and MUST use this challenge" |
+| Can the server know in advance whether the client will cope? | No | Yes — it published the endpoint, and client conformance follows from that |
+| Capability value needed? | Yes, under Framing B | **No** |
+
+ABCA also keeps this coherent for the reactive case: a fresh challenge may
+arrive on any response in the `OAuth-Client-Attestation-Challenge` field, and
+"The Client MUST use this new Challenge for the next
+OAuth-Client-Attestation-PoP." The obligation is normative throughout, so there
+is no state in which the server must guess.
+
+**The general rule this yields** is more useful than the capability candidate
+itself, because it bounds the registry:
+
+> Server-side discovery plus a conditional client requirement is an alternative
+> to a capability signal. Where an extension can express the client-side
+> behavior as a MUST conditioned on something the server advertises in its own
+> metadata, it should do that instead of registering a capability.
+
+A capability is what remains when the client-side behavior cannot be made
+mandatory — because it is genuinely optional for the client on grounds of
+platform, cost, or deployment shape — and the server therefore cannot discover
+conformance. ABCA could make its challenge mandatory because fetching one is
+cheap and universally implementable. RFC 9449 could not take the same route for
+nonces, because whether to demand a nonce is a per-request risk decision rather
+than a static posture, and advertising it in metadata would not describe the
+behavior. That is why the DPoP nonce is a capability candidate and the ABCA
+challenge is not.
+
+### Attestation as a carrier for capabilities
+
+The Client Attestation JWT permits extension claims — "The JWT MAY contain
+other claims. All claims that are not understood by implementations MUST be
+ignored" — so nothing stops an implementer from putting a capability set in one.
+The draft's admission test already answers this: a value one would want attested
+is not a capability. It is worth stating why, because there is a real argument
+on the other side.
+
+The argument for it is granularity. An attestation carries `cnf`, the Client
+Instance Key, so it is instance-scoped — and instance-level variation is exactly
+what the draft's replacement semantics exist to handle. An instance-scoped
+signed carrier looks like the right shape.
+
+It is the right granularity and the wrong lifetime, and the signature buys
+nothing. An attestation is minted by an issuer at a point in time and reused
+across requests for its validity period, so a capability inside it is immutable
+for that window — which defeats retraction, the very thing instance-level
+signaling is for. And CAP-3 forbids a server relying on a capability signal
+being truthful, so the signature adds no license to trust it. The attestation
+issuer is also poorly placed to vouch for a runtime processing property of a
+particular invocation. The request parameter provides the same granularity, at
+the right lifetime, at lower cost.
+
 ## What this changes in the draft
 
 Three findings, in descending order of consequence.
