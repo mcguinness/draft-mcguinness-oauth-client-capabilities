@@ -77,6 +77,7 @@ Capability-shaped, no signal today, and a CAP-1-safe framing exists.
 | Return a deferred response in place of a token or error ([DTR]) | Ordinary error response — the pre-DTR behavior. No token issued. | Clean |
 | Return a transaction authorization challenge ([TXN-CHALLENGE]) | Deny the operation. | Clean in principle; see below |
 | Rely on DPoP nonces (RFC 9449, Framing B) | Short-lived access tokens plus refresh, per Section 11.1 | Clean under Framing B only |
+| Return `redirect_to_web` at the authorization challenge endpoint ([FIRST-PARTY-APPS]) | Refuse the authorization; see the sweep below | Clean only under the deny framing, which the draft does not state |
 
 Two observations.
 
@@ -273,6 +274,91 @@ issuer is also poorly placed to vouch for a runtime processing property of a
 particular invocation. The request parameter provides the same granularity, at
 the right lifetime, at lower cost.
 
+## Sweep of active working group drafts
+
+Every active OAuth working group draft, as listed on the datatracker. The
+question asked of each is narrow: does it define behavior an authorization
+server or resource server returns *to a client* that a non-implementing client
+could fail to process, with a client-side requirement weak enough that the
+server cannot assume conformance?
+
+The `Basis` column records how far the draft was actually read, because the
+verdicts are not all equally well-evidenced.
+
+| Draft | New client-facing server behavior? | Verdict | Basis |
+|---|---|---|---|
+| `attestation-based-client-auth` | Challenge, but with a conditional client MUST and metadata advertisement | No capability needed — see the attestation section | Targeted read at -07; -10 is current |
+| `client-id-metadata-document` | None; an `https` `client_id` self-signals | No | Targeted read at -02 |
+| `first-party-apps` | **`redirect_to_web`**, client fallback non-normative, no AS guidance if the client cannot | **Tier 1 candidate** — see below | Targeted read at -04 |
+| `refresh-token-expiration` | `refresh_token_timeout`, `authorization_expires_in` — additive, no client MUST to process | No; additive and ignorable | Targeted read at -03 |
+| `status-list` | None; token format plus verifier-side status resolution | No | Targeted read at -21 |
+| `identity-assertion-authz-grant` | Assertion grant; client-initiated | No | Triage on scope |
+| `identity-chaining` | Cross-domain token exchange; client-initiated | No | Triage on scope |
+| `rfc7523bis` | JWT client auth and assertion grants; client-initiated | No | Triage on scope |
+| `spiffe-client-auth` | Client authentication method | No | Triage on scope |
+| `transaction-tokens` | Internal trust-domain exchange; not client-facing | No | Triage on scope |
+| `v2-1-15` | Consolidation; removes rather than adds | Not applicable | Triage on scope |
+| `security-topics-update` | Best current practice | Not applicable | Triage on scope |
+| `browser-based-apps` | Best current practice | Not applicable | Triage on scope |
+| `cross-device-security` | Best current practice | Not applicable | Triage on scope |
+| `rfc8725bis` | Best current practice | Not applicable | Triage on scope |
+| `sd-jwt-vc` | Credential format | Not applicable | Triage on scope |
+
+**One of sixteen** yields a new capability candidate. That ratio is the answer to
+"won't you end up registering everything." The mechanism is narrow because the
+qualifying conditions are narrow: the behavior has to change what the client
+receives, be genuinely optional for the client, and be undiscoverable from
+server metadata.
+
+### The candidate: `redirect_to_web`
+
+At the authorization challenge endpoint an authorization server may return
+`error: redirect_to_web`, optionally with a `request_uri` and `expires_in`, when
+it needs to interact with the user directly — "based on a risk assessment, the
+introduction of a new authentication method not supported in the application, or
+to handle an exception flow such as account recovery."
+
+The client-side requirement is non-normative: "If no `request_uri` is returned,
+the client is expected to initiate a new OAuth Authorization Code flow with
+PKCE." And the capability is genuinely optional in a way the earlier examples
+are not — a client with no usable browser (a kiosk, a headless deployment, an
+autonomous agent with no interactive surface) cannot perform the fallback at
+all, however well written it is.
+
+The two framings behave as before:
+
+- **Gate the error.** "The authorization server MUST NOT return
+  `redirect_to_web` unless the client signaled browser-fallback support." Absent
+  the signal the server must complete authentication in-app regardless, skipping
+  the risk-triggered step-up or the new authentication method it had judged
+  necessary. **Weaker user authentication. Violates CAP-1.**
+- **Gate the escalation, refuse otherwise.** Absent the signal the server
+  returns a terminal error: it cannot perform the interaction it requires, so it
+  declines to authorize. **Satisfies CAP-1.**
+
+The draft gives no guidance on what the authorization server should do when the
+client cannot perform the fallback, so the safe framing is the unwritten one.
+
+### The systematic finding
+
+Three independent documents now specify the gate and omit the fallback:
+
+- `txn-challenge` — "MUST NOT return a transaction authorization challenge
+  unless" signaled, with no statement of what the resource server does instead.
+- `first-party-apps` — `redirect_to_web`, with no guidance if the client cannot
+  fall back.
+- `attestation-based-client-auth` avoided the problem only by making the
+  client-side requirement normative and conditioning it on a metadata
+  advertisement, which removes the absent case rather than defining it.
+
+This is the strongest available argument for the `Absent-Signal Behavior`
+registry field. It is not process overhead: it catches an omission that
+extension authors make consistently. Authors specify what the capability turns
+*on* and leave what happens when it is *off* implicit — and the implicit answer
+is nearly always "proceed without it," which is the CAP-1-violating direction in
+both cases above. Requiring the fallback at registration time forces the
+question while there is still a designated expert reading the answer.
+
 ## What this changes in the draft
 
 Three findings, in descending order of consequence.
@@ -290,8 +376,9 @@ Three findings, in descending order of consequence.
    says only what the capability turns on. Adding this as a registry field
    makes the invariant checkable rather than aspirational.
 
-3. **The transaction challenge draft's unstated fallback is the first thing
-   that field would have caught** — which is a reasonable argument that the
+3. **Unstated fallbacks are systematic, not incidental.** Three drafts specify
+   the gate and omit the absent case; see the sweep. The transaction challenge
+   draft's unstated fallback is the first thing the field would have caught — which is a reasonable argument that the
    field belongs in the registry rather than in prose guidance.
 
 Finding 2 is applied to the draft as an `Absent-Signal Behavior` registry
@@ -300,5 +387,7 @@ wording, and the latter is an observation about another document.
 
 ---
 
+[ABCA]: https://datatracker.ietf.org/doc/draft-ietf-oauth-attestation-based-client-auth
 [DTR]: https://datatracker.ietf.org/doc/draft-gerber-oauth-deferred-token-response
 [TXN-CHALLENGE]: https://datatracker.ietf.org/doc/draft-rosomakho-oauth-txn-challenge
+[FIRST-PARTY-APPS]: https://datatracker.ietf.org/doc/draft-ietf-oauth-first-party-apps
