@@ -86,7 +86,6 @@ Table of Contents
      10.1.  Signals Are Not Proof
      10.2.  Downgrade
      10.3.  Denial of Service
-     10.4.  Interaction with Signed Requests
    11. Privacy Considerations
    12. IANA Considerations
      12.1.  OAuth Client Capabilities Registry
@@ -578,14 +577,10 @@ Table of Contents
    different path, and where the alternatives are not equivalent for the
    decision at hand, the weaker one is what the request gets.
 
-   Selection and gating ask different questions, and a value can be
-   justified by either.  Gating asks whether issuing a behavior would
-   break an unprepared client or weaken a security property.  Selection
-   asks, among paths that all clear the required assurance, which one
-   the client can carry to completion.  A path that is safe to issue
-   unconditionally needs no signal in order to be gated, and may still
-   warrant one so that a server does not choose a path the client cannot
-   finish.  Section 8 gives the criterion.
+   A path that is safe to issue unconditionally needs no signal in order
+   to be gated, and may still warrant one so that a server does not
+   choose a path the client cannot finish.  Section 8 treats that as a
+   distinct ground for registering a value.
 
 7.  Discovery
 
@@ -593,8 +588,8 @@ Table of Contents
       containing the capability values that the server recognizes and
       may act upon.
 
-   The field is defined for authorization server metadata [RFC8414] and
-   for protected resource metadata [RFC9728].
+   This metadata member is defined for authorization server metadata
+   [RFC8414] and for protected resource metadata [RFC9728].
 
    Every array element MUST conform to the capability production in
    Section 3.  The array MUST NOT contain none.  Order is not
@@ -623,8 +618,8 @@ Table of Contents
    SHOULD register a value in the registry established in Section 12.1
    rather than define a dedicated parameter or field.
 
-   The admission criterion follows from Section 4 and is best applied as
-   a single test:
+   The invariants in Section 4 decide admission.  One heuristic catches
+   most misclassifications:
 
       If an implementer would want the value to be attested, it is not a
       capability.
@@ -654,6 +649,11 @@ Table of Contents
       it is genuinely optional for the client and the server therefore
       cannot discover conformance.
 
+   *  State, in the registration, the carriers and endpoints at which
+      the value is meaningful.  A value meaningful at the token endpoint
+      is usually meaningless on a protected resource request, and a
+      registry that says so prevents clients from signaling noise.
+
    A value may be justified on either of two grounds: that a server
    cannot safely exercise the behavior without it, or that a server
    choosing among several paths would otherwise select one the client
@@ -662,10 +662,7 @@ Table of Contents
    and that the difference decides whether the operation can complete,
    not merely that the behavior is optional for the client.  A value
    that would make an already-workable path more convenient does not
-   qualify. - State, in the registration, the carriers and endpoints at
-   which the value is meaningful.  A value meaningful at the token
-   endpoint is usually meaningless on a protected resource request, and
-   a registry that says so prevents clients from signaling noise.
+   qualify.
 
 9.  Relationship to Existing Mechanisms
 
@@ -716,7 +713,11 @@ Table of Contents
    authorization, or skip evidence required by the enabled behavior.
 
    Servers MUST NOT treat a capability signal as evidence of client
-   identity, client software version, or client trustworthiness.
+   identity, client software version, or client trustworthiness.  Where
+   a Request Object [RFC9101] or software statement carries a set, the
+   signature prevents third-party modification without making the values
+   proof of implementation; the precedence rules for both are in
+   Section 5.5.
 
 10.2.  Downgrade
 
@@ -724,11 +725,8 @@ Table of Contents
    extension MUST define an absent-signal fallback that is itself safe.
    Where the enabled behavior is how a server obtains something it
    requires, the fallback is to refuse the operation rather than to
-   proceed without it.  A resource server that cannot issue a
-   transaction authorization challenge because the client did not signal
-   the capability denies the request; it does not treat the transaction
-   as authorized.  Removal costs the client functionality, never the
-   server a security property.
+   proceed without it.  Removal costs the client functionality, never
+   the server a security property.
 
    The inverted form to avoid is an extension whose enabled behavior is
    what applies a check the server would otherwise skip: "the client can
@@ -752,15 +750,6 @@ Table of Contents
    define any necessary rate-limiting, state-allocation, or replay
    protections.  A capability signal does not authorize the client to
    consume unbounded work.
-
-10.4.  Interaction with Signed Requests
-
-   Where a Request Object [RFC9101] or software statement carries a
-   capability set, the signature protects the assertion from
-   modification.  This does not make the values proof of implementation;
-   a signature attests to the assertion, not its truth.  The distinct
-   precedence rules for Request Objects and software statements are
-   specified in Section 5.5.
 
 11.  Privacy Considerations
 
@@ -1200,6 +1189,12 @@ C.2.  Applying the Admission Criterion
    required when server metadata advertises the feature, server-side
    discovery is preferable.
 
+   A second ground is narrower but real.  A behavior safe to issue
+   unconditionally needs no signal to be gated, yet a server choosing
+   among several such paths can still pick one the client cannot carry
+   to completion; Section 6.1 governs that use and Section 8 bounds when
+   it justifies a value.
+
    The criterion rejects client authentication methods, endpoint
    selection, client-initiated request parameters, additive response
    fields, and behavior a specification makes mandatory to implement.
@@ -1256,10 +1251,9 @@ C.5.  Open Issues
       declares client behavior rather than performing content
       negotiation, but this is not settled.
 
-   *  Whether capability values need versioning within the token, or
-      whether a new version registers a new token.  The latter is
-      assumed; the . and : characters remain available in the syntax if
-      that changes.
+   *  Whether capability values need internal versioning, or whether a
+      new version registers a new value.  The latter is assumed; the .
+      and : characters remain available in the syntax if that changes.
 
    *  Whether client software capabilities and running instance
       capabilities are adequately separated by the replacement rule in
