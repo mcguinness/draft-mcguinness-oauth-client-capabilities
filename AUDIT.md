@@ -130,9 +130,18 @@ leaves the selection question open. Step-up is where that matters; see
   request, which is exactly what a non-implementing client does not do. So the
   loop is real for precisely the clients that cannot handle the challenge. See
   [Selection candidates](#selection-candidates).
-- **Issuer identification (RFC 9207).** The authorization server adds `iss` to
-  the authorization response. A client that does not validate it ignores an
-  unrecognized parameter. Purely additive. No signal needed.
+- **Issuer identification (RFC 9207).** Additive on paper: RFC 6749
+  Section 4.1.2 requires clients to ignore unrecognized response parameters, and
+  RFC 9207 Section 2.4 leans on exactly that. No signal needed, and none is
+  possible as written, because support is advertised by a per-issuer metadata
+  boolean and clients that read it MUST reject responses lacking `iss`, making
+  the feature all-or-nothing per issuer. In deployment it nonetheless breaks
+  clients coded to reject unexpected parameters, which is non-conformance the
+  mechanism deliberately does not address. The instructive part is the
+  counterfactual: had a capability vocabulary existed, RFC 9207 could have gated
+  `iss` on a client signal, with the signaling client rejecting non-delivery, and
+  rolled out incrementally without breaking anyone. That makes it the best
+  motivating case for this mechanism and it is now cited as such in the draft.
 - **Endpoint selection is already the signal.** Device authorization
   (RFC 8628), pushed authorization requests (RFC 9126), the authorization
   challenge endpoint, token exchange (RFC 8693). Calling the endpoint is proof

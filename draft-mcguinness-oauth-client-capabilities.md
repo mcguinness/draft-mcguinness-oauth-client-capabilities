@@ -40,6 +40,7 @@ normative:
 informative:
   RFC3261:
   RFC7240:
+  RFC9207:
   RFC8942:
   RFC9396:
   RFC9449:
@@ -131,7 +132,21 @@ capability can enlarge an authorization URI visible to the user agent. Each
 resource capability adds a field to protected resource requests; an `Accept-*`
 design is one field per feature. Each signal also often needs its own
 registrations and metadata. A shared vocabulary pays those costs once across
-both sides of the asymmetry in {{asymmetry}}.
+both sides of the asymmetry in
+{{asymmetry}}.
+
+The cost of having no such vocabulary is visible in a published RFC. An
+authorization server adopting {{RFC9207}} adds an `iss` parameter to the
+authorization response. {{RFC6749}}, Section 4.1.2 requires clients to ignore
+unrecognized response parameters, so the change is additive on paper, but
+clients coded to reject unexpected parameters break, and the operator does not
+control them. {{RFC9207}} offers no way to ask first: support is advertised by
+a single per-issuer metadata boolean, and clients that read it MUST reject
+responses lacking `iss`, so the feature is all-or-nothing for every client of
+that issuer. Had a capability vocabulary existed, the parameter could have been
+sent only to clients that signaled they would process it, with the signaling
+client rejecting non-delivery. Rollout would have been incremental and no
+client would have broken.
 
 ## What This Specification Does Not Change
 
@@ -139,6 +154,13 @@ This specification defines carriers and a vocabulary. It does not define any
 capability values, reserves the `none` sentinel in {{none-value}}, does not
 change any existing parameter, and does not require existing extensions to
 migrate. It is designed so that extensions may adopt it incrementally.
+
+Two uses are out of scope. Capability values do not carry deployment-local
+feature flags or rollout cohort membership, which are server-side policy keyed
+on the client's identity rather than properties a client asserts. Nor do they
+signal conformance to an existing requirement: a client that violates a MUST is
+not made safe by asserting that it does not, and such a client generally cannot
+be updated to send the assertion in the first place.
 
 # Conventions and Definitions
 
@@ -520,6 +542,13 @@ Additional points of discipline:
 - State, in the registration, the carriers and endpoints at which the value is
   meaningful.
 
+An extension SHOULD NOT couple a client-affecting behavior to a per-issuer
+metadata flag that clients must key on, because that forecloses incremental
+rollout: the behavior becomes all-or-nothing for every client of the issuer.
+Where the behavior can vary per client, gate it on a capability instead, and
+require a client that signaled the capability to reject non-delivery so that
+stripping the signal denies service rather than silently removing a protection.
+
 A value may be justified on either of two grounds: that a server cannot safely
 exercise the behavior without it, or that a server choosing among several paths
 would otherwise select one the client cannot complete ({{selection}}). The
@@ -639,9 +668,10 @@ Description:
 : A brief description of the client behavior signaled by the value.
 
 Absent-Signal Behavior:
-: What the server does when the value is not in the effective set. Recording
-  this makes CAP-1 in {{invariants}} checkable at registration time rather than
-  aspirational.
+: What the server does when the value is not in the effective set, and, where
+  the enabled behavior is security relevant, what a client that signaled the
+  value does if the behavior does not arrive. Recording both makes CAP-1 in
+  {{invariants}} checkable at registration time rather than aspirational.
 
 Carriers:
 : The carriers in which the value is meaningful: any of "request parameter",
