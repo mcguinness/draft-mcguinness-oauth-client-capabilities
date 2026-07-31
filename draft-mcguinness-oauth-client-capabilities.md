@@ -144,14 +144,7 @@ registrations and metadata. A shared vocabulary pays those costs once across
 both sides of the asymmetry in
 {{asymmetry}}.
 
-The gap appears in current work. In considering how an authorization server can
-serve OAuth 2.0 and 2.1 clients at once, discussion has identified a need to
-let clients opt into 2.1 behavior during a slow rollout, naming native
-applications whose upgrades reach users gradually {{OAUTH21-VERSIONS}}. Reading
-that requirement as calling for a static default with a per-request override,
-the shape {{precedence}} defines, is an inference of this document rather than
-a conclusion of that discussion. Version selection itself is a different
-problem from capability signaling; see {{profiles}}.
+
 
 ## What This Specification Does Not Change
 
@@ -345,10 +338,16 @@ OAuth-Client-Capabilities: txn-challenge
 
 Senders MUST NOT generate Inner List members, members of another bare-item
 type, or parameters. A recipient MUST parse the field as a Structured Fields
-List. If parsing fails, or if any member is not a Token Item, the recipient
-MUST treat the field as absent. A recipient MUST ignore parameters and
-unrecognized capability values. The order of members is not significant, and
-duplicate values MUST be ignored.
+List. The field is invalid if parsing fails, if any member is not a Token Item,
+or if any member's Token does not conform to the `capability` production in
+{{values}}. The last case is distinct: a Structured Fields Token can be well
+formed and still violate that production, as `*bad` does. A recipient MUST
+treat an invalid field as absent, matching the treatment of an invalid request
+parameter in {{values}}.
+
+A recipient MUST ignore parameters, and MUST ignore a member that conforms to
+the production but names a capability the recipient does not recognize. The
+order of members is not significant, and duplicate values MUST be ignored.
 
 The `none` sentinel defined in {{none-value}} is not a capability value and
 MUST NOT be sent in this field. A recipient MUST ignore a member whose value is
@@ -551,13 +550,14 @@ Additional points of discipline:
 - State, in the registration, the carriers and endpoints at which the value is
   meaningful.
 
-An extension SHOULD NOT couple a client-affecting behavior to a per-issuer
-metadata flag that clients must key on, because that forecloses incremental
-rollout: the behavior becomes all-or-nothing for every client of the issuer.
-Where the behavior can vary per client, gate it on a capability instead.
-{{RFC9207}} is the cautionary case: support is advertised by one per-issuer
-boolean and clients that read it must reject responses lacking `iss`, so the
-feature is all-or-nothing for every client of that issuer.
+Issuer-wide behavior is often the intended design, and coupling it to a
+per-issuer metadata flag is a legitimate choice. Where per-client or fractional
+rollout is a requirement, however, an extension SHOULD NOT couple the behavior
+to such a flag, because it then becomes all-or-nothing for every client of the
+issuer; gate it on a capability instead. {{RFC9207}} illustrates the tradeoff
+rather than a mistake: coupling the advertisement to a server-wide delivery
+commitment is what allows a client to enforce that `iss` is present, and the
+cost is that the feature cannot be rolled out per client.
 
 This specification provides no delivery guarantee, and an extension MUST NOT
 rely on a capability signal to supply one. Under {{server-behavior}} a server
@@ -986,14 +986,17 @@ membership is closer to the policy input {{invariants}} excludes. This
 specification neither defines it nor proposes that version values be
 registered.
 
-The two problems do share a carrier shape. Fractional rollout requires a static
-default that a single request can override, which a registration field alone
-cannot provide: every deployed instance sharing a `client_id` carries the same
-declared version, so a rollout staged across native application releases cannot
-be expressed. The precedence rule in {{precedence}} is the general form of that
-override. Whether version selection should reuse it, or should instead be
-decomposed into the specific behaviors that actually need signaling, belongs to
-that work rather than this one.
+The two problems do share a carrier shape. That discussion lists a slow rollout
+for native applications, whose upgrades reach users gradually, among its
+requirements {{OAUTH21-VERSIONS}}. Reading the requirement as a call for a
+static default that a single request can override is an inference of this
+document rather than a conclusion of that discussion. A registration field
+alone cannot provide it: every deployed instance sharing a `client_id` carries
+the same declared version, so a rollout staged across native application
+releases cannot be expressed. The precedence rule in {{precedence}} is the
+general form of that override. Whether version selection should reuse it, or
+should instead be decomposed into the specific behaviors that actually need
+signaling, belongs to that work rather than this one.
 
 ## Trade-offs
 
