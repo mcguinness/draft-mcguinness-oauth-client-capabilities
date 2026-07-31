@@ -139,7 +139,7 @@ client-published metadata.
 Per-extension signals accumulate in both directions. Each front-channel
 capability can enlarge an authorization URI visible to the user agent. Each
 resource capability adds a field to protected resource requests; an `Accept-*`
-design is one field per feature. Each signal also often needs its own
+design is one field per feature. A per-extension signal also needs its own
 registrations and metadata. A shared vocabulary pays those costs once across
 both sides of the asymmetry in {{asymmetry}}.
 
@@ -170,8 +170,8 @@ Signal:
   the carriers defined in {{carriers}}.
 
 Effective capability set:
-: The capability set that applies to a request after the carrier and
-  precedence rules in {{carriers}} have been applied.
+: The capability set that applies to a request after the carrier and precedence
+  rules in {{carriers}} have been applied. Also called the effective set.
 
 Terms not otherwise defined are used as in {{RFC6749}} and {{RFC9110}}.
 
@@ -194,12 +194,15 @@ value is valid as a sequence of `NQCHAR` in a form-encoded OAuth parameter
 ({{RFC9651}}, Section 3.3.4). A single registered value is therefore usable in
 both carriers with no transformation.
 
-Capability values are case-sensitive. The following apply wherever a capability
-value appears, in every carrier in {{carriers}} and in {{discovery}}: a value
-MUST conform to the `capability` production, order is not significant,
-duplicates MUST be ignored, and a recipient MUST ignore a value it does not
-recognize. What a non-conforming value causes differs by carrier and is stated
-with each carrier.
+Capability values are case-sensitive. Four rules apply wherever a capability
+value appears, in every carrier in {{carriers}} and in {{discovery}}:
+
+- A value MUST conform to the `capability` production.
+- Order is not significant.
+- Duplicates MUST be ignored.
+- A recipient MUST ignore a value it does not recognize.
+
+What a non-conforming value causes differs by carrier, and is stated with each.
 
 For the request parameter, `capability-list` is applied after
 `application/x-www-form-urlencoded` decoding. An empty value is treated as
@@ -267,8 +270,8 @@ CAP-3:
   authentication, proof of possession, protocol validation, or other evidence
   required by the behavior it enables.
 
-Two consequences follow. Capabilities are self-asserted, and a client claiming
-one it lacks can receive a response it cannot process; CAP-2 and CAP-3 keep a
+Two consequences follow. Capabilities are self-asserted, so a client claiming
+one it lacks can receive a response it cannot process. CAP-2 and CAP-3 keep a
 false claim from being accepted as authorization, authentication, or proof of a
 security-relevant property, though an extension must still analyze its
 operational cost ({{dos}}). And an adversary who removes values degrades the
@@ -328,9 +331,10 @@ A client MUST NOT use the field on a request at an endpoint where the
 `client_capabilities` parameter is defined; it uses {{param}} there instead. An
 authorization server MUST ignore the field on any request to such an endpoint.
 At the authorization endpoint a user agent issues the HTTP request, so its
-fields cannot be attributed to the client, and using only the parameter at
-authorization server endpoints gives the request one unambiguous effective set
-while allowing Request Object or pushed-request protections where applicable.
+fields cannot be attributed to the client. Using only the parameter at
+authorization server endpoints also gives each request one unambiguous
+effective set, and allows Request Object or pushed-request protections where
+those apply.
 
 Its value is a Structured Fields List ({{RFC9651}}, Section 3.1). Each member
 MUST be an Item whose bare item is a Token containing a capability value as
@@ -963,8 +967,8 @@ errors; CAP-1 still prevents removal from weakening security.
 A related problem is selecting a protocol version or profile rather than a
 behavior. Discussion of how an authorization server can serve OAuth 2.0 and 2.1
 clients concurrently {{OAUTH21-VERSIONS}} led to a proposal on the working
-group list for a per-issuer `oauth_versions_supported` metadata array and a
-per-client `oauth_version` registration field, which notes that neither
+group list: a per-issuer `oauth_versions_supported` metadata array and a
+per-client `oauth_version` registration field. That proposal notes that neither
 provides a runtime signal {{OAUTH21-VERSIONS-LIST}}.
 
 That is not capability signaling as defined here. A version names a document
