@@ -88,7 +88,6 @@ CAP-1 and CAP-2.
 |---|---|---|
 | Return a deferred response in place of a token or error ([DTR]) | Ordinary error response, the pre-DTR behavior. No token issued. | Clean |
 | Return a transaction authorization challenge ([TXN-CHALLENGE]) | Deny the operation. | Clean in principle; see below |
-| Return a `resource` parameter in the token response ([RESOURCE-TOKEN-RESP]) | Omit it. A client that requested a resource rejects the token, so enforcement must key on the server's advertisement rather than the client's own signal. | Clean, and actionable: unpublished, with no per-issuer flag to unpick |
 | Return `redirect_to_web` at the authorization challenge endpoint ([FIRST-PARTY-APPS]) | Refuse the authorization; see the sweep below | Clean only under the deny framing, which the draft does not state |
 
 Two observations.
@@ -131,6 +130,18 @@ leaves the selection question open. Step-up is where that matters; see
   request, which is exactly what a non-implementing client does not do. So the
   loop is real for precisely the clients that cannot handle the challenge. See
   [Selection candidates](#selection-candidates).
+- **Adding a parameter to a response, generally.** RFC 6749 Section 4.1.2
+  requires clients to ignore unrecognized authorization response parameters and
+  Section 5.1 requires the same for token response members, so delivery is safe
+  for any conforming client and needs no gate. This rule disposes of RFC 9207
+  and of [RESOURCE-TOKEN-RESP], which returns a `resource` parameter so a client
+  can confirm which resource its token is valid for: what it needs is a way for
+  clients to learn that a server implements it, which is server metadata rather
+  than a client capability. Both were classified as candidates in earlier
+  revisions of this note. The recurring error was treating a deployed
+  population of strict parsers as evidence that a change is not additive, when
+  it is evidence of non-conformance, which the mechanism deliberately does not
+  address.
 - **Issuer identification (RFC 9207).** Additive on paper: RFC 6749
   Section 4.1.2 requires clients to ignore unrecognized response parameters, and
   RFC 9207 Section 2.4 leans on exactly that. No signal needed, and none is
@@ -138,11 +149,14 @@ leaves the selection question open. Step-up is where that matters; see
   boolean and clients that read it MUST reject responses lacking `iss`, making
   the feature all-or-nothing per issuer. In deployment it nonetheless breaks
   clients coded to reject unexpected parameters, which is non-conformance the
-  mechanism deliberately does not address. The instructive part is the
-  counterfactual: had a capability vocabulary existed, RFC 9207 could have gated
-  `iss` on a client signal, with the signaling client rejecting non-delivery, and
-  rolled out incrementally without breaking anyone. That makes it the best
-  motivating case for this mechanism and it is now cited as such in the draft.
+  mechanism deliberately does not address. An earlier revision of this note argued the counterfactual, that a capability
+  could have gated `iss` on a client signal with the signaling client rejecting
+  non-delivery. That is withdrawn. It rested on clients that violate RFC 6749
+  Section 4.1.2, and on a delivery guarantee the mechanism does not provide,
+  since a server retains discretion over whether to exercise optional behavior.
+  What survives is a design lesson for extension authors, now in the draft's
+  extension guidance: coupling a client-affecting behavior to a per-issuer
+  metadata flag that clients must key on forecloses incremental rollout.
 - **Endpoint selection is already the signal.** Device authorization
   (RFC 8628), pushed authorization requests (RFC 9126), the authorization
   challenge endpoint, token exchange (RFC 8693). Calling the endpoint is proof

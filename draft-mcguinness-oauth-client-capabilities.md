@@ -48,6 +48,9 @@ informative:
   RESOURCE-TOKEN-RESP:
     target: https://datatracker.ietf.org/doc/draft-mcguinness-oauth-resource-token-resp
     title: "Resource Token Response Parameter"
+  OAUTH21-VERSIONS-LIST:
+    target: https://mailarchive.ietf.org/arch/msg/oauth/hwo5a8eicmWM9q2fUtcVFlYw-HI/
+    title: "OAuth 2.0 and 2.1 version support discovery (oauth@ietf.org)"
   OAUTH21-VERSIONS:
     target: https://github.com/oauth-wg/oauth-v2-1/issues/120
     title: "How can an AS support both 2.0 and 2.1 clients concurrently"
@@ -141,27 +144,14 @@ registrations and metadata. A shared vocabulary pays those costs once across
 both sides of the asymmetry in
 {{asymmetry}}.
 
-The cost of having no such vocabulary is visible in a published RFC. An
-authorization server adopting {{RFC9207}} adds an `iss` parameter to the
-authorization response. {{RFC6749}}, Section 4.1.2 requires clients to ignore
-unrecognized response parameters, so the change is additive on paper, but
-clients coded to reject unexpected parameters break, and the operator does not
-control them. {{RFC9207}} offers no way to ask first: support is advertised by
-a single per-issuer metadata boolean, and clients that read it MUST reject
-responses lacking `iss`, so the feature is all-or-nothing for every client of
-that issuer. Had a capability vocabulary existed, the parameter could have been
-sent only to clients that signaled they would process it, with the signaling
-client rejecting non-delivery. Rollout would have been incremental and no
-client would have broken.
-
-The same gap is being met prospectively. In considering how an authorization
-server can serve OAuth 2.0 and 2.1 clients at once, discussion has identified a
-need to let clients opt into 2.1 behavior during a slow rollout, such as native
-applications whose upgrades reach users gradually, and has observed that a
-per-client registration flag cannot express it {{OAUTH21-VERSIONS}}. That
-requirement is a static default with a per-request override, the shape
-{{precedence}} defines. Version selection itself is a different problem from
-capability signaling; see {{profiles}}.
+The gap appears in current work. In considering how an authorization server can
+serve OAuth 2.0 and 2.1 clients at once, discussion has identified a need to
+let clients opt into 2.1 behavior during a slow rollout, naming native
+applications whose upgrades reach users gradually {{OAUTH21-VERSIONS}}. Reading
+that requirement as calling for a static default with a per-request override,
+the shape {{precedence}} defines, is an inference of this document rather than
+a conclusion of that discussion. Version selection itself is a different
+problem from capability signaling; see {{profiles}}.
 
 ## What This Specification Does Not Change
 
@@ -525,11 +515,9 @@ fingerprinting exposure, following the pattern of Client Hints {{RFC8942}}.
 Absence of `client_capabilities_supported` does not indicate that the server
 fails to support this specification.
 
-Where a capability enables a security-relevant behavior, the advertisement also
-determines when a client may enforce that behavior's arrival. A client that
-signaled such a value and treats its absence as an error MUST do so only where
-the server advertised the value, since a server that has not implemented the
-extension would otherwise cause the client to reject every response.
+Advertising a value is not a commitment to exercise the behavior. A client
+cannot infer from an advertisement, or from its own signal, that the behavior
+will be delivered; {{server-behavior}} leaves that to the server.
 
 # Guidance for Extension Specifications {#extension-guidance}
 
@@ -566,14 +554,17 @@ Additional points of discipline:
 An extension SHOULD NOT couple a client-affecting behavior to a per-issuer
 metadata flag that clients must key on, because that forecloses incremental
 rollout: the behavior becomes all-or-nothing for every client of the issuer.
-Where the behavior can vary per client, gate it on a capability instead. Where
-the behavior is security relevant, require a client to treat non-delivery as an
-error once the server has advertised the value in
-`client_capabilities_supported`, so that stripping the signal denies service
-rather than silently removing a protection. That rule keys on the
-advertisement, not on the client's own signal: a client signaling to a server
-that has not implemented the extension would otherwise reject every response it
-receives.
+Where the behavior can vary per client, gate it on a capability instead.
+{{RFC9207}} is the cautionary case: support is advertised by one per-issuer
+boolean and clients that read it must reject responses lacking `iss`, so the
+feature is all-or-nothing for every client of that issuer.
+
+This specification provides no delivery guarantee, and an extension MUST NOT
+rely on a capability signal to supply one. Under {{server-behavior}} a server
+retains discretion, so treating non-delivery as an error on the strength of a
+signal, or of an advertisement, is unsound. An extension that genuinely needs a
+delivery commitment defines it itself, along with how a client learns that the
+server will honor it.
 
 A value may be justified on either of two grounds: that a server cannot safely
 exercise the behavior without it, or that a server choosing among several paths
@@ -694,10 +685,9 @@ Description:
 : A brief description of the client behavior signaled by the value.
 
 Absent-Signal Behavior:
-: What the server does when the value is not in the effective set, and, where
-  the enabled behavior is security relevant, what a client that signaled the
-  value does if the behavior does not arrive. Recording both makes CAP-1 in
-  {{invariants}} checkable at registration time rather than aspirational.
+: What the server does when the value is not in the effective set. Recording
+  this makes CAP-1 in {{invariants}} checkable at registration time rather than
+  aspirational.
 
 Carriers:
 : The carriers in which the value is meaningful: any of "request parameter",
@@ -953,17 +943,14 @@ defined as optional server behavior with a safe absent-signal outcome. If
 server metadata can instead make the client behavior conditional, discovery is
 preferable.
 
-A value that would qualify is in {{RESOURCE-TOKEN-RESP}}, which returns a
-`resource` parameter in the token response so a client can confirm which
-resource its token is valid for, and requires a client that requested a
-resource to treat an omitted parameter as invalid. That rule is safe only where
-the client knows the server implements it, and the parameter is safe to send
-only to clients that process it. One registered value supplies both halves: the
-request signal tells the server it may send the parameter, and the
-advertisement in
-{{discovery}} tells the client it may enforce arrival. Unlike {{RFC9207}}, that
-specification has not shipped and defines no per-issuer flag, so it can adopt
-the mechanism rather than only illustrate its absence.
+Adding a parameter to a response is almost never a capability. {{RFC6749}},
+Sections 4.1.2 and 5.1 already require clients to ignore unrecognized
+authorization response parameters and unrecognized token response members, so
+delivery is safe for any conforming client and needs no gate.
+{{RESOURCE-TOKEN-RESP}} is a near miss of exactly this kind: it returns a
+`resource` parameter so a client can confirm which resource its token is valid
+for, and what it needs is a way for clients to learn that a server implements
+it. That is server metadata, not a client capability.
 
 A safe, unconditional behavior can also qualify when the server must choose
 among paths and the signal prevents selection of one the client cannot
@@ -988,9 +975,10 @@ errors; CAP-1 still prevents removal from weakening security.
 
 A related problem is selecting a protocol version or profile rather than a
 behavior. Discussion of how an authorization server can serve OAuth 2.0 and 2.1
-clients concurrently proposes a per-issuer `oauth_versions_supported` metadata
-array and a per-client `oauth_version` registration field
-{{OAUTH21-VERSIONS}}.
+clients concurrently {{OAUTH21-VERSIONS}} led to a proposal on the working
+group list for a per-issuer `oauth_versions_supported` metadata array and a
+per-client `oauth_version` registration field, which notes that neither
+provides a runtime signal {{OAUTH21-VERSIONS-LIST}}.
 
 That is not capability signaling as defined here. A version names a document
 rather than a behavior a server may exercise ({{values}}), and profile
