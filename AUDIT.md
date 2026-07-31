@@ -88,6 +88,7 @@ CAP-1 and CAP-2.
 |---|---|---|
 | Return a deferred response in place of a token or error ([DTR]) | Ordinary error response, the pre-DTR behavior. No token issued. | Clean |
 | Return a transaction authorization challenge ([TXN-CHALLENGE]) | Deny the operation. | Clean in principle; see below |
+| Return a `resource` parameter in the token response ([RESOURCE-TOKEN-RESP]) | Omit it. A client that requested a resource rejects the token, so enforcement must key on the server's advertisement rather than the client's own signal. | Clean, and actionable: unpublished, with no per-issuer flag to unpick |
 | Return `redirect_to_web` at the authorization challenge endpoint ([FIRST-PARTY-APPS]) | Refuse the authorization; see the sweep below | Clean only under the deny framing, which the draft does not state |
 
 Two observations.
@@ -480,3 +481,4 @@ wording, and the latter is an observation about another document.
 [DTR]: https://datatracker.ietf.org/doc/draft-gerber-oauth-deferred-token-response
 [TXN-CHALLENGE]: https://datatracker.ietf.org/doc/draft-rosomakho-oauth-txn-challenge
 [FIRST-PARTY-APPS]: https://datatracker.ietf.org/doc/draft-ietf-oauth-first-party-apps
+[RESOURCE-TOKEN-RESP]: https://datatracker.ietf.org/doc/draft-mcguinness-oauth-resource-token-resp

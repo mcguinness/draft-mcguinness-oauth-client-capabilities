@@ -45,6 +45,9 @@ informative:
   RFC9396:
   RFC9449:
   RFC9635:
+  RESOURCE-TOKEN-RESP:
+    target: https://datatracker.ietf.org/doc/draft-mcguinness-oauth-resource-token-resp
+    title: "Resource Token Response Parameter"
   OAUTH21-VERSIONS:
     target: https://github.com/oauth-wg/oauth-v2-1/issues/120
     title: "How can an AS support both 2.0 and 2.1 clients concurrently"
@@ -522,6 +525,12 @@ fingerprinting exposure, following the pattern of Client Hints {{RFC8942}}.
 Absence of `client_capabilities_supported` does not indicate that the server
 fails to support this specification.
 
+Where a capability enables a security-relevant behavior, the advertisement also
+determines when a client may enforce that behavior's arrival. A client that
+signaled such a value and treats its absence as an error MUST do so only where
+the server advertised the value, since a server that has not implemented the
+extension would otherwise cause the client to reject every response.
+
 # Guidance for Extension Specifications {#extension-guidance}
 
 An extension that needs a client to signal a processing capability SHOULD
@@ -557,9 +566,14 @@ Additional points of discipline:
 An extension SHOULD NOT couple a client-affecting behavior to a per-issuer
 metadata flag that clients must key on, because that forecloses incremental
 rollout: the behavior becomes all-or-nothing for every client of the issuer.
-Where the behavior can vary per client, gate it on a capability instead, and
-require a client that signaled the capability to reject non-delivery so that
-stripping the signal denies service rather than silently removing a protection.
+Where the behavior can vary per client, gate it on a capability instead. Where
+the behavior is security relevant, require a client to treat non-delivery as an
+error once the server has advertised the value in
+`client_capabilities_supported`, so that stripping the signal denies service
+rather than silently removing a protection. That rule keys on the
+advertisement, not on the client's own signal: a client signaling to a server
+that has not implemented the extension would otherwise reject every response it
+receives.
 
 A value may be justified on either of two grounds: that a server cannot safely
 exercise the behavior without it, or that a server choosing among several paths
@@ -938,6 +952,18 @@ The `redirect_to_web` fallback in {{FIRST-PARTY-APPS}} qualifies only if
 defined as optional server behavior with a safe absent-signal outcome. If
 server metadata can instead make the client behavior conditional, discovery is
 preferable.
+
+A value that would qualify is in {{RESOURCE-TOKEN-RESP}}, which returns a
+`resource` parameter in the token response so a client can confirm which
+resource its token is valid for, and requires a client that requested a
+resource to treat an omitted parameter as invalid. That rule is safe only where
+the client knows the server implements it, and the parameter is safe to send
+only to clients that process it. One registered value supplies both halves: the
+request signal tells the server it may send the parameter, and the
+advertisement in
+{{discovery}} tells the client it may enforce arrival. Unlike {{RFC9207}}, that
+specification has not shipped and defines no per-issuer flag, so it can adopt
+the mechanism rather than only illustrate its absence.
 
 A safe, unconditional behavior can also qualify when the server must choose
 among paths and the signal prevents selection of one the client cannot
