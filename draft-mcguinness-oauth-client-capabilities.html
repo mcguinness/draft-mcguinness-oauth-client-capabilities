@@ -1828,6 +1828,11 @@ Advertising recognized values lets clients bound request size and
 fingerprinting exposure, following the pattern of Client Hints <span>[<a href="#RFC8942" class="cite xref">RFC8942</a>]</span>.<a href="#section-7-4" class="pilcrow">¶</a></p>
 <p id="section-7-5">Absence of <code>client_capabilities_supported</code> does not indicate that the server
 fails to support this specification.<a href="#section-7-5" class="pilcrow">¶</a></p>
+<p id="section-7-6">Where a capability enables a security-relevant behavior, the advertisement also
+determines when a client may enforce that behavior's arrival. A client that
+signaled such a value and treats its absence as an error <span class="bcp14">MUST</span> do so only where
+the server advertised the value, since a server that has not implemented the
+extension would otherwise cause the client to reject every response.<a href="#section-7-6" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="extension-guidance">
@@ -1876,9 +1881,14 @@ meaningful.<a href="#section-8-6.4.1" class="pilcrow">¶</a></p>
 <p id="section-8-7">An extension <span class="bcp14">SHOULD NOT</span> couple a client-affecting behavior to a per-issuer
 metadata flag that clients must key on, because that forecloses incremental
 rollout: the behavior becomes all-or-nothing for every client of the issuer.
-Where the behavior can vary per client, gate it on a capability instead, and
-require a client that signaled the capability to reject non-delivery so that
-stripping the signal denies service rather than silently removing a protection.<a href="#section-8-7" class="pilcrow">¶</a></p>
+Where the behavior can vary per client, gate it on a capability instead. Where
+the behavior is security relevant, require a client to treat non-delivery as an
+error once the server has advertised the value in
+<code>client_capabilities_supported</code>, so that stripping the signal denies service
+rather than silently removing a protection. That rule keys on the
+advertisement, not on the client's own signal: a client signaling to a server
+that has not implemented the extension would otherwise reject every response it
+receives.<a href="#section-8-7" class="pilcrow">¶</a></p>
 <p id="section-8-8">A value may be justified on either of two grounds: that a server cannot safely
 exercise the behavior without it, or that a server choosing among several paths
 would otherwise select one the client cannot complete (<a href="#selection" class="auto internal xref">Section 6.1</a>). The
@@ -2385,6 +2395,10 @@ upon<a href="#section-12.5-2.4.1" class="pilcrow">¶</a></p>
         <dd>
 <span class="refTitle">"How can an AS support both 2.0 and 2.1 clients concurrently"</span>, <span>n.d.</span>, <span>&lt;<a href="https://github.com/oauth-wg/oauth-v2-1/issues/120">https://github.com/oauth-wg/oauth-v2-1/issues/120</a>&gt;</span>. </dd>
 <dd class="break"></dd>
+<dt id="RESOURCE-TOKEN-RESP">[RESOURCE-TOKEN-RESP]</dt>
+        <dd>
+<span class="refTitle">"Resource Token Response Parameter"</span>, <span>n.d.</span>, <span>&lt;<a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-resource-token-resp">https://datatracker.ietf.org/doc/draft-mcguinness-oauth-resource-token-resp</a>&gt;</span>. </dd>
+<dd class="break"></dd>
 <dt id="RFC3261">[RFC3261]</dt>
         <dd>
 <span class="refAuthor">Rosenberg, J.</span>, <span class="refAuthor">Schulzrinne, H.</span>, <span class="refAuthor">Camarillo, G.</span>, <span class="refAuthor">Johnston, A.</span>, <span class="refAuthor">Peterson, J.</span>, <span class="refAuthor">Sparks, R.</span>, <span class="refAuthor">Handley, M.</span>, and <span class="refAuthor">E. Schooler</span>, <span class="refTitle">"SIP: Session Initiation Protocol"</span>, <span class="seriesInfo">RFC 3261</span>, <span class="seriesInfo">DOI 10.17487/RFC3261</span>, <time datetime="2002-07" class="refDate">July 2002</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc3261">https://www.rfc-editor.org/rfc/rfc3261</a>&gt;</span>. </dd>
@@ -2557,13 +2571,24 @@ model.<a href="#appendix-C.2-2" class="pilcrow">¶</a></p>
 defined as optional server behavior with a safe absent-signal outcome. If
 server metadata can instead make the client behavior conditional, discovery is
 preferable.<a href="#appendix-C.2-3" class="pilcrow">¶</a></p>
-<p id="appendix-C.2-4">A safe, unconditional behavior can also qualify when the server must choose
+<p id="appendix-C.2-4">A value that would qualify is in <span>[<a href="#RESOURCE-TOKEN-RESP" class="cite xref">RESOURCE-TOKEN-RESP</a>]</span>, which returns a
+<code>resource</code> parameter in the token response so a client can confirm which
+resource its token is valid for, and requires a client that requested a
+resource to treat an omitted parameter as invalid. That rule is safe only where
+the client knows the server implements it, and the parameter is safe to send
+only to clients that process it. One registered value supplies both halves: the
+request signal tells the server it may send the parameter, and the
+advertisement in
+<a href="#discovery" class="auto internal xref">Section 7</a> tells the client it may enforce arrival. Unlike <span>[<a href="#RFC9207" class="cite xref">RFC9207</a>]</span>, that
+specification has not shipped and defines no per-issuer flag, so it can adopt
+the mechanism rather than only illustrate its absence.<a href="#appendix-C.2-4" class="pilcrow">¶</a></p>
+<p id="appendix-C.2-5">A safe, unconditional behavior can also qualify when the server must choose
 among paths and the signal prevents selection of one the client cannot
 complete;
-<a href="#selection" class="auto internal xref">Section 6.1</a> governs this narrower case.<a href="#appendix-C.2-4" class="pilcrow">¶</a></p>
-<p id="appendix-C.2-5">Client authentication methods, endpoint selection, client-initiated parameters,
+<a href="#selection" class="auto internal xref">Section 6.1</a> governs this narrower case.<a href="#appendix-C.2-5" class="pilcrow">¶</a></p>
+<p id="appendix-C.2-6">Client authentication methods, endpoint selection, client-initiated parameters,
 additive response fields, and mandatory client behavior do not qualify.
-<a href="#iana-registry" class="auto internal xref">Section 12.1</a> records absent-signal behavior to make this test explicit.<a href="#appendix-C.2-5" class="pilcrow">¶</a></p>
+<a href="#iana-registry" class="auto internal xref">Section 12.1</a> records absent-signal behavior to make this test explicit.<a href="#appendix-C.2-6" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="why-no-mandatory-to-understand-semantics">
