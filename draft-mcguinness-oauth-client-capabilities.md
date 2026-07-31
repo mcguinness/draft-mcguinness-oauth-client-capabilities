@@ -45,6 +45,9 @@ informative:
   RFC9396:
   RFC9449:
   RFC9635:
+  OAUTH21-VERSIONS:
+    target: https://github.com/oauth-wg/oauth-v2-1/issues/120
+    title: "How can an AS support both 2.0 and 2.1 clients concurrently"
   DTR:
     target: https://datatracker.ietf.org/doc/draft-gerber-oauth-deferred-token-response
     title: "Deferred Token Response"
@@ -147,6 +150,15 @@ that issuer. Had a capability vocabulary existed, the parameter could have been
 sent only to clients that signaled they would process it, with the signaling
 client rejecting non-delivery. Rollout would have been incremental and no
 client would have broken.
+
+The same gap is being met prospectively. In considering how an authorization
+server can serve OAuth 2.0 and 2.1 clients at once, discussion has identified a
+need to let clients opt into 2.1 behavior during a slow rollout, such as native
+applications whose upgrades reach users gradually, and has observed that a
+per-client registration flag cannot express it {{OAUTH21-VERSIONS}}. That
+requirement is a static default with a per-request override, the shape
+{{precedence}} defines. Version selection itself is a different problem from
+capability signaling; see {{profiles}}.
 
 ## What This Specification Does Not Change
 
@@ -945,6 +957,29 @@ the server implement something, while a capability states that the client can
 process behavior the server remains free not to exercise. Mixing the two would
 undermine the advisory model. Extensions needing hard failure define their own
 errors; CAP-1 still prevents removal from weakening security.
+
+## Capabilities and Profile Selection {#profiles}
+
+A related problem is selecting a protocol version or profile rather than a
+behavior. Discussion of how an authorization server can serve OAuth 2.0 and 2.1
+clients concurrently proposes a per-issuer `oauth_versions_supported` metadata
+array and a per-client `oauth_version` registration field
+{{OAUTH21-VERSIONS}}.
+
+That is not capability signaling as defined here. A version names a document
+rather than a behavior a server may exercise ({{values}}), and profile
+membership is closer to the policy input {{invariants}} excludes. This
+specification neither defines it nor proposes that version values be
+registered.
+
+The two problems do share a carrier shape. Fractional rollout requires a static
+default that a single request can override, which a registration field alone
+cannot provide: every deployed instance sharing a `client_id` carries the same
+declared version, so a rollout staged across native application releases cannot
+be expressed. The precedence rule in {{precedence}} is the general form of that
+override. Whether version selection should reuse it, or should instead be
+decomposed into the specific behaviors that actually need signaling, belongs to
+that work rather than this one.
 
 ## Trade-offs
 
