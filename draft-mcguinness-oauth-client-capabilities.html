@@ -1370,14 +1370,6 @@ design is one field per feature. Each signal also often needs its own
 registrations and metadata. A shared vocabulary pays those costs once across
 both sides of the asymmetry in
 <a href="#asymmetry" class="auto internal xref">Section 1.1</a>.<a href="#section-1.2-3" class="pilcrow">¶</a></p>
-<p id="section-1.2-4">The gap appears in current work. In considering how an authorization server can
-serve OAuth 2.0 and 2.1 clients at once, discussion has identified a need to
-let clients opt into 2.1 behavior during a slow rollout, naming native
-applications whose upgrades reach users gradually <span>[<a href="#OAUTH21-VERSIONS" class="cite xref">OAUTH21-VERSIONS</a>]</span>. Reading
-that requirement as calling for a static default with a per-request override,
-the shape <a href="#precedence" class="auto internal xref">Section 5.5</a> defines, is an inference of this document rather than
-a conclusion of that discussion. Version selection itself is a different
-problem from capability signaling; see <a href="#profiles" class="auto internal xref">Appendix C.4</a>.<a href="#section-1.2-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="what-this-specification-does-not-change">
@@ -1628,25 +1620,30 @@ OAuth-Client-Capabilities: txn-challenge
           </figcaption></figure>
 <p id="section-5.2-4">Senders <span class="bcp14">MUST NOT</span> generate Inner List members, members of another bare-item
 type, or parameters. A recipient <span class="bcp14">MUST</span> parse the field as a Structured Fields
-List. If parsing fails, or if any member is not a Token Item, the recipient
-<span class="bcp14">MUST</span> treat the field as absent. A recipient <span class="bcp14">MUST</span> ignore parameters and
-unrecognized capability values. The order of members is not significant, and
-duplicate values <span class="bcp14">MUST</span> be ignored.<a href="#section-5.2-4" class="pilcrow">¶</a></p>
-<p id="section-5.2-5">The <code>none</code> sentinel defined in <a href="#none-value" class="auto internal xref">Section 3.3</a> is not a capability value and
+List. The field is invalid if parsing fails, if any member is not a Token Item,
+or if any member's Token does not conform to the <code>capability</code> production in
+<a href="#values" class="auto internal xref">Section 3</a>. The last case is distinct: a Structured Fields Token can be well
+formed and still violate that production, as <code>*bad</code> does. A recipient <span class="bcp14">MUST</span>
+treat an invalid field as absent, matching the treatment of an invalid request
+parameter in <a href="#values" class="auto internal xref">Section 3</a>.<a href="#section-5.2-4" class="pilcrow">¶</a></p>
+<p id="section-5.2-5">A recipient <span class="bcp14">MUST</span> ignore parameters, and <span class="bcp14">MUST</span> ignore a member that conforms to
+the production but names a capability the recipient does not recognize. The
+order of members is not significant, and duplicate values <span class="bcp14">MUST</span> be ignored.<a href="#section-5.2-5" class="pilcrow">¶</a></p>
+<p id="section-5.2-6">The <code>none</code> sentinel defined in <a href="#none-value" class="auto internal xref">Section 3.3</a> is not a capability value and
 <span class="bcp14">MUST NOT</span> be sent in this field. A recipient <span class="bcp14">MUST</span> ignore a member whose value is
-<code>none</code>.<a href="#section-5.2-5" class="pilcrow">¶</a></p>
-<p id="section-5.2-6">A server whose response varies with the field <span class="bcp14">MUST</span> include
+<code>none</code>.<a href="#section-5.2-6" class="pilcrow">¶</a></p>
+<p id="section-5.2-7">A server whose response varies with the field <span class="bcp14">MUST</span> include
 <code>OAuth-Client-Capabilities</code> in the <code>Vary</code> field of the response, or use <code>Vary:
-*</code>, per <span>[<a href="#RFC9110" class="cite xref">RFC9110</a>]</span>, Section 12.5.5.<a href="#section-5.2-6" class="pilcrow">¶</a></p>
-<p id="section-5.2-7">The field is defined only for requests that have no OAuth request parameter
+*</code>, per <span>[<a href="#RFC9110" class="cite xref">RFC9110</a>]</span>, Section 12.5.5.<a href="#section-5.2-7" class="pilcrow">¶</a></p>
+<p id="section-5.2-8">The field is defined only for requests that have no OAuth request parameter
 surface. A client <span class="bcp14">MUST NOT</span> use the field on a request at an endpoint where the
 <code>client_capabilities</code> parameter is defined; it uses <a href="#param" class="auto internal xref">Section 5.1</a> there instead. An
-authorization server <span class="bcp14">MUST</span> ignore the field on any request to such an endpoint.<a href="#section-5.2-7" class="pilcrow">¶</a></p>
-<p id="section-5.2-8">At the authorization endpoint, a user agent issues the HTTP request, so its
+authorization server <span class="bcp14">MUST</span> ignore the field on any request to such an endpoint.<a href="#section-5.2-8" class="pilcrow">¶</a></p>
+<p id="section-5.2-9">At the authorization endpoint, a user agent issues the HTTP request, so its
 fields cannot be attributed to the client. Using only the parameter at
 authorization server endpoints also gives the request one unambiguous effective
-set and allows Request Object or pushed-request protections where applicable.<a href="#section-5.2-8" class="pilcrow">¶</a></p>
-<p id="section-5.2-9">An empty List and an absent field are equivalent: both signal the empty set.<a href="#section-5.2-9" class="pilcrow">¶</a></p>
+set and allows Request Object or pushed-request protections where applicable.<a href="#section-5.2-9" class="pilcrow">¶</a></p>
+<p id="section-5.2-10">An empty List and an absent field are equivalent: both signal the empty set.<a href="#section-5.2-10" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="metadata">
@@ -1864,13 +1861,14 @@ mandatory because the server cannot discover conformance.<a href="#section-8-6.3
 meaningful.<a href="#section-8-6.4.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
-<p id="section-8-7">An extension <span class="bcp14">SHOULD NOT</span> couple a client-affecting behavior to a per-issuer
-metadata flag that clients must key on, because that forecloses incremental
-rollout: the behavior becomes all-or-nothing for every client of the issuer.
-Where the behavior can vary per client, gate it on a capability instead.
-<span>[<a href="#RFC9207" class="cite xref">RFC9207</a>]</span> is the cautionary case: support is advertised by one per-issuer
-boolean and clients that read it must reject responses lacking <code>iss</code>, so the
-feature is all-or-nothing for every client of that issuer.<a href="#section-8-7" class="pilcrow">¶</a></p>
+<p id="section-8-7">Issuer-wide behavior is often the intended design, and coupling it to a
+per-issuer metadata flag is a legitimate choice. Where per-client or fractional
+rollout is a requirement, however, an extension <span class="bcp14">SHOULD NOT</span> couple the behavior
+to such a flag, because it then becomes all-or-nothing for every client of the
+issuer; gate it on a capability instead. <span>[<a href="#RFC9207" class="cite xref">RFC9207</a>]</span> illustrates the tradeoff
+rather than a mistake: coupling the advertisement to a server-wide delivery
+commitment is what allows a client to enforce that <code>iss</code> is present, and the
+cost is that the feature cannot be rolled out per client.<a href="#section-8-7" class="pilcrow">¶</a></p>
 <p id="section-8-8">This specification provides no delivery guarantee, and an extension <span class="bcp14">MUST NOT</span>
 rely on a capability signal to supply one. Under <a href="#server-behavior" class="auto internal xref">Section 6</a> a server
 retains discretion, so treating non-delivery as an error on the strength of a
@@ -2609,14 +2607,17 @@ rather than a behavior a server may exercise (<a href="#values" class="auto inte
 membership is closer to the policy input <a href="#invariants" class="auto internal xref">Section 4</a> excludes. This
 specification neither defines it nor proposes that version values be
 registered.<a href="#appendix-C.4-2" class="pilcrow">¶</a></p>
-<p id="appendix-C.4-3">The two problems do share a carrier shape. Fractional rollout requires a static
-default that a single request can override, which a registration field alone
-cannot provide: every deployed instance sharing a <code>client_id</code> carries the same
-declared version, so a rollout staged across native application releases cannot
-be expressed. The precedence rule in <a href="#precedence" class="auto internal xref">Section 5.5</a> is the general form of that
-override. Whether version selection should reuse it, or should instead be
-decomposed into the specific behaviors that actually need signaling, belongs to
-that work rather than this one.<a href="#appendix-C.4-3" class="pilcrow">¶</a></p>
+<p id="appendix-C.4-3">The two problems do share a carrier shape. That discussion lists a slow rollout
+for native applications, whose upgrades reach users gradually, among its
+requirements <span>[<a href="#OAUTH21-VERSIONS" class="cite xref">OAUTH21-VERSIONS</a>]</span>. Reading the requirement as a call for a
+static default that a single request can override is an inference of this
+document rather than a conclusion of that discussion. A registration field
+alone cannot provide it: every deployed instance sharing a <code>client_id</code> carries
+the same declared version, so a rollout staged across native application
+releases cannot be expressed. The precedence rule in <a href="#precedence" class="auto internal xref">Section 5.5</a> is the
+general form of that override. Whether version selection should reuse it, or
+should instead be decomposed into the specific behaviors that actually need
+signaling, belongs to that work rather than this one.<a href="#appendix-C.4-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="trade-offs">
