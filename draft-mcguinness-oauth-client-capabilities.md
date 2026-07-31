@@ -194,8 +194,12 @@ value is valid as a sequence of `NQCHAR` in a form-encoded OAuth parameter
 ({{RFC9651}}, Section 3.3.4). A single registered value is therefore usable in
 both carriers with no transformation.
 
-Capability values are case-sensitive. The order of values is not significant,
-and duplicates MUST be ignored.
+Capability values are case-sensitive. The following apply wherever a capability
+value appears, in every carrier in {{carriers}} and in {{discovery}}: a value
+MUST conform to the `capability` production, order is not significant,
+duplicates MUST be ignored, and a recipient MUST ignore a value it does not
+recognize. What a non-conforming value causes differs by carrier and is stated
+with each carrier.
 
 For the request parameter, `capability-list` is applied after
 `application/x-www-form-urlencoded` decoding. An empty value is treated as
@@ -267,10 +271,9 @@ Two consequences follow. Capabilities are self-asserted, and a client claiming
 one it lacks can receive a response it cannot process; CAP-2 and CAP-3 keep a
 false claim from being accepted as authorization, authentication, or proof of a
 security-relevant property, though an extension must still analyze its
-operational cost ({{dos}}). And an adversary able to modify a request,
-including the user agent on the front channel, can remove values and degrade
-the client to base OAuth. Under CAP-1 that is the safe direction, at the cost
-of optional functionality.
+operational cost ({{dos}}). And an adversary who removes values degrades the
+client to base OAuth, which under CAP-1 is the safe direction at the cost of
+optional functionality; see {{security-considerations}}.
 
 These invariants also serve as the admission criterion for the registry; see
 {{extension-guidance}}.
@@ -350,13 +353,10 @@ formed and still violate that production, as `*bad` does. A recipient MUST
 treat an invalid field as absent, matching the treatment of an invalid request
 parameter in {{values}}.
 
-A recipient MUST ignore parameters, and MUST ignore a member that conforms to
-the production but names a capability the recipient does not recognize. The
-order of members is not significant, and duplicate values MUST be ignored.
+A recipient MUST ignore parameters.
 
-The `none` sentinel defined in {{none-value}} is not a capability value and
-MUST NOT be sent in this field. A recipient MUST ignore a member whose value is
-`none`.
+The `none` sentinel ({{none-value}}) MUST NOT be sent in this field, and a
+recipient MUST ignore a member whose value is `none`.
 
 A server whose response varies with the field MUST include
 `OAuth-Client-Capabilities` in the `Vary` field of the response, or use `Vary:
@@ -376,14 +376,11 @@ authorization server, published at a Client Identifier URL {{CIMD}}, or carried
 in a software statement. Depending on the mechanism, it can describe client
 software, a deployed instance, or both; see {{precedence}}.
 
-Every array element MUST conform to the `capability` production in {{values}}.
 The array MUST NOT contain `none`. An absent field and an empty array both
-denote the empty set. Order is not significant, and recipients MUST ignore
-duplicate and unrecognized values. If any element is not a string or does not
-conform to the `capability` production, the metadata field is invalid. A
-recipient MUST NOT derive any capabilities from an invalid field; the
-containing metadata protocol determines whether the document or request is
-rejected or the field is ignored.
+denote the empty set. If any element is not a string or does not conform to the
+`capability` production, the field is invalid. A recipient MUST NOT derive any
+capabilities from an invalid field; the containing metadata protocol determines
+whether the document or request is rejected or the field is ignored.
 
 A party publishing or registering this metadata MUST NOT declare a capability
 unless every client instance covered by that metadata can process the enabled
@@ -449,8 +446,7 @@ declaration.
 
 # Server Behavior {#server-behavior}
 
-A server MUST ignore capability values it does not recognize. Presence of an
-unrecognized value MUST NOT cause a request to fail.
+Presence of an unrecognized capability value MUST NOT cause a request to fail.
 
 Signaling a capability does not entitle a client to the corresponding behavior.
 A server retains discretion over whether to exercise optional behavior.
@@ -493,11 +489,9 @@ client_capabilities_supported:
 This metadata member is defined for authorization server metadata {{RFC8414}}
 and for protected resource metadata {{RFC9728}}.
 
-Every array element MUST conform to the `capability` production in {{values}}.
-The array MUST NOT contain `none`. Order is not significant, and clients MUST
-ignore duplicate and unrecognized values. If any element is not a string or
-does not conform to the `capability` production, the value of this member is
-invalid and MUST be ignored in its entirety.
+The array MUST NOT contain `none`. If any element is not a string or does not
+conform to the `capability` production, the value of this member is invalid and
+MUST be ignored in its entirety.
 
 Clients SHOULD signal only capability values that appear in
 `client_capabilities_supported`, where the server publishes it. A client MAY
@@ -509,9 +503,8 @@ fingerprinting exposure, following the pattern of Client Hints {{RFC8942}}.
 Absence of `client_capabilities_supported` does not indicate that the server
 fails to support this specification.
 
-Advertising a value is not a commitment to exercise the behavior. A client
-cannot infer from an advertisement, or from its own signal, that the behavior
-will be delivered; {{server-behavior}} leaves that to the server.
+Advertising a value is not a commitment to exercise the behavior; see
+{{server-behavior}}.
 
 # Guidance for Extension Specifications {#extension-guidance}
 
@@ -561,10 +554,9 @@ commitment is what allows a client to enforce that `iss` is present, and the
 cost is that the feature cannot be rolled out per client.
 
 This specification provides no delivery guarantee, and an extension MUST NOT
-rely on a capability signal to supply one. Under {{server-behavior}} a server
-retains discretion, so treating non-delivery as an error on the strength of a
-signal, or of an advertisement, is unsound. An extension that genuinely needs a
-delivery commitment defines it itself, along with how a client learns that the
+rely on a capability signal or an advertisement to supply one;
+{{server-behavior}} leaves delivery to the server. An extension that needs a
+delivery commitment defines it itself, along with how a client learns the
 server will honor it.
 
 # Relationship to Existing Mechanisms {#relationships}
