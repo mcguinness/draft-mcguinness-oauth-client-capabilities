@@ -103,8 +103,9 @@ Table of Contents
      C.1.  Survey of Existing Mechanisms
      C.2.  Applying the Admission Criterion
      C.3.  Why No Mandatory-to-Understand Semantics
-     C.4.  Trade-offs
-     C.5.  Open Issues
+     C.4.  Capabilities and Profile Selection
+     C.5.  Trade-offs
+     C.6.  Open Issues
    Acknowledgments
    Author's Address
 
@@ -179,6 +180,16 @@ Table of Contents
    could have been sent only to clients that signaled they would process
    it, with the signaling client rejecting non-delivery.  Rollout would
    have been incremental and no client would have broken.
+
+   The same gap is being met prospectively.  In considering how an
+   authorization server can serve OAuth 2.0 and 2.1 clients at once,
+   discussion has identified a need to let clients opt into 2.1 behavior
+   during a slow rollout, such as native applications whose upgrades
+   reach users gradually, and has observed that a per-client
+   registration flag cannot express it [OAUTH21-VERSIONS].  That
+   requirement is a static default with a per-request override, the
+   shape Section 5.5 defines.  Version selection itself is a different
+   problem from capability signaling; see Appendix C.4.
 
 1.3.  What This Specification Does Not Change
 
@@ -954,6 +965,11 @@ Table of Contents
               "OAuth Parameters", n.d.,
               <https://www.iana.org/assignments/oauth-parameters/>.
 
+   [OAUTH21-VERSIONS]
+              "How can an AS support both 2.0 and 2.1 clients
+              concurrently", n.d.,
+              <https://github.com/oauth-wg/oauth-v2-1/issues/120>.
+
    [RFC3261]  Rosenberg, J., Schulzrinne, H., Camarillo, G., Johnston,
               A., Peterson, J., Sparks, R., Handley, M., and E.
               Schooler, "SIP: Session Initiation Protocol", RFC 3261,
@@ -968,7 +984,10 @@ Table of Contents
               DOI 10.17487/RFC8942, February 2021,
               <https://www.rfc-editor.org/rfc/rfc8942>.
 
-   [RFC9207]  "*** BROKEN REFERENCE ***".
+   [RFC9207]  Meyer zu Selhausen, K. and D. Fett, "OAuth 2.0
+              Authorization Server Issuer Identification", RFC 9207,
+              DOI 10.17487/RFC9207, March 2022,
+              <https://www.rfc-editor.org/rfc/rfc9207>.
 
    [RFC9396]  Lodderstedt, T., Richer, J., and B. Campbell, "OAuth 2.0
               Rich Authorization Requests", RFC 9396,
@@ -1122,7 +1141,31 @@ C.3.  Why No Mandatory-to-Understand Semantics
    Extensions needing hard failure define their own errors; CAP-1 still
    prevents removal from weakening security.
 
-C.4.  Trade-offs
+C.4.  Capabilities and Profile Selection
+
+   A related problem is selecting a protocol version or profile rather
+   than a behavior.  Discussion of how an authorization server can serve
+   OAuth 2.0 and 2.1 clients concurrently proposes a per-issuer
+   oauth_versions_supported metadata array and a per-client
+   oauth_version registration field [OAUTH21-VERSIONS].
+
+   That is not capability signaling as defined here.  A version names a
+   document rather than a behavior a server may exercise (Section 3),
+   and profile membership is closer to the policy input Section 4
+   excludes.  This specification neither defines it nor proposes that
+   version values be registered.
+
+   The two problems do share a carrier shape.  Fractional rollout
+   requires a static default that a single request can override, which a
+   registration field alone cannot provide: every deployed instance
+   sharing a client_id carries the same declared version, so a rollout
+   staged across native application releases cannot be expressed.  The
+   precedence rule in Section 5.5 is the general form of that override.
+   Whether version selection should reuse it, or should instead be
+   decomposed into the specific behaviors that actually need signaling,
+   belongs to that work rather than this one.
+
+C.5.  Trade-offs
 
    Cache keys become coarser.  A protected resource whose responses vary
    by capability sends Vary: OAuth-Client-Capabilities, keying the cache
@@ -1137,7 +1180,7 @@ C.4.  Trade-offs
    continued growth and is easier to establish before more incompatible
    carriers ship.
 
-C.5.  Open Issues
+C.6.  Open Issues
 
    *  Should a server report which capabilities it acted upon, as
       [RFC7240] does with Preference-Applied?  The current answer is no
