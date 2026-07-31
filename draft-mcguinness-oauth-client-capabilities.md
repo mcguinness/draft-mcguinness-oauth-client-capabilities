@@ -141,10 +141,7 @@ capability can enlarge an authorization URI visible to the user agent. Each
 resource capability adds a field to protected resource requests; an `Accept-*`
 design is one field per feature. Each signal also often needs its own
 registrations and metadata. A shared vocabulary pays those costs once across
-both sides of the asymmetry in
-{{asymmetry}}.
-
-
+both sides of the asymmetry in {{asymmetry}}.
 
 ## What This Specification Does Not Change
 
@@ -324,6 +321,14 @@ capabilities on a request that has no OAuth request parameter surface, most
 importantly a protected resource request, which is also where alternative
 challenge paths most often coexist; see {{selection}}.
 
+A client MUST NOT use the field on a request at an endpoint where the
+`client_capabilities` parameter is defined; it uses {{param}} there instead. An
+authorization server MUST ignore the field on any request to such an endpoint.
+At the authorization endpoint a user agent issues the HTTP request, so its
+fields cannot be attributed to the client, and using only the parameter at
+authorization server endpoints gives the request one unambiguous effective set
+while allowing Request Object or pushed-request protections where applicable.
+
 Its value is a Structured Fields List ({{RFC9651}}, Section 3.1). Each member
 MUST be an Item whose bare item is a Token containing a capability value as
 defined in {{values}}:
@@ -356,16 +361,6 @@ MUST NOT be sent in this field. A recipient MUST ignore a member whose value is
 A server whose response varies with the field MUST include
 `OAuth-Client-Capabilities` in the `Vary` field of the response, or use `Vary:
 *`, per {{RFC9110}}, Section 12.5.5.
-
-The field is defined only for requests that have no OAuth request parameter
-surface. A client MUST NOT use the field on a request at an endpoint where the
-`client_capabilities` parameter is defined; it uses {{param}} there instead. An
-authorization server MUST ignore the field on any request to such an endpoint.
-
-At the authorization endpoint, a user agent issues the HTTP request, so its
-fields cannot be attributed to the client. Using only the parameter at
-authorization server endpoints also gives the request one unambiguous effective
-set and allows Request Object or pushed-request protections where applicable.
 
 An empty List and an absent field are equivalent: both signal the empty set.
 
@@ -501,8 +496,8 @@ and for protected resource metadata {{RFC9728}}.
 Every array element MUST conform to the `capability` production in {{values}}.
 The array MUST NOT contain `none`. Order is not significant, and clients MUST
 ignore duplicate and unrecognized values. If any element is not a string or
-does not conform to the `capability` production, the metadata field is invalid
-and MUST be ignored in its entirety.
+does not conform to the `capability` production, the value of this member is
+invalid and MUST be ignored in its entirety.
 
 Clients SHOULD signal only capability values that appear in
 `client_capabilities_supported`, where the server publishes it. A client MAY
@@ -524,8 +519,14 @@ An extension that needs a client to signal a processing capability SHOULD
 register a value in the registry established in {{iana-registry}} rather than
 define a dedicated parameter or field.
 
-The invariants in {{invariants}} decide admission. One heuristic catches most
-misclassifications:
+The invariants in {{invariants}} decide admission. A value may be justified on
+either of two grounds: that a server cannot safely exercise the behavior
+without it, or that a server choosing among several paths would otherwise
+select one the client cannot complete ({{selection}}). The second requires that
+the signal can change whether the operation completes, not merely make an
+already-workable path more convenient.
+
+One heuristic catches most misclassifications:
 
 > If an implementer would want the value to be attested, it is not a
 > capability.
@@ -565,12 +566,6 @@ retains discretion, so treating non-delivery as an error on the strength of a
 signal, or of an advertisement, is unsound. An extension that genuinely needs a
 delivery commitment defines it itself, along with how a client learns that the
 server will honor it.
-
-A value may be justified on either of two grounds: that a server cannot safely
-exercise the behavior without it, or that a server choosing among several paths
-would otherwise select one the client cannot complete ({{selection}}). The
-second requires that the signal can change whether the operation completes, not
-merely make an already-workable path more convenient.
 
 # Relationship to Existing Mechanisms {#relationships}
 
@@ -618,8 +613,7 @@ behavior.
 Servers MUST NOT treat a capability signal as evidence of client identity,
 client software version, or client trustworthiness. Where a Request Object
 {{RFC9101}} or software statement carries a set, the signature prevents
-third-party modification but does not prove implementation. See
-{{precedence}}.
+third-party modification but does not prove implementation. See {{precedence}}.
 
 ## Downgrade
 
@@ -952,14 +946,15 @@ delivery is safe for any conforming client and needs no gate.
 for, and what it needs is a way for clients to learn that a server implements
 it. That is server metadata, not a client capability.
 
-A safe, unconditional behavior can also qualify when the server must choose
-among paths and the signal prevents selection of one the client cannot
-complete;
-{{selection}} governs this narrower case.
+On gating grounds the criterion also rejects client authentication methods,
+endpoint selection, client-initiated parameters, and behavior a specification
+makes mandatory to implement.
 
-Client authentication methods, endpoint selection, client-initiated parameters,
-additive response fields, and mandatory client behavior do not qualify.
-{{iana-registry}} records absent-signal behavior to make this test explicit.
+Selection is the one exception. A behavior safe to issue unconditionally needs
+no gating signal, yet can still qualify where a server must choose among paths
+and the signal prevents it selecting one the client cannot complete;
+{{selection}} governs that narrower case and {{extension-guidance}} bounds it.
+{{iana-registry}} records absent-signal behavior to make the test explicit.
 
 ## Why No Mandatory-to-Understand Semantics
 
