@@ -4,8 +4,8 @@
 
 Web Authorization Protocol                                 K. McGuinness
 Internet-Draft                                               Independent
-Intended status: Standards Track                            30 July 2026
-Expires: 31 January 2027
+Intended status: Standards Track                            31 July 2026
+Expires: 1 February 2027
 
 
                      OAuth 2.0 Client Capabilities
@@ -43,7 +43,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 31 January 2027.
+   This Internet-Draft will expire on 1 February 2027.
 
 Copyright Notice
 
@@ -166,6 +166,20 @@ Table of Contents
    vocabulary pays those costs once across both sides of the asymmetry
    in Section 1.1.
 
+   The cost of having no such vocabulary is visible in a published RFC.
+   An authorization server adopting [RFC9207] adds an iss parameter to
+   the authorization response.  [RFC6749], Section 4.1.2 requires
+   clients to ignore unrecognized response parameters, so the change is
+   additive on paper, but clients coded to reject unexpected parameters
+   break, and the operator does not control them.  [RFC9207] offers no
+   way to ask first: support is advertised by a single per-issuer
+   metadata boolean, and clients that read it MUST reject responses
+   lacking iss, so the feature is all-or-nothing for every client of
+   that issuer.  Had a capability vocabulary existed, the parameter
+   could have been sent only to clients that signaled they would process
+   it, with the signaling client rejecting non-delivery.  Rollout would
+   have been incremental and no client would have broken.
+
 1.3.  What This Specification Does Not Change
 
    This specification defines carriers and a vocabulary.  It does not
@@ -173,6 +187,14 @@ Table of Contents
    Section 3.3, does not change any existing parameter, and does not
    require existing extensions to migrate.  It is designed so that
    extensions may adopt it incrementally.
+
+   Two uses are out of scope.  Capability values do not carry
+   deployment-local feature flags or rollout cohort membership, which
+   are server-side policy keyed on the client's identity rather than
+   properties a client asserts.  Nor do they signal conformance to an
+   existing requirement: a client that violates a MUST is not made safe
+   by asserting that it does not, and such a client generally cannot be
+   updated to send the assertion in the first place.
 
 2.  Conventions and Definitions
 
@@ -586,6 +608,14 @@ Table of Contents
    *  State, in the registration, the carriers and endpoints at which
       the value is meaningful.
 
+   An extension SHOULD NOT couple a client-affecting behavior to a per-
+   issuer metadata flag that clients must key on, because that
+   forecloses incremental rollout: the behavior becomes all-or-nothing
+   for every client of the issuer.  Where the behavior can vary per
+   client, gate it on a capability instead, and require a client that
+   signaled the capability to reject non-delivery so that stripping the
+   signal denies service rather than silently removing a protection.
+
    A value may be justified on either of two grounds: that a server
    cannot safely exercise the behavior without it, or that a server
    choosing among several paths would otherwise select one the client
@@ -713,7 +743,9 @@ Table of Contents
       the value.
 
    Absent-Signal Behavior:  What the server does when the value is not
-      in the effective set.  Recording this makes CAP-1 in Section 4
+      in the effective set, and, where the enabled behavior is security
+      relevant, what a client that signaled the value does if the
+      behavior does not arrive.  Recording both makes CAP-1 in Section 4
       checkable at registration time rather than aspirational.
 
    Carriers:  The carriers in which the value is meaningful: any of
@@ -935,6 +967,8 @@ Table of Contents
    [RFC8942]  Grigorik, I. and Y. Weiss, "HTTP Client Hints", RFC 8942,
               DOI 10.17487/RFC8942, February 2021,
               <https://www.rfc-editor.org/rfc/rfc8942>.
+
+   [RFC9207]  "*** BROKEN REFERENCE ***".
 
    [RFC9396]  Lodderstedt, T., Richer, J., and B. Campbell, "OAuth 2.0
               Rich Authorization Requests", RFC 9396,
