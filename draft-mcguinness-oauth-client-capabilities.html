@@ -1368,8 +1368,7 @@ capability can enlarge an authorization URI visible to the user agent. Each
 resource capability adds a field to protected resource requests; an <code>Accept-*</code>
 design is one field per feature. Each signal also often needs its own
 registrations and metadata. A shared vocabulary pays those costs once across
-both sides of the asymmetry in
-<a href="#asymmetry" class="auto internal xref">Section 1.1</a>.<a href="#section-1.2-3" class="pilcrow">¶</a></p>
+both sides of the asymmetry in <a href="#asymmetry" class="auto internal xref">Section 1.1</a>.<a href="#section-1.2-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="what-this-specification-does-not-change">
@@ -1603,11 +1602,18 @@ confidentiality, but passing one by value does not reduce URI size.<a href="#sec
 capabilities on a request that has no OAuth request parameter surface, most
 importantly a protected resource request, which is also where alternative
 challenge paths most often coexist; see <a href="#selection" class="auto internal xref">Section 6.1</a>.<a href="#section-5.2-1" class="pilcrow">¶</a></p>
-<p id="section-5.2-2">Its value is a Structured Fields List (<span>[<a href="#RFC9651" class="cite xref">RFC9651</a>]</span>, Section 3.1). Each member
+<p id="section-5.2-2">A client <span class="bcp14">MUST NOT</span> use the field on a request at an endpoint where the
+<code>client_capabilities</code> parameter is defined; it uses <a href="#param" class="auto internal xref">Section 5.1</a> there instead. An
+authorization server <span class="bcp14">MUST</span> ignore the field on any request to such an endpoint.
+At the authorization endpoint a user agent issues the HTTP request, so its
+fields cannot be attributed to the client, and using only the parameter at
+authorization server endpoints gives the request one unambiguous effective set
+while allowing Request Object or pushed-request protections where applicable.<a href="#section-5.2-2" class="pilcrow">¶</a></p>
+<p id="section-5.2-3">Its value is a Structured Fields List (<span>[<a href="#RFC9651" class="cite xref">RFC9651</a>]</span>, Section 3.1). Each member
 <span class="bcp14">MUST</span> be an Item whose bare item is a Token containing a capability value as
-defined in <a href="#values" class="auto internal xref">Section 3</a>:<a href="#section-5.2-2" class="pilcrow">¶</a></p>
+defined in <a href="#values" class="auto internal xref">Section 3</a>:<a href="#section-5.2-3" class="pilcrow">¶</a></p>
 <span id="name-signaling-a-capability-on-a"></span><figure id="figure-2">
-          <div class="lang-http-message sourcecode" id="section-5.2-3.1">
+          <div class="lang-http-message sourcecode" id="section-5.2-4.1">
 <pre>
 GET /transfers/42 HTTP/1.1
 Host: api.example.com
@@ -1618,32 +1624,24 @@ OAuth-Client-Capabilities: txn-challenge
 <figcaption><a href="#figure-2" class="selfRef">Figure 2</a>:
 <a href="#name-signaling-a-capability-on-a" class="selfRef">Signaling a capability on a protected resource request</a>
           </figcaption></figure>
-<p id="section-5.2-4">Senders <span class="bcp14">MUST NOT</span> generate Inner List members, members of another bare-item
+<p id="section-5.2-5">Senders <span class="bcp14">MUST NOT</span> generate Inner List members, members of another bare-item
 type, or parameters. A recipient <span class="bcp14">MUST</span> parse the field as a Structured Fields
 List. The field is invalid if parsing fails, if any member is not a Token Item,
 or if any member's Token does not conform to the <code>capability</code> production in
 <a href="#values" class="auto internal xref">Section 3</a>. The last case is distinct: a Structured Fields Token can be well
 formed and still violate that production, as <code>*bad</code> does. A recipient <span class="bcp14">MUST</span>
 treat an invalid field as absent, matching the treatment of an invalid request
-parameter in <a href="#values" class="auto internal xref">Section 3</a>.<a href="#section-5.2-4" class="pilcrow">¶</a></p>
-<p id="section-5.2-5">A recipient <span class="bcp14">MUST</span> ignore parameters, and <span class="bcp14">MUST</span> ignore a member that conforms to
+parameter in <a href="#values" class="auto internal xref">Section 3</a>.<a href="#section-5.2-5" class="pilcrow">¶</a></p>
+<p id="section-5.2-6">A recipient <span class="bcp14">MUST</span> ignore parameters, and <span class="bcp14">MUST</span> ignore a member that conforms to
 the production but names a capability the recipient does not recognize. The
-order of members is not significant, and duplicate values <span class="bcp14">MUST</span> be ignored.<a href="#section-5.2-5" class="pilcrow">¶</a></p>
-<p id="section-5.2-6">The <code>none</code> sentinel defined in <a href="#none-value" class="auto internal xref">Section 3.3</a> is not a capability value and
+order of members is not significant, and duplicate values <span class="bcp14">MUST</span> be ignored.<a href="#section-5.2-6" class="pilcrow">¶</a></p>
+<p id="section-5.2-7">The <code>none</code> sentinel defined in <a href="#none-value" class="auto internal xref">Section 3.3</a> is not a capability value and
 <span class="bcp14">MUST NOT</span> be sent in this field. A recipient <span class="bcp14">MUST</span> ignore a member whose value is
-<code>none</code>.<a href="#section-5.2-6" class="pilcrow">¶</a></p>
-<p id="section-5.2-7">A server whose response varies with the field <span class="bcp14">MUST</span> include
+<code>none</code>.<a href="#section-5.2-7" class="pilcrow">¶</a></p>
+<p id="section-5.2-8">A server whose response varies with the field <span class="bcp14">MUST</span> include
 <code>OAuth-Client-Capabilities</code> in the <code>Vary</code> field of the response, or use <code>Vary:
-*</code>, per <span>[<a href="#RFC9110" class="cite xref">RFC9110</a>]</span>, Section 12.5.5.<a href="#section-5.2-7" class="pilcrow">¶</a></p>
-<p id="section-5.2-8">The field is defined only for requests that have no OAuth request parameter
-surface. A client <span class="bcp14">MUST NOT</span> use the field on a request at an endpoint where the
-<code>client_capabilities</code> parameter is defined; it uses <a href="#param" class="auto internal xref">Section 5.1</a> there instead. An
-authorization server <span class="bcp14">MUST</span> ignore the field on any request to such an endpoint.<a href="#section-5.2-8" class="pilcrow">¶</a></p>
-<p id="section-5.2-9">At the authorization endpoint, a user agent issues the HTTP request, so its
-fields cannot be attributed to the client. Using only the parameter at
-authorization server endpoints also gives the request one unambiguous effective
-set and allows Request Object or pushed-request protections where applicable.<a href="#section-5.2-9" class="pilcrow">¶</a></p>
-<p id="section-5.2-10">An empty List and an absent field are equivalent: both signal the empty set.<a href="#section-5.2-10" class="pilcrow">¶</a></p>
+*</code>, per <span>[<a href="#RFC9110" class="cite xref">RFC9110</a>]</span>, Section 12.5.5.<a href="#section-5.2-8" class="pilcrow">¶</a></p>
+<p id="section-5.2-9">An empty List and an absent field are equivalent: both signal the empty set.<a href="#section-5.2-9" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="metadata">
@@ -1803,8 +1801,8 @@ and for protected resource metadata <span>[<a href="#RFC9728" class="cite xref">
 <p id="section-7-3">Every array element <span class="bcp14">MUST</span> conform to the <code>capability</code> production in <a href="#values" class="auto internal xref">Section 3</a>.
 The array <span class="bcp14">MUST NOT</span> contain <code>none</code>. Order is not significant, and clients <span class="bcp14">MUST</span>
 ignore duplicate and unrecognized values. If any element is not a string or
-does not conform to the <code>capability</code> production, the metadata field is invalid
-and <span class="bcp14">MUST</span> be ignored in its entirety.<a href="#section-7-3" class="pilcrow">¶</a></p>
+does not conform to the <code>capability</code> production, the value of this member is
+invalid and <span class="bcp14">MUST</span> be ignored in its entirety.<a href="#section-7-3" class="pilcrow">¶</a></p>
 <p id="section-7-4">Clients <span class="bcp14">SHOULD</span> signal only capability values that appear in
 <code>client_capabilities_supported</code>, where the server publishes it. A client <span class="bcp14">MAY</span>
 signal values absent from the list, and <span class="bcp14">MAY</span> signal values to a server that
@@ -1826,60 +1824,60 @@ will be delivered; <a href="#server-behavior" class="auto internal xref">Section
 <p id="section-8-1">An extension that needs a client to signal a processing capability <span class="bcp14">SHOULD</span>
 register a value in the registry established in <a href="#iana-registry" class="auto internal xref">Section 12.1</a> rather than
 define a dedicated parameter or field.<a href="#section-8-1" class="pilcrow">¶</a></p>
-<p id="section-8-2">The invariants in <a href="#invariants" class="auto internal xref">Section 4</a> decide admission. One heuristic catches most
-misclassifications:<a href="#section-8-2" class="pilcrow">¶</a></p>
+<p id="section-8-2">The invariants in <a href="#invariants" class="auto internal xref">Section 4</a> decide admission. A value may be justified on
+either of two grounds: that a server cannot safely exercise the behavior
+without it, or that a server choosing among several paths would otherwise
+select one the client cannot complete (<a href="#selection" class="auto internal xref">Section 6.1</a>). The second requires that
+the signal can change whether the operation completes, not merely make an
+already-workable path more convenient.<a href="#section-8-2" class="pilcrow">¶</a></p>
+<p id="section-8-3">One heuristic catches most misclassifications:<a href="#section-8-3" class="pilcrow">¶</a></p>
 <ul class="normal ulEmpty">
-<li class="normal ulEmpty" id="section-8-3.1">
-          <p id="section-8-3.1.1">If an implementer would want the value to be attested, it is not a
-capability.<a href="#section-8-3.1.1" class="pilcrow">¶</a></p>
+<li class="normal ulEmpty" id="section-8-4.1">
+          <p id="section-8-4.1.1">If an implementer would want the value to be attested, it is not a
+capability.<a href="#section-8-4.1.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
-<p id="section-8-4">A property that must be trustworthy to be useful is an assurance, and belongs
+<p id="section-8-5">A property that must be trustworthy to be useful is an assurance, and belongs
 in client attestation <span>[<a href="#ABCA" class="cite xref">ABCA</a>]</span>, a software statement <span>[<a href="#RFC7591" class="cite xref">RFC7591</a>]</span>, or an
 equivalent signed structure. A capability is an assertion, not an assurance; an
 extension that needs to bind it to a key or trust it in a policy decision has
-misclassified it.<a href="#section-8-4" class="pilcrow">¶</a></p>
-<p id="section-8-5">Additional points of discipline:<a href="#section-8-5" class="pilcrow">¶</a></p>
+misclassified it.<a href="#section-8-5" class="pilcrow">¶</a></p>
+<p id="section-8-6">Additional points of discipline:<a href="#section-8-6" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-8-6.1">
-          <p id="section-8-6.1.1">Register a behavior, not a specification. See <a href="#values" class="auto internal xref">Section 3</a>.<a href="#section-8-6.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-8-7.1">
+          <p id="section-8-7.1.1">Register a behavior, not a specification. See <a href="#values" class="auto internal xref">Section 3</a>.<a href="#section-8-7.1.1" class="pilcrow">¶</a></p>
 </li>
-        <li class="normal" id="section-8-6.2">
-          <p id="section-8-6.2.1">State the absent-signal behavior, not only the behavior enabled. An extension
+        <li class="normal" id="section-8-7.2">
+          <p id="section-8-7.2.1">State the absent-signal behavior, not only the behavior enabled. An extension
 that cannot describe a fallback at least as conservative as the pre-extension
-behavior has not satisfied CAP-1, whatever the value is named.<a href="#section-8-6.2.1" class="pilcrow">¶</a></p>
+behavior has not satisfied CAP-1, whatever the value is named.<a href="#section-8-7.2.1" class="pilcrow">¶</a></p>
 </li>
-        <li class="normal" id="section-8-6.3">
-          <p id="section-8-6.3.1">Prefer server-side discovery where it works. If the client-side behavior can
+        <li class="normal" id="section-8-7.3">
+          <p id="section-8-7.3.1">Prefer server-side discovery where it works. If the client-side behavior can
 be specified as a requirement conditioned on something the server advertises
 in its own metadata (<span>[<a href="#RFC8414" class="cite xref">RFC8414</a>]</span> or <span>[<a href="#RFC9728" class="cite xref">RFC9728</a>]</span>), specify it that way and
 register no capability. A capability is for behavior that cannot be made
-mandatory because the server cannot discover conformance.<a href="#section-8-6.3.1" class="pilcrow">¶</a></p>
+mandatory because the server cannot discover conformance.<a href="#section-8-7.3.1" class="pilcrow">¶</a></p>
 </li>
-        <li class="normal" id="section-8-6.4">
-          <p id="section-8-6.4.1">State, in the registration, the carriers and endpoints at which the value is
-meaningful.<a href="#section-8-6.4.1" class="pilcrow">¶</a></p>
+        <li class="normal" id="section-8-7.4">
+          <p id="section-8-7.4.1">State, in the registration, the carriers and endpoints at which the value is
+meaningful.<a href="#section-8-7.4.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
-<p id="section-8-7">Issuer-wide behavior is often the intended design, and coupling it to a
+<p id="section-8-8">Issuer-wide behavior is often the intended design, and coupling it to a
 per-issuer metadata flag is a legitimate choice. Where per-client or fractional
 rollout is a requirement, however, an extension <span class="bcp14">SHOULD NOT</span> couple the behavior
 to such a flag, because it then becomes all-or-nothing for every client of the
 issuer; gate it on a capability instead. <span>[<a href="#RFC9207" class="cite xref">RFC9207</a>]</span> illustrates the tradeoff
 rather than a mistake: coupling the advertisement to a server-wide delivery
 commitment is what allows a client to enforce that <code>iss</code> is present, and the
-cost is that the feature cannot be rolled out per client.<a href="#section-8-7" class="pilcrow">¶</a></p>
-<p id="section-8-8">This specification provides no delivery guarantee, and an extension <span class="bcp14">MUST NOT</span>
+cost is that the feature cannot be rolled out per client.<a href="#section-8-8" class="pilcrow">¶</a></p>
+<p id="section-8-9">This specification provides no delivery guarantee, and an extension <span class="bcp14">MUST NOT</span>
 rely on a capability signal to supply one. Under <a href="#server-behavior" class="auto internal xref">Section 6</a> a server
 retains discretion, so treating non-delivery as an error on the strength of a
 signal, or of an advertisement, is unsound. An extension that genuinely needs a
 delivery commitment defines it itself, along with how a client learns that the
-server will honor it.<a href="#section-8-8" class="pilcrow">¶</a></p>
-<p id="section-8-9">A value may be justified on either of two grounds: that a server cannot safely
-exercise the behavior without it, or that a server choosing among several paths
-would otherwise select one the client cannot complete (<a href="#selection" class="auto internal xref">Section 6.1</a>). The
-second requires that the signal can change whether the operation completes, not
-merely make an already-workable path more convenient.<a href="#section-8-9" class="pilcrow">¶</a></p>
+server will honor it.<a href="#section-8-9" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="relationships">
@@ -1946,8 +1944,7 @@ behavior.<a href="#section-10.1-2" class="pilcrow">¶</a></p>
 <p id="section-10.1-3">Servers <span class="bcp14">MUST NOT</span> treat a capability signal as evidence of client identity,
 client software version, or client trustworthiness. Where a Request Object
 <span>[<a href="#RFC9101" class="cite xref">RFC9101</a>]</span> or software statement carries a set, the signature prevents
-third-party modification but does not prove implementation. See
-<a href="#precedence" class="auto internal xref">Section 5.5</a>.<a href="#section-10.1-3" class="pilcrow">¶</a></p>
+third-party modification but does not prove implementation. See <a href="#precedence" class="auto internal xref">Section 5.5</a>.<a href="#section-10.1-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="downgrade">
@@ -2568,13 +2565,14 @@ delivery is safe for any conforming client and needs no gate.
 <code>resource</code> parameter so a client can confirm which resource its token is valid
 for, and what it needs is a way for clients to learn that a server implements
 it. That is server metadata, not a client capability.<a href="#appendix-C.2-4" class="pilcrow">¶</a></p>
-<p id="appendix-C.2-5">A safe, unconditional behavior can also qualify when the server must choose
-among paths and the signal prevents selection of one the client cannot
-complete;
-<a href="#selection" class="auto internal xref">Section 6.1</a> governs this narrower case.<a href="#appendix-C.2-5" class="pilcrow">¶</a></p>
-<p id="appendix-C.2-6">Client authentication methods, endpoint selection, client-initiated parameters,
-additive response fields, and mandatory client behavior do not qualify.
-<a href="#iana-registry" class="auto internal xref">Section 12.1</a> records absent-signal behavior to make this test explicit.<a href="#appendix-C.2-6" class="pilcrow">¶</a></p>
+<p id="appendix-C.2-5">On gating grounds the criterion also rejects client authentication methods,
+endpoint selection, client-initiated parameters, and behavior a specification
+makes mandatory to implement.<a href="#appendix-C.2-5" class="pilcrow">¶</a></p>
+<p id="appendix-C.2-6">Selection is the one exception. A behavior safe to issue unconditionally needs
+no gating signal, yet can still qualify where a server must choose among paths
+and the signal prevents it selecting one the client cannot complete;
+<a href="#selection" class="auto internal xref">Section 6.1</a> governs that narrower case and <a href="#extension-guidance" class="auto internal xref">Section 8</a> bounds it.
+<a href="#iana-registry" class="auto internal xref">Section 12.1</a> records absent-signal behavior to make the test explicit.<a href="#appendix-C.2-6" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="why-no-mandatory-to-understand-semantics">

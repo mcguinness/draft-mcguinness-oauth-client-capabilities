@@ -357,6 +357,16 @@ Table of Contents
    where alternative challenge paths most often coexist; see
    Section 6.1.
 
+   A client MUST NOT use the field on a request at an endpoint where the
+   client_capabilities parameter is defined; it uses Section 5.1 there
+   instead.  An authorization server MUST ignore the field on any
+   request to such an endpoint.  At the authorization endpoint a user
+   agent issues the HTTP request, so its fields cannot be attributed to
+   the client, and using only the parameter at authorization server
+   endpoints gives the request one unambiguous effective set while
+   allowing Request Object or pushed-request protections where
+   applicable.
+
    Its value is a Structured Fields List ([RFC9651], Section 3.1).  Each
    member MUST be an Item whose bare item is a Token containing a
    capability value as defined in Section 3:
@@ -390,18 +400,6 @@ Table of Contents
    A server whose response varies with the field MUST include OAuth-
    Client-Capabilities in the Vary field of the response, or use Vary:
    *, per [RFC9110], Section 12.5.5.
-
-   The field is defined only for requests that have no OAuth request
-   parameter surface.  A client MUST NOT use the field on a request at
-   an endpoint where the client_capabilities parameter is defined; it
-   uses Section 5.1 there instead.  An authorization server MUST ignore
-   the field on any request to such an endpoint.
-
-   At the authorization endpoint, a user agent issues the HTTP request,
-   so its fields cannot be attributed to the client.  Using only the
-   parameter at authorization server endpoints also gives the request
-   one unambiguous effective set and allows Request Object or pushed-
-   request protections where applicable.
 
    An empty List and an absent field are equivalent: both signal the
    empty set.
@@ -551,8 +549,8 @@ Table of Contents
    Section 3.  The array MUST NOT contain none.  Order is not
    significant, and clients MUST ignore duplicate and unrecognized
    values.  If any element is not a string or does not conform to the
-   capability production, the metadata field is invalid and MUST be
-   ignored in its entirety.
+   capability production, the value of this member is invalid and MUST
+   be ignored in its entirety.
 
    Clients SHOULD signal only capability values that appear in
    client_capabilities_supported, where the server publishes it.  A
@@ -576,8 +574,15 @@ Table of Contents
    SHOULD register a value in the registry established in Section 12.1
    rather than define a dedicated parameter or field.
 
-   The invariants in Section 4 decide admission.  One heuristic catches
-   most misclassifications:
+   The invariants in Section 4 decide admission.  A value may be
+   justified on either of two grounds: that a server cannot safely
+   exercise the behavior without it, or that a server choosing among
+   several paths would otherwise select one the client cannot complete
+   (Section 6.1).  The second requires that the signal can change
+   whether the operation completes, not merely make an already-workable
+   path more convenient.
+
+   One heuristic catches most misclassifications:
 
       If an implementer would want the value to be attested, it is not a
       capability.
@@ -623,13 +628,6 @@ Table of Contents
    the strength of a signal, or of an advertisement, is unsound.  An
    extension that genuinely needs a delivery commitment defines it
    itself, along with how a client learns that the server will honor it.
-
-   A value may be justified on either of two grounds: that a server
-   cannot safely exercise the behavior without it, or that a server
-   choosing among several paths would otherwise select one the client
-   cannot complete (Section 6.1).  The second requires that the signal
-   can change whether the operation completes, not merely make an
-   already-workable path more convenient.
 
 9.  Relationship to Existing Mechanisms
 
@@ -1137,14 +1135,16 @@ C.2.  Applying the Admission Criterion
    clients to learn that a server implements it.  That is server
    metadata, not a client capability.
 
-   A safe, unconditional behavior can also qualify when the server must
-   choose among paths and the signal prevents selection of one the
-   client cannot complete; Section 6.1 governs this narrower case.
+   On gating grounds the criterion also rejects client authentication
+   methods, endpoint selection, client-initiated parameters, and
+   behavior a specification makes mandatory to implement.
 
-   Client authentication methods, endpoint selection, client-initiated
-   parameters, additive response fields, and mandatory client behavior
-   do not qualify.  Section 12.1 records absent-signal behavior to make
-   this test explicit.
+   Selection is the one exception.  A behavior safe to issue
+   unconditionally needs no gating signal, yet can still qualify where a
+   server must choose among paths and the signal prevents it selecting
+   one the client cannot complete; Section 6.1 governs that narrower
+   case and Section 8 bounds it.  Section 12.1 records absent-signal
+   behavior to make the test explicit.
 
 C.3.  Why No Mandatory-to-Understand Semantics
 
