@@ -175,6 +175,31 @@ Effective capability set:
 
 Terms not otherwise defined are used as in {{RFC6749}} and {{RFC9110}}.
 
+# Overview {#overview}
+
+A client tells a server what optional behavior it can process by signaling
+capability values. A capability value is a short token drawn from a single
+registry ({{iana-registry}}), so one vocabulary serves every extension.
+
+Three carriers convey a set, chosen by what the request can hold:
+
+- The `client_capabilities` request parameter, on requests a client makes to an
+  authorization server ({{param}}).
+- The `OAuth-Client-Capabilities` HTTP field, on requests that carry no OAuth
+  parameters, chiefly protected resource requests ({{field}}).
+- A `client_capabilities` member in client metadata, supplying a default when a
+  request carries no signal ({{metadata}}).
+
+Whichever carrier applies, the result is the request's effective capability
+set: the values a server may act upon for that request. A request-level signal
+replaces any metadata default rather than adding to it, so a constrained
+deployment can retract what its metadata declares ({{precedence}}).
+
+A server advertises the values it recognizes in its own metadata
+({{discovery}}). Signaling never obliges a server to act, and the invariants in
+{{invariants}} confine what a capability may do, so a signal that is absent,
+stripped, or untrue leaves the protocol no weaker.
+
 # Capability Values {#values}
 
 ## Syntax
@@ -281,6 +306,32 @@ optional functionality; see {{security-considerations}}.
 These invariants also serve as the admission criterion for the registry; see
 {{extension-guidance}}.
 
+# Relationship to Existing Mechanisms {#relationships}
+
+scope:
+: `scope` is an authorization construct. Its values are consented to, are often
+  displayed to a user, and are carried in the resulting grant and access token.
+  Capabilities are protocol mechanics: not consented to, not displayed, and by
+  CAP-2 barred from affecting the grant. Overloading `scope` would place
+  non-authorization values in front of users and inside issued tokens.
+
+grant_types and response_types:
+: These select protocol flows and constrain which requests a registered client
+  may make. Their absence can cause a request to fail. A capability instead
+  describes optional response processing and has the safe-absence property in
+  CAP-1.
+
+Server metadata:
+: {{RFC8414}} and {{RFC9728}} provide extensible discovery documents for
+  authorization servers and protected resources. This specification defines a
+  common member in both documents for the server-to-client direction and the
+  carriers in {{carriers}} for the client-to-server direction.
+
+Client attestation:
+: See {{extension-guidance}}. The two mechanisms are complementary and address
+  different questions: what the client can do, versus what can be proven about
+  the client.
+
 # Carriers {#carriers}
 
 ## The `client_capabilities` Request Parameter {#param}
@@ -296,6 +347,16 @@ parameter MAY appear inside a Request Object {{RFC9101}}. An extension MAY
 define its use at another endpoint that accepts OAuth request parameters. An
 extension registering a capability value states every endpoint at which the
 value is meaningful.
+
+~~~ http-message
+POST /token HTTP/1.1
+Host: as.example.com
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=authorization_code&code=SplxlOB...
+&client_capabilities=accept-deferred-response
+~~~
+{: title="A capability signaled on a token request"}
 
 The parameter is not defined for the client registration endpoint. A
 registration request carries a JSON body rather than form-encoded parameters,
@@ -399,23 +460,6 @@ instance, and changes take effect only as authorization servers refresh their
 cached copies. Clients identified this way SHOULD treat the request parameter
 in {{param}} as the primary carrier.
 
-## Scope of a Signal {#signal-scope}
-
-A request signal applies only to that request, not to later requests in the
-grant. Client metadata supplies a default for each request as described in
-{{precedence}}; it does not make a prior request signal persist.
-
-A capability in a pushed authorization request applies to the authorization
-request represented by the resulting `request_uri`, and nothing else. A
-capability governing token endpoint behavior MUST be in the effective set for
-the token request; the authorization server MUST NOT infer it from an earlier
-request in the grant. Because metadata can be cached or obtained from multiple
-sources, a client SHOULD signal such a capability explicitly on the token
-request rather than rely on a metadata default.
-
-Where a capability is meaningful at more than one endpoint, its registration
-({{iana-registry}}) records which endpoints those are.
-
 ## Precedence {#precedence}
 
 For requests directed to an authorization server, the effective capability set
@@ -447,6 +491,23 @@ precedence over a duplicate value outside it. A capability set in a software
 statement is client metadata and remains subject to the request-level override
 above; signing the statement does not turn a default into a per-request
 declaration.
+
+## Scope of a Signal {#signal-scope}
+
+A request signal applies only to that request, not to later requests in the
+grant. Client metadata supplies a default for each request as described in
+{{precedence}}; it does not make a prior request signal persist.
+
+A capability in a pushed authorization request applies to the authorization
+request represented by the resulting `request_uri`, and nothing else. A
+capability governing token endpoint behavior MUST be in the effective set for
+the token request; the authorization server MUST NOT infer it from an earlier
+request in the grant. Because metadata can be cached or obtained from multiple
+sources, a client SHOULD signal such a capability explicitly on the token
+request rather than rely on a metadata default.
+
+Where a capability is meaningful at more than one endpoint, its registration
+({{iana-registry}}) records which endpoints those are.
 
 # Server Behavior {#server-behavior}
 
@@ -562,32 +623,6 @@ rely on a capability signal or an advertisement to supply one;
 {{server-behavior}} leaves delivery to the server. An extension that needs a
 delivery commitment defines it itself, along with how a client learns the
 server will honor it.
-
-# Relationship to Existing Mechanisms {#relationships}
-
-scope:
-: `scope` is an authorization construct. Its values are consented to, are often
-  displayed to a user, and are carried in the resulting grant and access token.
-  Capabilities are protocol mechanics: not consented to, not displayed, and by
-  CAP-2 barred from affecting the grant. Overloading `scope` would place
-  non-authorization values in front of users and inside issued tokens.
-
-grant_types and response_types:
-: These select protocol flows and constrain which requests a registered client
-  may make. Their absence can cause a request to fail. A capability instead
-  describes optional response processing and has the safe-absence property in
-  CAP-1.
-
-Server metadata:
-: {{RFC8414}} and {{RFC9728}} provide extensible discovery documents for
-  authorization servers and protected resources. This specification defines a
-  common member in both documents for the server-to-client direction and the
-  carriers in {{carriers}} for the client-to-server direction.
-
-Client attestation:
-: See {{extension-guidance}}. The two mechanisms are complementary and address
-  different questions: what the client can do, versus what can be proven about
-  the client.
 
 # Security Considerations {#security-considerations}
 
