@@ -4,8 +4,8 @@
 
 Web Authorization Protocol                                 K. McGuinness
 Internet-Draft                                               Independent
-Intended status: Standards Track                            31 July 2026
-Expires: 1 February 2027
+Intended status: Standards Track                           1 August 2026
+Expires: 2 February 2027
 
 
                      OAuth 2.0 Client Capabilities
@@ -43,7 +43,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 1 February 2027.
+   This Internet-Draft will expire on 2 February 2027.
 
 Copyright Notice
 
@@ -66,37 +66,38 @@ Table of Contents
      1.2.  Why Open-World Deployment Makes This Urgent
      1.3.  What This Specification Does Not Change
    2.  Conventions and Definitions
-   3.  Capability Values
-     3.1.  Syntax
-     3.2.  Naming Guidance
-     3.3.  The none Sentinel
-   4.  Capability Invariants
-   5.  Carriers
-     5.1.  The client_capabilities Request Parameter
-     5.2.  The OAuth-Client-Capabilities HTTP Field
-     5.3.  Client Metadata Declaration
-     5.4.  Scope of a Signal
-     5.5.  Precedence
-   6.  Server Behavior
-     6.1.  Selecting Among Alternatives
-   7.  Discovery
-   8.  Guidance for Extension Specifications
-   9.  Relationship to Existing Mechanisms
-   10. Security Considerations
-     10.1.  Signals Are Not Proof
-     10.2.  Downgrade
-     10.3.  Denial of Service
-   11. Privacy Considerations
-   12. IANA Considerations
-     12.1.  OAuth Client Capabilities Registry
-     12.2.  OAuth Parameters Registry
-     12.3.  OAuth Dynamic Client Registration Metadata Registry
-     12.4.  OAuth Authorization Server Metadata Registry
-     12.5.  OAuth Protected Resource Metadata Registry
-     12.6.  HTTP Field Name Registry
-   13. References
-     13.1.  Normative References
-     13.2.  Informative References
+   3.  Overview
+   4.  Capability Values
+     4.1.  Syntax
+     4.2.  Naming Guidance
+     4.3.  The none Sentinel
+   5.  Capability Invariants
+   6.  Relationship to Existing Mechanisms
+   7.  Carriers
+     7.1.  The client_capabilities Request Parameter
+     7.2.  The OAuth-Client-Capabilities HTTP Field
+     7.3.  Client Metadata Declaration
+     7.4.  Precedence
+     7.5.  Scope of a Signal
+   8.  Server Behavior
+     8.1.  Selecting Among Alternatives
+   9.  Discovery
+   10. Guidance for Extension Specifications
+   11. Security Considerations
+     11.1.  Signals Are Not Proof
+     11.2.  Downgrade
+     11.3.  Denial of Service
+   12. Privacy Considerations
+   13. IANA Considerations
+     13.1.  OAuth Client Capabilities Registry
+     13.2.  OAuth Parameters Registry
+     13.3.  OAuth Dynamic Client Registration Metadata Registry
+     13.4.  OAuth Authorization Server Metadata Registry
+     13.5.  OAuth Protected Resource Metadata Registry
+     13.6.  HTTP Field Name Registry
+   14. References
+     14.1.  Normative References
+     14.2.  Informative References
    Appendix A.  Examples
    Appendix B.  Applying This Specification to Existing Drafts
    Appendix C.  Design Rationale
@@ -171,7 +172,7 @@ Table of Contents
 
    This specification defines carriers and a vocabulary.  It does not
    define any capability values, reserves the none sentinel in
-   Section 3.3, does not change any existing parameter, and does not
+   Section 4.3, does not change any existing parameter, and does not
    require existing extensions to migrate.  It is designed so that
    extensions may adopt it incrementally.
 
@@ -195,17 +196,47 @@ Table of Contents
       and that a server may therefore choose to exercise.
 
    Signal:  The act of a client conveying a capability value to a server
-      through one of the carriers defined in Section 5.
+      through one of the carriers defined in Section 7.
 
    Effective capability set:  The capability set that applies to a
-      request after the carrier and precedence rules in Section 5 have
+      request after the carrier and precedence rules in Section 7 have
       been applied.  Also called the effective set.
 
    Terms not otherwise defined are used as in [RFC6749] and [RFC9110].
 
-3.  Capability Values
+3.  Overview
 
-3.1.  Syntax
+   A client tells a server what optional behavior it can process by
+   signaling capability values.  A capability value is a short token
+   drawn from a single registry (Section 13.1), so one vocabulary serves
+   every extension.
+
+   Three carriers convey a set, chosen by what the request can hold:
+
+   *  The client_capabilities request parameter, on requests a client
+      makes to an authorization server (Section 7.1).
+
+   *  The OAuth-Client-Capabilities HTTP field, on requests that carry
+      no OAuth parameters, chiefly protected resource requests
+      (Section 7.2).
+
+   *  A client_capabilities member in client metadata, supplying a
+      default when a request carries no signal (Section 7.3).
+
+   Whichever carrier applies, the result is the request's effective
+   capability set: the values a server may act upon for that request.  A
+   request-level signal replaces any metadata default rather than adding
+   to it, so a constrained deployment can retract what its metadata
+   declares (Section 7.4).
+
+   A server advertises the values it recognizes in its own metadata
+   (Section 9).  Signaling never obliges a server to act, and the
+   invariants in Section 5 confine what a capability may do, so a signal
+   that is absent, stripped, or untrue leaves the protocol no weaker.
+
+4.  Capability Values
+
+4.1.  Syntax
 
    A capability value is a bare token.  The syntax uses ABNF [RFC5234],
    including its ALPHA, DIGIT, and SP core rules:
@@ -223,8 +254,8 @@ Table of Contents
    transformation.
 
    Capability values are case-sensitive.  Four rules apply wherever a
-   capability value appears, in every carrier in Section 5 and in
-   Section 7:
+   capability value appears, in every carrier in Section 7 and in
+   Section 9:
 
    *  A value MUST conform to the capability production.
 
@@ -244,14 +275,14 @@ Table of Contents
    trailing, or repeated spaces, is invalid.  A recipient MUST treat an
    invalid value as signaling the empty set and MUST NOT reject the
    request solely because the value is invalid, except as permitted by
-   Section 10.3.
+   Section 11.3.
 
    Capability values MUST NOT carry parameters.  An extension that needs
    structured detail alongside a capability defines a companion request
    parameter, or uses authorization_details [RFC9396].  The registry is
    a flat vocabulary.
 
-3.2.  Naming Guidance
+4.2.  Naming Guidance
 
    A capability value names a specific client behavior that a server may
    exercise after receiving the value, not a document. accept-deferred-
@@ -263,27 +294,27 @@ Table of Contents
    registers a new value rather than reusing the old one, so that a
    server can distinguish the two.
 
-3.3.  The none Sentinel
+4.3.  The none Sentinel
 
    The token none is reserved for use as the complete value of the
    client_capabilities request parameter.  It denotes the empty set: the
    client signals no capabilities beyond base OAuth.  It exists so that
    a client can explicitly retract a statically declared set, as
-   described in Section 5.5.  It is not a capability value and has no
+   described in Section 7.4.  It is not a capability value and has no
    meaning in the HTTP field or client metadata carriers.
 
    none MUST NOT appear together with any capability value.  A server
    that receives none alongside other values MUST treat the signaled set
    as empty.  Resolving the conflict in favor of the empty set rather
    than rejecting the request keeps the semantics of a capability signal
-   non-fatal, consistent with Section 6, and errs toward the direction
+   non-fatal, consistent with Section 8, and errs toward the direction
    CAP-1 makes safe.
 
-4.  Capability Invariants
+5.  Capability Invariants
 
    The following three constraints apply to every registered capability
-   value and to every use of the carriers in Section 5.  They are the
-   basis on which the security analysis in Section 10 rests, and they
+   value and to every use of the carriers in Section 7.  They are the
+   basis on which the security analysis in Section 11 rests, and they
    are normative.
 
    CAP-1:  A capability MUST only enable optional server behavior.
@@ -311,19 +342,44 @@ Table of Contents
    CAP-2 and CAP-3 keep a false claim from being accepted as
    authorization, authentication, or proof of a security-relevant
    property, though an extension must still analyze its operational cost
-   (Section 10.3).  And an adversary who removes values degrades the
+   (Section 11.3).  And an adversary who removes values degrades the
    client to base OAuth, which under CAP-1 is the safe direction at the
-   cost of optional functionality; see Section 10.
+   cost of optional functionality; see Section 11.
 
    These invariants also serve as the admission criterion for the
-   registry; see Section 8.
+   registry; see Section 10.
 
-5.  Carriers
+6.  Relationship to Existing Mechanisms
 
-5.1.  The client_capabilities Request Parameter
+   scope:  scope is an authorization construct.  Its values are
+      consented to, are often displayed to a user, and are carried in
+      the resulting grant and access token.  Capabilities are protocol
+      mechanics: not consented to, not displayed, and by CAP-2 barred
+      from affecting the grant.  Overloading scope would place non-
+      authorization values in front of users and inside issued tokens.
+
+   grant_types and response_types:  These select protocol flows and
+      constrain which requests a registered client may make.  Their
+      absence can cause a request to fail.  A capability instead
+      describes optional response processing and has the safe-absence
+      property in CAP-1.
+
+   Server metadata:  [RFC8414] and [RFC9728] provide extensible
+      discovery documents for authorization servers and protected
+      resources.  This specification defines a common member in both
+      documents for the server-to-client direction and the carriers in
+      Section 7 for the client-to-server direction.
+
+   Client attestation:  See Section 10.  The two mechanisms are
+      complementary and address different questions: what the client can
+      do, versus what can be proven about the client.
+
+7.  Carriers
+
+7.1.  The client_capabilities Request Parameter
 
    client_capabilities:  OPTIONAL.  A space-delimited list of capability
-      values, as defined in Section 3.
+      values, as defined in Section 4.
 
    The parameter is defined for use at the authorization endpoint and
    token endpoint.  Because a pushed authorization request carries
@@ -334,10 +390,19 @@ Table of Contents
    registering a capability value states every endpoint at which the
    value is meaningful.
 
+   POST /token HTTP/1.1
+   Host: as.example.com
+   Content-Type: application/x-www-form-urlencoded
+
+   grant_type=authorization_code&code=SplxlOB...
+   &client_capabilities=accept-deferred-response
+
+             Figure 2: A capability signaled on a token request
+
    The parameter is not defined for the client registration endpoint.  A
    registration request carries a JSON body rather than form-encoded
    parameters, so a client declares capabilities there using the
-   metadata field in Section 5.3.
+   metadata field in Section 7.3.
 
    A client MAY send client_capabilities to any authorization server
    without prior knowledge of whether the server implements this
@@ -360,16 +425,16 @@ Table of Contents
    protection, and encryption adds confidentiality, but passing one by
    value does not reduce URI size.
 
-5.2.  The OAuth-Client-Capabilities HTTP Field
+7.2.  The OAuth-Client-Capabilities HTTP Field
 
    The OAuth-Client-Capabilities HTTP field allows a client to signal
    capabilities on a request that has no OAuth request parameter
    surface, most importantly a protected resource request, which is also
    where alternative challenge paths most often coexist; see
-   Section 6.1.
+   Section 8.1.
 
    A client MUST NOT use the field on a request at an endpoint where the
-   client_capabilities parameter is defined; it uses Section 5.1 there
+   client_capabilities parameter is defined; it uses Section 7.1 there
    instead.  An authorization server MUST ignore the field on any
    request to such an endpoint.  At the authorization endpoint a user
    agent issues the HTTP request, so its fields cannot be attributed to
@@ -380,28 +445,28 @@ Table of Contents
 
    Its value is a Structured Fields List ([RFC9651], Section 3.1).  Each
    member MUST be an Item whose bare item is a Token containing a
-   capability value as defined in Section 3:
+   capability value as defined in Section 4:
 
    GET /transfers/42 HTTP/1.1
    Host: api.example.com
    Authorization: Bearer eyJhbGci...
    OAuth-Client-Capabilities: txn-challenge
 
-      Figure 2: Signaling a capability on a protected resource request
+      Figure 3: Signaling a capability on a protected resource request
 
    Senders MUST NOT generate Inner List members, members of another
    bare-item type, or parameters.  A recipient MUST parse the field as a
    Structured Fields List.  The field is invalid if parsing fails, if
    any member is not a Token Item, or if any member's Token does not
-   conform to the capability production in Section 3.  The last case is
+   conform to the capability production in Section 4.  The last case is
    distinct: a Structured Fields Token can be well formed and still
    violate that production, as *bad does.  A recipient MUST treat an
    invalid field as absent, matching the treatment of an invalid request
-   parameter in Section 3.
+   parameter in Section 4.
 
    A recipient MUST ignore parameters.
 
-   The none sentinel (Section 3.3) MUST NOT be sent in this field, and a
+   The none sentinel (Section 4.3) MUST NOT be sent in this field, and a
    recipient MUST ignore a member whose value is none.
 
    A server whose response varies with the field MUST include OAuth-
@@ -411,17 +476,17 @@ Table of Contents
    An empty List and an absent field are equivalent: both signal the
    empty set.
 
-5.3.  Client Metadata Declaration
+7.3.  Client Metadata Declaration
 
    client_capabilities:  OPTIONAL.  A JSON array of strings, each a
-      capability value as defined in Section 3, describing the default
+      capability value as defined in Section 4, describing the default
       capabilities of the client identified by the metadata.
 
    This client metadata field [RFC7591] covers metadata registered with
    an authorization server, published at a Client Identifier URL [CIMD],
    or carried in a software statement.  Depending on the mechanism, it
    can describe client software, a deployed instance, or both; see
-   Section 5.5.
+   Section 7.4.
 
    The array MUST NOT contain none.  An absent field and an empty array
    both denote the empty set.  If any element is not a string or does
@@ -442,29 +507,10 @@ Table of Contents
    using the URL, and may be cached.  Its capabilities are therefore
    public and shared by every instance, and changes take effect only as
    authorization servers refresh their cached copies.  Clients
-   identified this way SHOULD treat the request parameter in Section 5.1
+   identified this way SHOULD treat the request parameter in Section 7.1
    as the primary carrier.
 
-5.4.  Scope of a Signal
-
-   A request signal applies only to that request, not to later requests
-   in the grant.  Client metadata supplies a default for each request as
-   described in Section 5.5; it does not make a prior request signal
-   persist.
-
-   A capability in a pushed authorization request applies to the
-   authorization request represented by the resulting request_uri, and
-   nothing else.  A capability governing token endpoint behavior MUST be
-   in the effective set for the token request; the authorization server
-   MUST NOT infer it from an earlier request in the grant.  Because
-   metadata can be cached or obtained from multiple sources, a client
-   SHOULD signal such a capability explicitly on the token request
-   rather than rely on a metadata default.
-
-   Where a capability is meaningful at more than one endpoint, its
-   registration (Section 12.1) records which endpoints those are.
-
-5.5.  Precedence
+7.4.  Precedence
 
    For requests directed to an authorization server, the effective
    capability set is determined as follows:
@@ -479,7 +525,7 @@ Table of Contents
    3.  If neither is present, the effective set is empty.
 
    The OAuth-Client-Capabilities field plays no part in this
-   determination.  As specified in Section 5.2, an authorization server
+   determination.  As specified in Section 7.2, an authorization server
    ignores the field at any endpoint where the request parameter is
    defined.
 
@@ -500,7 +546,26 @@ Table of Contents
    signing the statement does not turn a default into a per-request
    declaration.
 
-6.  Server Behavior
+7.5.  Scope of a Signal
+
+   A request signal applies only to that request, not to later requests
+   in the grant.  Client metadata supplies a default for each request as
+   described in Section 7.4; it does not make a prior request signal
+   persist.
+
+   A capability in a pushed authorization request applies to the
+   authorization request represented by the resulting request_uri, and
+   nothing else.  A capability governing token endpoint behavior MUST be
+   in the effective set for the token request; the authorization server
+   MUST NOT infer it from an earlier request in the grant.  Because
+   metadata can be cached or obtained from multiple sources, a client
+   SHOULD signal such a capability explicitly on the token request
+   rather than rely on a metadata default.
+
+   Where a capability is meaningful at more than one endpoint, its
+   registration (Section 13.1) records which endpoints those are.
+
+8.  Server Behavior
 
    Presence of an unrecognized capability value MUST NOT cause a request
    to fail.
@@ -522,7 +587,7 @@ Table of Contents
    that provides it, but a subsequent request can override that default
    with a different set.
 
-6.1.  Selecting Among Alternatives
+8.1.  Selecting Among Alternatives
 
    A server may have several ways to obtain what a request lacks.  For
    example, a protected resource might return a transaction
@@ -538,9 +603,9 @@ Table of Contents
 
    A path safe to issue unconditionally needs no gating signal, but may
    warrant one to prevent the server from selecting a path the client
-   cannot complete.  See Section 8.
+   cannot complete.  See Section 10.
 
-7.  Discovery
+9.  Discovery
 
    client_capabilities_supported:  OPTIONAL.  A JSON array of strings
       containing the capability values that the server recognizes and
@@ -565,19 +630,19 @@ Table of Contents
    server fails to support this specification.
 
    Advertising a value is not a commitment to exercise the behavior; see
-   Section 6.
+   Section 8.
 
-8.  Guidance for Extension Specifications
+10.  Guidance for Extension Specifications
 
    An extension that needs a client to signal a processing capability
-   SHOULD register a value in the registry established in Section 12.1
+   SHOULD register a value in the registry established in Section 13.1
    rather than define a dedicated parameter or field.
 
-   The invariants in Section 4 decide admission.  A value may be
+   The invariants in Section 5 decide admission.  A value may be
    justified on either of two grounds: that a server cannot safely
    exercise the behavior without it, or that a server choosing among
    several paths would otherwise select one the client cannot complete
-   (Section 6.1).  The second requires that the signal can change
+   (Section 8.1).  The second requires that the signal can change
    whether the operation completes, not merely make an already-workable
    path more convenient.
 
@@ -594,7 +659,7 @@ Table of Contents
 
    Additional points of discipline:
 
-   *  Register a behavior, not a specification.  See Section 3.
+   *  Register a behavior, not a specification.  See Section 4.
 
    *  State the absent-signal behavior, not only the behavior enabled.
       An extension that cannot describe a fallback at least as
@@ -623,40 +688,15 @@ Table of Contents
 
    This specification provides no delivery guarantee, and an extension
    MUST NOT rely on a capability signal or an advertisement to supply
-   one; Section 6 leaves delivery to the server.  An extension that
+   one; Section 8 leaves delivery to the server.  An extension that
    needs a delivery commitment defines it itself, along with how a
    client learns the server will honor it.
 
-9.  Relationship to Existing Mechanisms
+11.  Security Considerations
 
-   scope:  scope is an authorization construct.  Its values are
-      consented to, are often displayed to a user, and are carried in
-      the resulting grant and access token.  Capabilities are protocol
-      mechanics: not consented to, not displayed, and by CAP-2 barred
-      from affecting the grant.  Overloading scope would place non-
-      authorization values in front of users and inside issued tokens.
+   The security properties of this mechanism rest on Section 5.
 
-   grant_types and response_types:  These select protocol flows and
-      constrain which requests a registered client may make.  Their
-      absence can cause a request to fail.  A capability instead
-      describes optional response processing and has the safe-absence
-      property in CAP-1.
-
-   Server metadata:  [RFC8414] and [RFC9728] provide extensible
-      discovery documents for authorization servers and protected
-      resources.  This specification defines a common member in both
-      documents for the server-to-client direction and the carriers in
-      Section 5 for the client-to-server direction.
-
-   Client attestation:  See Section 8.  The two mechanisms are
-      complementary and address different questions: what the client can
-      do, versus what can be proven about the client.
-
-10.  Security Considerations
-
-   The security properties of this mechanism rest on Section 4.
-
-10.1.  Signals Are Not Proof
+11.1.  Signals Are Not Proof
 
    A capability signal asserts, but does not prove, that the client
    implements the capability.  Depending on their use, transport
@@ -674,9 +714,9 @@ Table of Contents
    identity, client software version, or client trustworthiness.  Where
    a Request Object [RFC9101] or software statement carries a set, the
    signature prevents third-party modification but does not prove
-   implementation.  See Section 5.5.
+   implementation.  See Section 7.4.
 
-10.2.  Downgrade
+11.2.  Downgrade
 
    Because capability signals may be removed by an adversary, an
    extension MUST define a safe absent-signal fallback.  If the enabled
@@ -689,7 +729,7 @@ Table of Contents
    remove the check.  Such a check belongs in policy or an authenticated
    negotiation mechanism.
 
-10.3.  Denial of Service
+11.3.  Denial of Service
 
    A capability list is attacker-controllable in size.  Servers MUST
    apply finite limits to the encoded length, number of members, and
@@ -706,7 +746,7 @@ Table of Contents
    protections.  A capability signal does not authorize the client to
    consume unbounded work.
 
-11.  Privacy Considerations
+12.  Privacy Considerations
 
    A capability set discriminates over the client population and
    contributes to fingerprinting.  On the front channel it is visible to
@@ -729,9 +769,9 @@ Table of Contents
    whether signaling them creates a useful fingerprint and SHOULD choose
    names that describe behavior without exposing implementation details.
 
-12.  IANA Considerations
+13.  IANA Considerations
 
-12.1.  OAuth Client Capabilities Registry
+13.1.  OAuth Client Capabilities Registry
 
    This specification requests that IANA establish an "OAuth Client
    Capabilities" registry in the "OAuth Parameters" registry group.
@@ -741,13 +781,13 @@ Table of Contents
    The registry contains the following fields:
 
    Capability Value:  The token, conforming to the capability production
-      in Section 3.
+      in Section 4.
 
    Description:  A brief description of the client behavior signaled by
       the value.
 
    Absent-Signal Behavior:  What the server does when the value is not
-      in the effective set.  Recording this makes CAP-1 in Section 4
+      in the effective set.  Recording this makes CAP-1 in Section 5
       checkable at registration time rather than aspirational.
 
    Carriers:  The carriers in which the value is meaningful: any of
@@ -764,8 +804,8 @@ Table of Contents
 
    Designated experts evaluating a registration request should:
 
-   *  confirm that the value satisfies CAP-1 through CAP-3 in Section 4
-      and the criterion in Section 8, and that its registered absent-
+   *  confirm that the value satisfies CAP-1 through CAP-3 in Section 5
+      and the criterion in Section 10, and that its registered absent-
       signal behavior is at least as conservative as what the server
       would apply had the value never been defined;
 
@@ -799,9 +839,9 @@ Table of Contents
 
    Change Controller:  IETF
 
-   Specification Document(s):  This specification, Section 3.3
+   Specification Document(s):  This specification, Section 4.3
 
-12.2.  OAuth Parameters Registry
+13.2.  OAuth Parameters Registry
 
    This specification requests registration of the following value in
    the IANA "OAuth Parameters" registry established by [RFC6749]:
@@ -812,9 +852,9 @@ Table of Contents
 
    Change Controller:  IETF
 
-   Specification Document(s):  This specification, Section 5.1
+   Specification Document(s):  This specification, Section 7.1
 
-12.3.  OAuth Dynamic Client Registration Metadata Registry
+13.3.  OAuth Dynamic Client Registration Metadata Registry
 
    This specification requests registration of the following value in
    the IANA "OAuth Dynamic Client Registration Metadata" registry
@@ -827,9 +867,9 @@ Table of Contents
 
    Change Controller:  IETF
 
-   Specification Document(s):  This specification, Section 5.3
+   Specification Document(s):  This specification, Section 7.3
 
-12.4.  OAuth Authorization Server Metadata Registry
+13.4.  OAuth Authorization Server Metadata Registry
 
    This specification requests registration of the following value in
    the IANA "OAuth Authorization Server Metadata" registry established
@@ -842,9 +882,9 @@ Table of Contents
 
    Change Controller:  IETF
 
-   Specification Document(s):  This specification, Section 7
+   Specification Document(s):  This specification, Section 9
 
-12.5.  OAuth Protected Resource Metadata Registry
+13.5.  OAuth Protected Resource Metadata Registry
 
    This specification requests registration of the following value in
    the IANA "OAuth Protected Resource Metadata" registry established by
@@ -857,9 +897,9 @@ Table of Contents
 
    Change Controller:  IETF
 
-   Specification Document(s):  This specification, Section 7
+   Specification Document(s):  This specification, Section 9
 
-12.6.  HTTP Field Name Registry
+13.6.  HTTP Field Name Registry
 
    This specification requests registration of the following value in
    the "Hypertext Transfer Protocol (HTTP) Field Name" registry:
@@ -870,11 +910,11 @@ Table of Contents
 
    Structured Type:  List
 
-   Reference:  This specification, Section 5.2
+   Reference:  This specification, Section 7.2
 
-13.  References
+14.  References
 
-13.1.  Normative References
+14.1.  Normative References
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
@@ -933,7 +973,7 @@ Table of Contents
               DOI 10.17487/RFC9728, April 2025,
               <https://www.rfc-editor.org/rfc/rfc9728>.
 
-13.2.  Informative References
+14.2.  Informative References
 
    [ABCA]     "OAuth 2.0 Attestation-Based Client Authentication", n.d.,
               <https://datatracker.ietf.org/doc/draft-ietf-oauth-
@@ -1030,11 +1070,11 @@ Appendix A.  Examples
    &code_challenge=W6uP...&code_challenge_method=S256
    &client_capabilities=accept-deferred-response
 
-       Figure 3: Capability carried in a pushed authorization request
+       Figure 4: Capability carried in a pushed authorization request
 
    The same capability on the token request.  Because the behavior
    affects the token response, the earlier signal does not carry over;
-   see Section 5.4:
+   see Section 7.5:
 
    POST /token HTTP/1.1
    Host: as.example.com
@@ -1044,7 +1084,7 @@ Appendix A.  Examples
    &client_id=https%3A%2F%2Fapp.example%2Fclient
    &client_capabilities=accept-deferred-response
 
-       Figure 4: Signaling at the endpoint where the behavior occurs
+       Figure 5: Signaling at the endpoint where the behavior occurs
 
    A deployment of the same software whose metadata declares the
    capability, retracting it because this process cannot outlive the
@@ -1058,7 +1098,7 @@ Appendix A.  Examples
    &client_id=https%3A%2F%2Fapp.example%2Fclient
    &client_capabilities=none
 
-         Figure 5: Explicit retraction by a constrained deployment
+         Figure 6: Explicit retraction by a constrained deployment
 
 Appendix B.  Applying This Specification to Existing Drafts
 
@@ -1070,10 +1110,10 @@ Appendix B.  Applying This Specification to Existing Drafts
       client_capabilities containing accept-deferred-response.  The
       authorization server still MUST NOT defer unless the value is in
       the request's effective set.  Because deferral affects the token
-      response, Section 5.4 requires the value in the token request's
+      response, Section 7.5 requires the value in the token request's
       effective set; signaling at an earlier endpoint remains only a
       hint.  The proposed single-purpose registry is subsumed by
-      Section 12.1.
+      Section 13.1.
 
    Transaction Authorization Challenge:  Accept-Txn-Challenge: ?1
       becomes OAuth-Client-Capabilities: txn-challenge.  The normative
@@ -1140,8 +1180,8 @@ C.2.  Applying the Admission Criterion
    Selection is the one exception.  A behavior safe to issue
    unconditionally needs no gating signal, yet can still qualify where a
    server must choose among paths and the signal prevents it selecting
-   one the client cannot complete; Section 6.1 governs that narrower
-   case and Section 8 bounds it.  Section 12.1 records absent-signal
+   one the client cannot complete; Section 8.1 governs that narrower
+   case and Section 10 bounds it.  Section 13.1 records absent-signal
    behavior to make the test explicit.
 
 C.3.  Why No Mandatory-to-Understand Semantics
@@ -1166,8 +1206,8 @@ C.4.  Capabilities and Profile Selection
    provides a runtime signal [OAUTH21-VERSIONS-LIST].
 
    That is not capability signaling as defined here.  A version names a
-   document rather than a behavior a server may exercise (Section 3),
-   and profile membership is closer to the policy input Section 4
+   document rather than a behavior a server may exercise (Section 4),
+   and profile membership is closer to the policy input Section 5
    excludes.  This specification neither defines it nor proposes that
    version values be registered.
 
@@ -1179,7 +1219,7 @@ C.4.  Capabilities and Profile Selection
    that discussion.  A registration field alone cannot provide it: every
    deployed instance sharing a client_id carries the same declared
    version, so a rollout staged across native application releases
-   cannot be expressed.  The precedence rule in Section 5.5 is the
+   cannot be expressed.  The precedence rule in Section 7.4 is the
    general form of that override.  Whether version selection should
    reuse it, or should instead be decomposed into the specific behaviors
    that actually need signaling, belongs to that work rather than this
@@ -1219,7 +1259,7 @@ C.6.  Open Issues
 
    *  Whether client software capabilities and running instance
       capabilities are adequately separated by the replacement rule in
-      Section 5.5, or whether instance-level identity mechanisms should
+      Section 7.4, or whether instance-level identity mechanisms should
       carry a capability set of their own.
 
 Acknowledgments
