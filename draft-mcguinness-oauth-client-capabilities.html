@@ -1538,6 +1538,41 @@ value only once the processing it names is stable. Before then implementers can
 use an unregistered value, which is safe because a recipient ignores a value it
 does not recognize and, under CAP-1, absence of a recognized value leaves the
 behavior unexercised.<a href="#section-4.2-3" class="pilcrow">¶</a></p>
+<p id="section-4.2-4">A revision number is a document reference, so a registered value <span class="bcp14">SHOULD NOT</span>
+carry one. Where the revised behavior can be named, name it. Where it cannot,
+because a format changed in many small ways at once, a bare sequence suffix is
+preferable to a revision number, since it indexes variants rather than pointing
+at a document that ceases to be authoritative on publication. An interim value
+used before registration <span class="bcp14">MAY</span> carry a revision number, since impermanence is the
+point there, but it is replaced by the registered value rather than registered
+in that form.<a href="#section-4.2-4" class="pilcrow">¶</a></p>
+<p id="section-4.2-5">The following non-normative example illustrates the distinction. Suppose an
+extension defines a transaction authorization challenge, and a later revision
+changes the challenge from a set of form-encoded parameters to a JWT, so that a
+client built against the earlier revision cannot parse the later one:<a href="#section-4.2-5" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-4.2-6.1">
+            <p id="section-4.2-6.1.1"><code>txn-challenge</code> names the original behavior.<a href="#section-4.2-6.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-4.2-6.2">
+            <p id="section-4.2-6.2.1"><code>txn-challenge-jwt</code> names the revised behavior by what a client must now
+parse, and is the preferred registration.<a href="#section-4.2-6.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-4.2-6.3">
+            <p id="section-4.2-6.3.1"><code>txn-challenge-2</code> is acceptable where no behavioral name is available.<a href="#section-4.2-6.3.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-4.2-6.4">
+            <p id="section-4.2-6.4.1"><code>txn-challenge-11</code> is not, because the suffix names a draft revision rather
+than a behavior, and means nothing once the draft is published.<a href="#section-4.2-6.4.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-4.2-6.5">
+            <p id="section-4.2-6.5.1"><code>txn-challenge-draft-11</code> suits the period while the revision is still
+unstable, as an unregistered value that will be replaced rather than
+registered in that form.<a href="#section-4.2-6.5.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+<p id="section-4.2-7">A server that recognizes both <code>txn-challenge</code> and <code>txn-challenge-jwt</code> serves
+clients built against either revision from a single deployment.<a href="#section-4.2-7" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="none-value">
@@ -2142,8 +2177,9 @@ identifies every applicable carrier and endpoint;<a href="#section-13.1-5.2.1" c
 false assertion and signal removal; and<a href="#section-13.1-5.3.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-13.1-5.4">
-            <p id="section-13.1-5.4.1">reject values that duplicate the semantics of an existing registration or
-differ from one only in letter case.<a href="#section-13.1-5.4.1" class="pilcrow">¶</a></p>
+            <p id="section-13.1-5.4.1">reject values that duplicate the semantics of an existing registration, differ
+from one only in letter case, or name a document revision rather than a
+behavior.<a href="#section-13.1-5.4.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 <p id="section-13.1-6">The designated experts should presume that a registration is acceptable when
