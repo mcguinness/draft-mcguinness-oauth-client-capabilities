@@ -35,7 +35,7 @@ only optional server behavior, so that their absence is always safe.
     Jinja2 3.1.6
     lxml 6.1.1
     natsort 8.4.0
-    platformdirs 4.10.1
+    platformdirs 4.11.0
     pycountry 24.6.1
     PyYAML 6.0.3
     requests 2.33.1
@@ -1059,7 +1059,7 @@ svg {
 </tr></thead>
 <tfoot><tr>
 <td class="left">McGuinness</td>
-<td class="center">Expires 2 February 2027</td>
+<td class="center">Expires 4 February 2027</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1072,12 +1072,12 @@ svg {
 <dd class="internet-draft">draft-mcguinness-oauth-client-capabilities-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-08-01" class="published">1 August 2026</time>
+<time datetime="2026-08-03" class="published">3 August 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2027-02-02">2 February 2027</time></dd>
+<dd class="expires"><time datetime="2027-02-04">4 February 2027</time></dd>
 <dt class="label-authors">Author:</dt>
 <dd class="authors">
 <div class="author">
@@ -1121,7 +1121,7 @@ only optional server behavior, so that their absence is always safe.<a href="#se
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 2 February 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 4 February 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1524,9 +1524,20 @@ after receiving the value, not a document. <code>accept-deferred-response</code>
 capability; <code>draft-gerber-oauth-deferred-token-response</code> is not. A
 specification <span class="bcp14">MAY</span> register more than one value where a client can usefully
 implement part of it.<a href="#section-4.2-1" class="pilcrow">¶</a></p>
-<p id="section-4.2-2">A new version of an extension whose client-side processing differs registers a
+<p id="section-4.2-2">A new revision of an extension whose client-side processing differs registers a
 new value rather than reusing the old one, so that a server can distinguish the
-two.<a href="#section-4.2-2" class="pilcrow">¶</a></p>
+two. Registering the new value does not retire the old one: its change
+controller <span class="bcp14">MAY</span> mark the old value obsolete, and a server <span class="bcp14">MAY</span> continue to
+recognize it. A server that recognizes several revisions of a behavior serves
+clients built against each of them from a single deployment, which is how
+concurrent support for incompatible revisions is achieved.<a href="#section-4.2-2" class="pilcrow">¶</a></p>
+<p id="section-4.2-3">While an extension is still being revised its client-side processing may change
+from one draft to the next, and registering a value per interim revision would
+fill the registry with values that never ship. An extension <span class="bcp14">SHOULD</span> register a
+value only once the processing it names is stable. Before then implementers can
+use an unregistered value, which is safe because a recipient ignores a value it
+does not recognize and, under CAP-1, absence of a recognized value leaves the
+behavior unexercised.<a href="#section-4.2-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="none-value">
@@ -2659,7 +2670,16 @@ rather than a behavior a server may exercise (<a href="#values" class="auto inte
 membership is closer to the policy input <a href="#invariants" class="auto internal xref">Section 5</a> excludes. This
 specification neither defines it nor proposes that version values be
 registered.<a href="#appendix-C.4-2" class="pilcrow">¶</a></p>
-<p id="appendix-C.4-3">The two problems do share a carrier shape. That discussion lists a slow rollout
+<p id="appendix-C.4-3">A draft revision is a different case, and one this specification does handle.
+Where a specification changes what a client must parse between revisions, the
+change is a client-side behavior, and <a href="#values" class="auto internal xref">Section 4</a> already covers it: register a
+value for the new processing, keep recognizing the old one, and a server serves
+both populations at once. No version string is needed, because what a client
+signals is the behavior the string stood for, and <a href="#discovery" class="auto internal xref">Section 9</a> lets a client
+learn which revisions a server implements without a version at all. What
+remains out of scope is selecting a framework version or a profile, where the
+label does not correspond to a single client-side behavior.<a href="#appendix-C.4-3" class="pilcrow">¶</a></p>
+<p id="appendix-C.4-4">The two problems do share a carrier shape. That discussion lists a slow rollout
 for native applications, whose upgrades reach users gradually, among its
 requirements <span>[<a href="#OAUTH21-VERSIONS" class="cite xref">OAUTH21-VERSIONS</a>]</span>. Reading the requirement as a call for a
 static default that a single request can override is an inference of this
@@ -2667,9 +2687,9 @@ document rather than a conclusion of that discussion. A registration field
 alone cannot provide it: every deployed instance sharing a <code>client_id</code> carries
 the same declared version, so a rollout staged across native application
 releases cannot be expressed. The precedence rule in <a href="#precedence" class="auto internal xref">Section 7.4</a> is the
-general form of that override. Whether version selection should reuse it, or
-should instead be decomposed into the specific behaviors that actually need
-signaling, belongs to that work rather than this one.<a href="#appendix-C.4-3" class="pilcrow">¶</a></p>
+general form of that override. Whether framework version selection should reuse
+it, or should instead be decomposed into the specific behaviors that actually
+need signaling, belongs to that work rather than this one.<a href="#appendix-C.4-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="trade-offs">
@@ -2706,9 +2726,10 @@ former is preferred because the field declares client behavior rather than
 negotiating content, but the choice is not settled.<a href="#appendix-C.6-1.2.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="appendix-C.6-1.3">
-            <p id="appendix-C.6-1.3.1">Whether capability values need internal versioning, or whether a new version
-registers a new value. The latter is assumed; the <code>.</code> and <code>:</code>
-characters remain available in the syntax if that changes.<a href="#appendix-C.6-1.3.1" class="pilcrow">¶</a></p>
+            <p id="appendix-C.6-1.3.1">Whether the <code>.</code> and <code>:</code> characters the syntax allows should carry any
+structure. <a href="#values" class="auto internal xref">Section 4</a> settles that a revision with different client-side
+processing registers a new value rather than versioning an existing one, so no
+structure is needed today.<a href="#appendix-C.6-1.3.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="appendix-C.6-1.4">
             <p id="appendix-C.6-1.4.1">Whether client software capabilities and running instance capabilities are
