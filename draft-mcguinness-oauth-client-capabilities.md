@@ -249,9 +249,21 @@ capability; `draft-gerber-oauth-deferred-token-response` is not. A
 specification MAY register more than one value where a client can usefully
 implement part of it.
 
-A new version of an extension whose client-side processing differs registers a
+A new revision of an extension whose client-side processing differs registers a
 new value rather than reusing the old one, so that a server can distinguish the
-two.
+two. Registering the new value does not retire the old one: its change
+controller MAY mark the old value obsolete, and a server MAY continue to
+recognize it. A server that recognizes several revisions of a behavior serves
+clients built against each of them from a single deployment, which is how
+concurrent support for incompatible revisions is achieved.
+
+While an extension is still being revised its client-side processing may change
+from one draft to the next, and registering a value per interim revision would
+fill the registry with values that never ship. An extension SHOULD register a
+value only once the processing it names is stable. Before then implementers can
+use an unregistered value, which is safe because a recipient ignores a value it
+does not recognize and, under CAP-1, absence of a recognized value leaves the
+behavior unexercised.
 
 ## The `none` Sentinel {#none-value}
 
@@ -1012,6 +1024,16 @@ membership is closer to the policy input {{invariants}} excludes. This
 specification neither defines it nor proposes that version values be
 registered.
 
+A draft revision is a different case, and one this specification does handle.
+Where a specification changes what a client must parse between revisions, the
+change is a client-side behavior, and {{values}} already covers it: register a
+value for the new processing, keep recognizing the old one, and a server serves
+both populations at once. No version string is needed, because what a client
+signals is the behavior the string stood for, and {{discovery}} lets a client
+learn which revisions a server implements without a version at all. What
+remains out of scope is selecting a framework version or a profile, where the
+label does not correspond to a single client-side behavior.
+
 The two problems do share a carrier shape. That discussion lists a slow rollout
 for native applications, whose upgrades reach users gradually, among its
 requirements {{OAUTH21-VERSIONS}}. Reading the requirement as a call for a
@@ -1020,9 +1042,9 @@ document rather than a conclusion of that discussion. A registration field
 alone cannot provide it: every deployed instance sharing a `client_id` carries
 the same declared version, so a rollout staged across native application
 releases cannot be expressed. The precedence rule in {{precedence}} is the
-general form of that override. Whether version selection should reuse it, or
-should instead be decomposed into the specific behaviors that actually need
-signaling, belongs to that work rather than this one.
+general form of that override. Whether framework version selection should reuse
+it, or should instead be decomposed into the specific behaviors that actually
+need signaling, belongs to that work rather than this one.
 
 ## Trade-offs
 
@@ -1047,9 +1069,10 @@ and is easier to establish before more incompatible carriers ship.
   {{ABCA}}. `Accept-OAuth-Capabilities` would match the `Accept-*` family. The
   former is preferred because the field declares client behavior rather than
   negotiating content, but the choice is not settled.
-- Whether capability values need internal versioning, or whether a new version
-  registers a new value. The latter is assumed; the `.` and `:`
-  characters remain available in the syntax if that changes.
+- Whether the `.` and `:` characters the syntax allows should carry any
+  structure. {{values}} settles that a revision with different client-side
+  processing registers a new value rather than versioning an existing one, so no
+  structure is needed today.
 - Whether client software capabilities and running instance capabilities are
   adequately separated by the replacement rule in {{precedence}}, or whether
   instance-level identity mechanisms should carry a capability set of their
