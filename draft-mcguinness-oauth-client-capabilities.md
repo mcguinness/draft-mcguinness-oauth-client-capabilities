@@ -265,6 +265,33 @@ use an unregistered value, which is safe because a recipient ignores a value it
 does not recognize and, under CAP-1, absence of a recognized value leaves the
 behavior unexercised.
 
+A revision number is a document reference, so a registered value SHOULD NOT
+carry one. Where the revised behavior can be named, name it. Where it cannot,
+because a format changed in many small ways at once, a bare sequence suffix is
+preferable to a revision number, since it indexes variants rather than pointing
+at a document that ceases to be authoritative on publication. An interim value
+used before registration MAY carry a revision number, since impermanence is the
+point there, but it is replaced by the registered value rather than registered
+in that form.
+
+The following non-normative example illustrates the distinction. Suppose an
+extension defines a transaction authorization challenge, and a later revision
+changes the challenge from a set of form-encoded parameters to a JWT, so that a
+client built against the earlier revision cannot parse the later one:
+
+- `txn-challenge` names the original behavior.
+- `txn-challenge-jwt` names the revised behavior by what a client must now
+  parse, and is the preferred registration.
+- `txn-challenge-2` is acceptable where no behavioral name is available.
+- `txn-challenge-11` is not, because the suffix names a draft revision rather
+  than a behavior, and means nothing once the draft is published.
+- `txn-challenge-draft-11` suits the period while the revision is still
+  unstable, as an unregistered value that will be replaced rather than
+  registered in that form.
+
+A server that recognizes both `txn-challenge` and `txn-challenge-jwt` serves
+clients built against either revision from a single deployment.
+
 ## The `none` Sentinel {#none-value}
 
 The token `none` is reserved for use as the complete value of the
@@ -751,8 +778,9 @@ Designated experts evaluating a registration request should:
   identifies every applicable carrier and endpoint;
 - consider the security, privacy, interoperability, and operational effects of
   false assertion and signal removal; and
-- reject values that duplicate the semantics of an existing registration or
-  differ from one only in letter case.
+- reject values that duplicate the semantics of an existing registration, differ
+  from one only in letter case, or name a document revision rather than a
+  behavior.
 
 The designated experts should presume that a registration is acceptable when
 these requirements are met. They may obtain feedback from the OAuth Working
