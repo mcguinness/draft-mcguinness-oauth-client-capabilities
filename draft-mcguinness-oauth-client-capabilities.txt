@@ -4,8 +4,8 @@
 
 Web Authorization Protocol                                 K. McGuinness
 Internet-Draft                                               Independent
-Intended status: Standards Track                           3 August 2026
-Expires: 4 February 2027
+Intended status: Standards Track                           4 August 2026
+Expires: 5 February 2027
 
 
                      OAuth 2.0 Client Capabilities
@@ -43,7 +43,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 4 February 2027.
+   This Internet-Draft will expire on 5 February 2027.
 
 Copyright Notice
 
@@ -135,8 +135,8 @@ Table of Contents
 1.1.  The Carrier Asymmetry
 
    Neither carrier can perform the other's function.  An HTTP field
-   works for [TXN-CHALLENGE] because the client makes the protected
-   resource request directly, but that request has no OAuth parameter
+   works for [TXN-CHALLENGE] because the protected resource request is
+   made directly over HTTP, but that request has no OAuth parameter
    surface.  At the authorization endpoint, the client constructs a URI
    for a user agent, which issues the HTTP request with its own fields;
    a client-originated field cannot cross that redirect boundary.
@@ -174,7 +174,9 @@ Table of Contents
    define any capability values, reserves the none sentinel in
    Section 4.3, does not change any existing parameter, and does not
    require existing extensions to migrate.  It is designed so that
-   extensions may adopt it incrementally.
+   extensions may adopt it incrementally.  The extensions in Appendix B
+   are the intended first adopters; this document proposes the mechanism
+   for their use rather than registering values on their behalf.
 
    Two uses are out of scope.  Capability values do not carry
    deployment-local feature flags or rollout cohort membership, which
@@ -299,24 +301,24 @@ Table of Contents
    against each of them from a single deployment, which is how
    concurrent support for incompatible revisions is achieved.
 
-   While an extension is still being revised its client-side processing
-   may change from one draft to the next, and registering a value per
-   interim revision would fill the registry with values that never ship.
-   An extension SHOULD register a value only once the processing it
-   names is stable.  Before then implementers can use an unregistered
-   value, which is safe because a recipient ignores a value it does not
-   recognize and, under CAP-1, absence of a recognized value leaves the
-   behavior unexercised.
+   Because client-side processing may change while an extension is being
+   revised, an extension SHOULD register a value only once the
+   processing it names is stable.  Unregistered values are not a general
+   substitute in the interim.  Ignoring an unrecognized value protects a
+   recipient that has never seen it, but not one that has independently
+   assigned the same token different semantics, in which case the
+   recipient exercises a behavior the sender cannot process.
+   Unregistered values therefore SHOULD be confined to deployments whose
+   parties have agreed on their meaning out of band, and early
+   allocation SHOULD be sought once deployment becomes interoperable, as
+   [RFC7120] describes.
 
-   A revision number is a document reference, so a registered value
-   SHOULD NOT carry one.  Where the revised behavior can be named, name
-   it.  Where it cannot, because a format changed in many small ways at
-   once, a bare sequence suffix is preferable to a revision number,
-   since it indexes variants rather than pointing at a document that
-   ceases to be authoritative on publication.  An interim value used
-   before registration MAY carry a revision number, since impermanence
-   is the point there, but it is replaced by the registered value rather
-   than registered in that form.
+   A revision number is a document reference, so a value SHOULD NOT
+   carry one: it means nothing once the draft is published, and a run of
+   revisions with identical client processing would imply as many
+   variants.  Where the revised behavior can be named, name it.  Where
+   it cannot, because a format changed in many small ways at once, a
+   bare sequence suffix indexes variants without pointing at a document.
 
    The following non-normative example illustrates the distinction.
    Suppose an extension defines a transaction authorization challenge,
@@ -333,12 +335,7 @@ Table of Contents
       available.
 
    *  txn-challenge-11 is not, because the suffix names a draft revision
-      rather than a behavior, and means nothing once the draft is
-      published.
-
-   *  txn-challenge-draft-11 suits the period while the revision is
-      still unstable, as an unregistered value that will be replaced
-      rather than registered in that form.
+      rather than a behavior.
 
    A server that recognizes both txn-challenge and txn-challenge-jwt
    serves clients built against either revision from a single
@@ -444,7 +441,8 @@ Table of Contents
    Host: as.example.com
    Content-Type: application/x-www-form-urlencoded
 
-   grant_type=authorization_code&code=SplxlOB...
+   grant_type=refresh_token&refresh_token=tGzv3JOkF0XG5Qx2TlKWIA
+   &client_id=https%3A%2F%2Fapp.example%2Fclient
    &client_capabilities=accept-deferred-response
 
              Figure 2: A capability signaled on a token request
@@ -482,6 +480,14 @@ Table of Contents
    surface, most importantly a protected resource request, which is also
    where alternative challenge paths most often coexist; see
    Section 8.1.
+
+   The field asserts that the path which will process the response can
+   process the behavior.  That path may be the sender alone, or the
+   sender together with another component on whose behalf it acts: an
+   agent making a resource request may relay a challenge to a component
+   that completes it.  The sender is accountable for the assertion.
+   Because the field does not necessarily identify the OAuth client,
+   client metadata supplies no default for it (Section 7.4).
 
    A client MUST NOT use the field on a request at an endpoint where the
    client_capabilities parameter is defined; it uses Section 7.1 there
@@ -836,6 +842,11 @@ Table of Contents
    Description:  A brief description of the client behavior signaled by
       the value.
 
+   Status:  Either current or obsolete.  A value is registered as
+      current.  Its change controller MAY later set it to obsolete to
+      record that a superseding value exists; an obsolete value remains
+      registered, and a server MAY continue to recognize it.
+
    Absent-Signal Behavior:  What the server does when the value is not
       in the effective set.  Recording this makes CAP-1 in Section 5
       checkable at registration time rather than aspirational.
@@ -879,6 +890,8 @@ Table of Contents
    Capability Value:  none
 
    Description:  Reserved.  Denotes the empty capability set.
+
+   Status:  current
 
    Absent-Signal Behavior:  Not applicable. none is a sentinel rather
       than a capability.
@@ -1069,6 +1082,10 @@ Table of Contents
               DOI 10.17487/RFC3261, July 2002,
               <https://www.rfc-editor.org/rfc/rfc3261>.
 
+   [RFC7120]  Cotton, M., "Early IANA Allocation of Standards Track Code
+              Points", BCP 100, RFC 7120, DOI 10.17487/RFC7120, January
+              2014, <https://www.rfc-editor.org/rfc/rfc7120>.
+
    [RFC7240]  Snell, J., "Prefer Header for HTTP", RFC 7240,
               DOI 10.17487/RFC7240, June 2014,
               <https://www.rfc-editor.org/rfc/rfc7240>.
@@ -1133,6 +1150,8 @@ Appendix A.  Examples
 
    grant_type=authorization_code&code=SplxlOB...
    &client_id=https%3A%2F%2Fapp.example%2Fclient
+   &redirect_uri=https%3A%2F%2Fapp.example%2Fcb
+   &code_verifier=dBjftJeZ...
    &client_capabilities=accept-deferred-response
 
        Figure 5: Signaling at the endpoint where the behavior occurs
@@ -1147,6 +1166,8 @@ Appendix A.  Examples
 
    grant_type=authorization_code&code=SplxlOB...
    &client_id=https%3A%2F%2Fapp.example%2Fclient
+   &redirect_uri=https%3A%2F%2Fapp.example%2Fcb
+   &code_verifier=dBjftJeZ...
    &client_capabilities=none
 
          Figure 6: Explicit retraction by a constrained deployment
@@ -1164,7 +1185,13 @@ Appendix B.  Applying This Specification to Existing Drafts
       response, Section 7.5 requires the value in the token request's
       effective set; signaling at an earlier endpoint remains only a
       hint.  The proposed single-purpose registry is subsumed by
-      Section 13.1.
+      Section 13.1, and the deferred_token_response_supported
+      authorization server metadata Boolean by
+      client_capabilities_supported containing the value.  Either
+      suffices to show that a server recognizes the capability, and
+      because an advertisement is not a commitment (Section 9), a
+      disagreement between them affects only which values a client
+      chooses to send.
 
    Transaction Authorization Challenge:  Accept-Txn-Challenge: ?1
       becomes OAuth-Client-Capabilities: txn-challenge.  The normative
@@ -1273,19 +1300,19 @@ C.4.  Capabilities and Profile Selection
    remains out of scope is selecting a framework version or a profile,
    where the label does not correspond to a single client-side behavior.
 
-   The two problems do share a carrier shape.  That discussion lists a
-   slow rollout for native applications, whose upgrades reach users
-   gradually, among its requirements [OAUTH21-VERSIONS].  Reading the
-   requirement as a call for a static default that a single request can
-   override is an inference of this document rather than a conclusion of
-   that discussion.  A registration field alone cannot provide it: every
-   deployed instance sharing a client_id carries the same declared
-   version, so a rollout staged across native application releases
-   cannot be expressed.  The precedence rule in Section 7.4 is the
-   general form of that override.  Whether framework version selection
-   should reuse it, or should instead be decomposed into the specific
-   behaviors that actually need signaling, belongs to that work rather
-   than this one.
+   The two problems do share a carrier shape.  Comments on that issue
+   list a slow rollout for native applications, whose upgrades reach
+   users gradually, among the requirements [OAUTH21-VERSIONS].  Reading
+   the requirement as a call for a static default that a single request
+   can override is an inference of this document rather than a
+   conclusion of that discussion.  A registration field alone cannot
+   provide it: every deployed instance sharing a client_id carries the
+   same declared version, so a rollout staged across native application
+   releases cannot be expressed.  The precedence rule in Section 7.4 is
+   the general form of that override.  Whether framework version
+   selection should reuse it, or should instead be decomposed into the
+   specific behaviors that actually need signaling, belongs to that work
+   rather than this one.
 
 C.5.  Trade-offs
 
