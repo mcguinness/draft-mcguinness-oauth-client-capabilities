@@ -40,6 +40,7 @@ normative:
 informative:
   RFC3261:
   RFC7240:
+  RFC7120:
   RFC9207:
   RFC8942:
   RFC9396:
@@ -112,8 +113,8 @@ The requirements are structurally identical. The carriers are not.
 ## The Carrier Asymmetry {#asymmetry}
 
 Neither carrier can perform the other's function. An HTTP field works for
-{{TXN-CHALLENGE}} because the client makes the protected resource request
-directly, but that request has no OAuth parameter surface. At the authorization
+{{TXN-CHALLENGE}} because the protected resource request is made directly over
+HTTP, but that request has no OAuth parameter surface. At the authorization
 endpoint, the client constructs a URI for a user agent, which issues the HTTP
 request with its own fields; a client-originated field cannot cross that
 redirect boundary.
@@ -148,7 +149,10 @@ both sides of the asymmetry in {{asymmetry}}.
 This specification defines carriers and a vocabulary. It does not define any
 capability values, reserves the `none` sentinel in {{none-value}}, does not
 change any existing parameter, and does not require existing extensions to
-migrate. It is designed so that extensions may adopt it incrementally.
+migrate. It is designed so that extensions may adopt it incrementally. The
+extensions in {{existing-drafts}} are the intended first adopters; this
+document proposes the mechanism for their use rather than registering values on
+their behalf.
 
 Two uses are out of scope. Capability values do not carry deployment-local
 feature flags or rollout cohort membership, which are server-side policy keyed
@@ -257,22 +261,22 @@ recognize it. A server that recognizes several revisions of a behavior serves
 clients built against each of them from a single deployment, which is how
 concurrent support for incompatible revisions is achieved.
 
-While an extension is still being revised its client-side processing may change
-from one draft to the next, and registering a value per interim revision would
-fill the registry with values that never ship. An extension SHOULD register a
-value only once the processing it names is stable. Before then implementers can
-use an unregistered value, which is safe because a recipient ignores a value it
-does not recognize and, under CAP-1, absence of a recognized value leaves the
-behavior unexercised.
+Because client-side processing may change while an extension is being revised,
+an extension SHOULD register a value only once the processing it names is
+stable. Unregistered values are not a general substitute in the interim.
+Ignoring an unrecognized value protects a recipient that has never seen it, but
+not one that has independently assigned the same token different semantics, in
+which case the recipient exercises a behavior the sender cannot process.
+Unregistered values therefore SHOULD be confined to deployments whose parties
+have agreed on their meaning out of band, and early allocation SHOULD be sought
+once deployment becomes interoperable, as {{RFC7120}} describes.
 
-A revision number is a document reference, so a registered value SHOULD NOT
-carry one. Where the revised behavior can be named, name it. Where it cannot,
-because a format changed in many small ways at once, a bare sequence suffix is
-preferable to a revision number, since it indexes variants rather than pointing
-at a document that ceases to be authoritative on publication. An interim value
-used before registration MAY carry a revision number, since impermanence is the
-point there, but it is replaced by the registered value rather than registered
-in that form.
+A revision number is a document reference, so a value SHOULD NOT carry one: it
+means nothing once the draft is published, and a run of revisions with
+identical client processing would imply as many variants. Where the revised
+behavior can be named, name it. Where it cannot, because a format changed in
+many small ways at once, a bare sequence suffix indexes variants without
+pointing at a document.
 
 The following non-normative example illustrates the distinction. Suppose an
 extension defines a transaction authorization challenge, and a later revision
@@ -284,10 +288,7 @@ client built against the earlier revision cannot parse the later one:
   parse, and is the preferred registration.
 - `txn-challenge-2` is acceptable where no behavioral name is available.
 - `txn-challenge-11` is not, because the suffix names a draft revision rather
-  than a behavior, and means nothing once the draft is published.
-- `txn-challenge-draft-11` suits the period while the revision is still
-  unstable, as an unregistered value that will be replaced rather than
-  registered in that form.
+  than a behavior.
 
 A server that recognizes both `txn-challenge` and `txn-challenge-jwt` serves
 clients built against either revision from a single deployment.
@@ -392,7 +393,8 @@ POST /token HTTP/1.1
 Host: as.example.com
 Content-Type: application/x-www-form-urlencoded
 
-grant_type=authorization_code&code=SplxlOB...
+grant_type=refresh_token&refresh_token=tGzv3JOkF0XG5Qx2TlKWIA
+&client_id=https%3A%2F%2Fapp.example%2Fclient
 &client_capabilities=accept-deferred-response
 ~~~
 {: title="A capability signaled on a token request"}
@@ -426,6 +428,13 @@ The `OAuth-Client-Capabilities` HTTP field allows a client to signal
 capabilities on a request that has no OAuth request parameter surface, most
 importantly a protected resource request, which is also where alternative
 challenge paths most often coexist; see {{selection}}.
+
+The field asserts that the path which will process the response can process the
+behavior. That path may be the sender alone, or the sender together with
+another component on whose behalf it acts: an agent making a resource request
+may relay a challenge to a component that completes it. The sender is
+accountable for the assertion. Because the field does not necessarily identify
+the OAuth client, client metadata supplies no default for it ({{precedence}}).
 
 A client MUST NOT use the field on a request at an endpoint where the
 `client_capabilities` parameter is defined; it uses {{param}} there instead. An
@@ -748,6 +757,12 @@ Capability Value:
 Description:
 : A brief description of the client behavior signaled by the value.
 
+Status:
+: Either `current` or `obsolete`. A value is registered as `current`. Its
+  change controller MAY later set it to `obsolete` to record that a superseding
+  value exists; an obsolete value remains registered, and a server MAY continue
+  to recognize it.
+
 Absent-Signal Behavior:
 : What the server does when the value is not in the effective set. Recording
   this makes CAP-1 in {{invariants}} checkable at registration time rather than
@@ -793,6 +808,9 @@ Capability Value:
 
 Description:
 : Reserved. Denotes the empty capability set.
+
+Status:
+: current
 
 Absent-Signal Behavior:
 : Not applicable. `none` is a sentinel rather than a capability.
@@ -931,6 +949,8 @@ Content-Type: application/x-www-form-urlencoded
 
 grant_type=authorization_code&code=SplxlOB...
 &client_id=https%3A%2F%2Fapp.example%2Fclient
+&redirect_uri=https%3A%2F%2Fapp.example%2Fcb
+&code_verifier=dBjftJeZ...
 &client_capabilities=accept-deferred-response
 ~~~
 {: title="Signaling at the endpoint where the behavior occurs"}
@@ -945,6 +965,8 @@ Content-Type: application/x-www-form-urlencoded
 
 grant_type=authorization_code&code=SplxlOB...
 &client_id=https%3A%2F%2Fapp.example%2Fclient
+&redirect_uri=https%3A%2F%2Fapp.example%2Fcb
+&code_verifier=dBjftJeZ...
 &client_capabilities=none
 ~~~
 {: title="Explicit retraction by a constrained deployment"}
@@ -958,14 +980,20 @@ Deferred Token Response:
 : `completion_mode=deferred` becomes `client_capabilities` containing
   `accept-deferred-response`. The authorization server still MUST NOT defer
   unless the value is in the request's effective set. Because deferral affects
-  the token response, {{signal-scope}} requires the value in the token request's
-  effective set; signaling at an earlier endpoint remains only a hint. The
-  proposed single-purpose registry is subsumed by {{iana-registry}}.
+  the token response, {{signal-scope}} requires the value in the token
+  request's effective set; signaling at an earlier endpoint remains only a
+  hint. The proposed single-purpose registry is subsumed by {{iana-registry}},
+  and the
+`deferred_token_response_supported` authorization server metadata Boolean by
+`client_capabilities_supported` containing the value. Either suffices to show
+that a server recognizes the capability, and because an advertisement is not a
+commitment ({{discovery}}), a disagreement between them affects only which
+values a client chooses to send.
 
 Transaction Authorization Challenge:
-: `Accept-Txn-Challenge: ?1` becomes `OAuth-Client-Capabilities: txn-challenge`.
-  The normative rule and the out-of-band knowledge provision are unchanged. The
-  Boolean becomes list membership; absence expresses false.
+: `Accept-Txn-Challenge: ?1` becomes `OAuth-Client-Capabilities:
+  txn-challenge`. The normative rule and the out-of-band knowledge provision
+  are unchanged. The Boolean becomes list membership; absence expresses false.
 
 # Design Rationale {#rationale}
 
@@ -1062,9 +1090,9 @@ learn which revisions a server implements without a version at all. What
 remains out of scope is selecting a framework version or a profile, where the
 label does not correspond to a single client-side behavior.
 
-The two problems do share a carrier shape. That discussion lists a slow rollout
-for native applications, whose upgrades reach users gradually, among its
-requirements {{OAUTH21-VERSIONS}}. Reading the requirement as a call for a
+The two problems do share a carrier shape. Comments on that issue list a slow
+rollout for native applications, whose upgrades reach users gradually, among
+the requirements {{OAUTH21-VERSIONS}}. Reading the requirement as a call for a
 static default that a single request can override is an inference of this
 document rather than a conclusion of that discussion. A registration field
 alone cannot provide it: every deployed instance sharing a `client_id` carries
