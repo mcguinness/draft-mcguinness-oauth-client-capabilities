@@ -127,7 +127,7 @@ A general mechanism therefore cannot be an HTTP field alone, and cannot be a
 request parameter alone. Two request carriers over one shared vocabulary is the
 minimum that covers OAuth's actual topology.
 
-## Why Open-World Deployment Makes This Urgent {#open-world}
+## Open-World Deployment {#open-world}
 
 Classic OAuth establishes client behavior at registration. Metadata fields such
 as `grant_types`, `response_types`, `token_endpoint_auth_method`,
@@ -172,7 +172,7 @@ design is one field per feature. A per-extension signal also needs its own
 registrations and metadata. A shared vocabulary pays those costs once across
 both sides of the asymmetry in {{asymmetry}}.
 
-## What This Specification Does Not Change {#scope}
+## Scope {#scope}
 
 This specification defines carriers and a vocabulary, and reserves the `none`
 sentinel ({{none-value}}). It does not define any capability values, change any
@@ -730,7 +730,7 @@ server will honor it.
 
 The security properties of this mechanism rest on {{invariants}}.
 
-## Signals Are Not Proof {#unverified-signals}
+## Unverified Signals {#unverified-signals}
 
 A capability signal asserts, but does not prove, that the client implements the
 capability. Depending on their use, transport security, client authentication,
@@ -1073,7 +1073,7 @@ this protocol", yet still represents client-to-server capabilities per feature.
 The IANA "OAuth Parameters" registry group currently contains no generic client
 capability parameter, field, or registry {{IANA-OAUTH}}.
 
-## Why Not HTTP Prefer {#why-not-prefer}
+## Comparison with HTTP Prefer {#why-not-prefer}
 
 `Prefer` {{RFC7240}} is the closest existing mechanism. A server may ignore a
 preference, as it may decline to exercise a capability, and `respond-async` is
@@ -1140,7 +1140,7 @@ paths and the signal prevents it selecting one the client cannot complete;
 {{selection}} governs that narrower case and {{extension-guidance}} bounds it.
 {{iana-registry}} records absent-signal behavior to make the test explicit.
 
-## Why No Mandatory-to-Understand Semantics {#no-require}
+## Absence of Mandatory-to-Understand Semantics {#no-require}
 
 SIP {{RFC3261}} pairs `Supported` with `Require`, letting a client insist an
 extension be understood or the request fail. This specification omits the
