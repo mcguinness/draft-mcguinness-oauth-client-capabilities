@@ -1898,9 +1898,13 @@ uses only the parameters inside it (<span><a href="https://rfc-editor.org/rfc/rf
 <code>client_capabilities</code> value outside the Request Object is not used, and if the
 Request Object contains no such value, step 2 applies. Inside a Request Object,
 the value is a JSON string containing a <code>capability-list</code>; a value of any other
-JSON type is invalid (<a href="#values" class="auto internal xref">Section 4</a>). A capability set in a software statement is
-client metadata and remains subject to the request-level override above;
-signing the statement does not turn a default into a per-request declaration.<a href="#section-7.4-6" class="pilcrow">¶</a></p>
+JSON type is invalid (<a href="#values" class="auto internal xref">Section 4</a>). An authorization request that uses a
+<code>request_uri</code> from a pushed authorization request is built as defined in
+<span>[<a href="#RFC9101" class="cite xref">RFC9101</a>]</span> (<span><a href="https://rfc-editor.org/rfc/rfc9126#section-4" class="relref">Section 4</a> of [<a href="#RFC9126" class="cite xref">RFC9126</a>]</span>), so the same holds for the parameters
+that were pushed: a <code>client_capabilities</code> value sent alongside the
+<code>request_uri</code> is not used. A capability set in a software statement is client
+metadata and remains subject to the request-level override above; signing the
+statement does not turn a default into a per-request declaration.<a href="#section-7.4-6" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="signal-scope">
@@ -2581,11 +2585,13 @@ upon<a href="#section-13.5-2.4.1" class="pilcrow">¶</a></p>
 <a href="#appendix-A" class="section-number selfRef">Appendix A. </a><a href="#name-examples" class="section-name selfRef">Examples</a>
       </h2>
 <p id="appendix-A-1">This specification registers no capability values. The
-<code>accept-deferred-response</code> value below is illustrative, corresponding to a
-behavior described in <a href="#existing-drafts" class="auto internal xref">Appendix B</a>. Line breaks in the form-encoded
-request bodies are for display only.<a href="#appendix-A-1" class="pilcrow">¶</a></p>
+<code>accept-deferred-response</code> and <code>txn-challenge</code> values below are illustrative,
+corresponding to behaviors described in <a href="#existing-drafts" class="auto internal xref">Appendix B</a>. Line breaks in
+the form-encoded request bodies are for display only.<a href="#appendix-A-1" class="pilcrow">¶</a></p>
 <p id="appendix-A-2">The following example shows a pushed authorization request carrying the
-capability; pushing the request keeps the value off the authorization URI:<a href="#appendix-A-2" class="pilcrow">¶</a></p>
+parameter, which keeps the value off the authorization URI. The value applies
+only to that authorization request (<a href="#signal-scope" class="auto internal xref">Section 7.5</a>); the example illustrates
+the carrier:<a href="#appendix-A-2" class="pilcrow">¶</a></p>
 <span id="name-capability-carried-in-a-pus"></span><figure id="figure-4">
         <div class="lang-http-message sourcecode" id="appendix-A-3.1">
 <pre>
@@ -2602,10 +2608,30 @@ response_type=code&amp;client_id=https%3A%2F%2Fapp.example%2Fclient
 <figcaption><a href="#figure-4" class="selfRef">Figure 4</a>:
 <a href="#name-capability-carried-in-a-pus" class="selfRef">Capability carried in a pushed authorization request</a>
         </figcaption></figure>
-<p id="appendix-A-4">The following example shows the same capability on the token request; the
-earlier signal does not carry over (<a href="#signal-scope" class="auto internal xref">Section 7.5</a>):<a href="#appendix-A-4" class="pilcrow">¶</a></p>
-<span id="name-signaling-at-the-endpoint-w"></span><figure id="figure-5">
-        <div class="lang-http-message sourcecode" id="appendix-A-5.1">
+<p id="appendix-A-4">The following example shows the claims of a Request Object carrying the
+parameter. The value is a JSON string, not an array (<a href="#precedence" class="auto internal xref">Section 7.4</a>):<a href="#appendix-A-4" class="pilcrow">¶</a></p>
+<span id="name-capability-carried-in-reque"></span><figure id="figure-5">
+        <div class="lang-json sourcecode" id="appendix-A-5.1">
+<pre>
+{
+  "iss": "https://app.example/client",
+  "aud": "https://as.example.com",
+  "response_type": "code",
+  "client_id": "https://app.example/client",
+  "redirect_uri": "https://app.example/cb",
+  "code_challenge": "W6uP...",
+  "code_challenge_method": "S256",
+  "client_capabilities": "accept-deferred-response"
+}
+</pre>
+</div>
+<figcaption><a href="#figure-5" class="selfRef">Figure 5</a>:
+<a href="#name-capability-carried-in-reque" class="selfRef">Capability carried in Request Object claims</a>
+        </figcaption></figure>
+<p id="appendix-A-6">The following example shows the same capability on the token request; the
+earlier signal does not carry over (<a href="#signal-scope" class="auto internal xref">Section 7.5</a>):<a href="#appendix-A-6" class="pilcrow">¶</a></p>
+<span id="name-signaling-at-the-endpoint-w"></span><figure id="figure-6">
+        <div class="lang-http-message sourcecode" id="appendix-A-7.1">
 <pre>
 POST /token HTTP/1.1
 Host: as.example.com
@@ -2618,14 +2644,35 @@ grant_type=authorization_code&amp;code=SplxlOB...
 &amp;client_capabilities=accept-deferred-response
 </pre>
 </div>
-<figcaption><a href="#figure-5" class="selfRef">Figure 5</a>:
+<figcaption><a href="#figure-6" class="selfRef">Figure 6</a>:
 <a href="#name-signaling-at-the-endpoint-w" class="selfRef">Signaling at the endpoint where the behavior occurs</a>
         </figcaption></figure>
-<p id="appendix-A-6">The following example shows a registered client retracting the capability
+<p id="appendix-A-8">The following example shows a client registration request <span>[<a href="#RFC7591" class="cite xref">RFC7591</a>]</span> that
+declares a default capability set. Every instance covered by the registration
+can process the behavior or overrides the default on its requests
+(<a href="#metadata" class="auto internal xref">Section 7.3</a>), as the next example shows:<a href="#appendix-A-8" class="pilcrow">¶</a></p>
+<span id="name-default-capability-set-in-a"></span><figure id="figure-7">
+        <div class="lang-http-message sourcecode" id="appendix-A-9.1">
+<pre>
+POST /register HTTP/1.1
+Host: as.example.com
+Content-Type: application/json
+
+{
+  "redirect_uris": ["https://app.example/cb"],
+  "token_endpoint_auth_method": "none",
+  "client_capabilities": ["accept-deferred-response"]
+}
+</pre>
+</div>
+<figcaption><a href="#figure-7" class="selfRef">Figure 7</a>:
+<a href="#name-default-capability-set-in-a" class="selfRef">Default capability set in a registration request</a>
+        </figcaption></figure>
+<p id="appendix-A-10">The following example shows a registered client retracting the capability
 its metadata declares, on a request made by an instance that cannot outlive
-the request:<a href="#appendix-A-6" class="pilcrow">¶</a></p>
-<span id="name-explicit-retraction-by-a-le"></span><figure id="figure-6">
-        <div class="lang-http-message sourcecode" id="appendix-A-7.1">
+the request:<a href="#appendix-A-10" class="pilcrow">¶</a></p>
+<span id="name-explicit-retraction-by-a-le"></span><figure id="figure-8">
+        <div class="lang-http-message sourcecode" id="appendix-A-11.1">
 <pre>
 POST /token HTTP/1.1
 Host: as.example.com
@@ -2638,9 +2685,84 @@ grant_type=authorization_code&amp;code=SplxlOB...
 &amp;client_capabilities=none
 </pre>
 </div>
-<figcaption><a href="#figure-6" class="selfRef">Figure 6</a>:
+<figcaption><a href="#figure-8" class="selfRef">Figure 8</a>:
 <a href="#name-explicit-retraction-by-a-le" class="selfRef">Explicit retraction by a less-capable instance</a>
         </figcaption></figure>
+<p id="appendix-A-12">The following examples show excerpts of authorization server metadata
+<span>[<a href="#RFC8414" class="cite xref">RFC8414</a>]</span> and protected resource metadata <span>[<a href="#RFC9728" class="cite xref">RFC9728</a>]</span> that advertise
+recognized values (<a href="#discovery" class="auto internal xref">Section 9</a>):<a href="#appendix-A-12" class="pilcrow">¶</a></p>
+<span id="name-authorization-server-metada"></span><figure id="figure-9">
+        <div class="lang-json sourcecode" id="appendix-A-13.1">
+<pre>
+{
+  "issuer": "https://as.example.com",
+  "token_endpoint": "https://as.example.com/token",
+  "client_capabilities_supported": ["accept-deferred-response"]
+}
+</pre>
+</div>
+<figcaption><a href="#figure-9" class="selfRef">Figure 9</a>:
+<a href="#name-authorization-server-metada" class="selfRef">Authorization server metadata excerpt</a>
+        </figcaption></figure>
+<span id="name-protected-resource-metadata"></span><figure id="figure-10">
+        <div class="lang-json sourcecode" id="appendix-A-14.1">
+<pre>
+{
+  "resource": "https://api.example.com",
+  "authorization_servers": ["https://as.example.com"],
+  "client_capabilities_supported": ["txn-challenge"]
+}
+</pre>
+</div>
+<figcaption><a href="#figure-10" class="selfRef">Figure 10</a>:
+<a href="#name-protected-resource-metadata" class="selfRef">Protected resource metadata excerpt</a>
+        </figcaption></figure>
+<p id="appendix-A-15">The following is an illustrative entry for the deferred-response behavior in
+<a href="#existing-drafts" class="auto internal xref">Appendix B</a>, filled in as <a href="#iana-registry" class="auto internal xref">Section 13.1</a> describes. It is not a
+registration request.<a href="#appendix-A-15" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="appendix-A-16">
+        <dt id="appendix-A-16.1">Capability Value:</dt>
+        <dd style="margin-left: 1.5em" id="appendix-A-16.2">
+          <p id="appendix-A-16.2.1"><code>accept-deferred-response</code><a href="#appendix-A-16.2.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="appendix-A-16.3">Description:</dt>
+        <dd style="margin-left: 1.5em" id="appendix-A-16.4">
+          <p id="appendix-A-16.4.1">The client can process a deferred token response.<a href="#appendix-A-16.4.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="appendix-A-16.5">Status:</dt>
+        <dd style="margin-left: 1.5em" id="appendix-A-16.6">
+          <p id="appendix-A-16.6.1">current<a href="#appendix-A-16.6.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="appendix-A-16.7">Absent-Signal Behavior:</dt>
+        <dd style="margin-left: 1.5em" id="appendix-A-16.8">
+          <p id="appendix-A-16.8.1">The authorization server responds synchronously or with an error; it does
+not defer.<a href="#appendix-A-16.8.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="appendix-A-16.9">Carriers:</dt>
+        <dd style="margin-left: 1.5em" id="appendix-A-16.10">
+          <p id="appendix-A-16.10.1">request parameter, client metadata<a href="#appendix-A-16.10.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="appendix-A-16.11">Endpoints:</dt>
+        <dd style="margin-left: 1.5em" id="appendix-A-16.12">
+          <p id="appendix-A-16.12.1">token endpoint<a href="#appendix-A-16.12.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="appendix-A-16.13">Change Controller:</dt>
+        <dd style="margin-left: 1.5em" id="appendix-A-16.14">
+          <p id="appendix-A-16.14.1">The party responsible for the registration<a href="#appendix-A-16.14.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="appendix-A-16.15">Specification Document(s):</dt>
+        <dd style="margin-left: 1.5em" id="appendix-A-16.16">
+          <p id="appendix-A-16.16.1"><span>[<a href="#DTR" class="cite xref">DTR</a>]</span><a href="#appendix-A-16.16.1" class="pilcrow">¶</a></p>
+</dd>
+      <dd class="break"></dd>
+</dl>
 </section>
 </div>
 <div id="existing-drafts">
@@ -2837,8 +2959,12 @@ typically not shared-cacheable.<a href="#appendix-C.6-1" class="pilcrow">¶</a><
 <p id="appendix-C.6-2">Coordination replaces autonomy. Registering a dedicated parameter requires no
 shared vocabulary; this registry requires naming discipline and agreement on
 CAP-1 through CAP-3.<a href="#appendix-C.6-2" class="pilcrow">¶</a></p>
-<p id="appendix-C.6-3">The current extension count is small. The registry anticipates continued growth
-and is easier to establish before more incompatible carriers ship.<a href="#appendix-C.6-3" class="pilcrow">¶</a></p>
+<p id="appendix-C.6-3">A request set replaces the metadata default rather than adding to it
+(<a href="#precedence" class="auto internal xref">Section 7.4</a>). A client that adds one value on a request repeats every
+default it still wants; in exchange, a less-capable instance can retract a
+default without a per-value removal syntax.<a href="#appendix-C.6-3" class="pilcrow">¶</a></p>
+<p id="appendix-C.6-4">The current extension count is small. The registry anticipates continued growth
+and is easier to establish before more incompatible carriers ship.<a href="#appendix-C.6-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="open-issues">

@@ -626,10 +626,14 @@ Table of Contents
    Object is not used, and if the Request Object contains no such value,
    step 2 applies.  Inside a Request Object, the value is a JSON string
    containing a capability-list; a value of any other JSON type is
-   invalid (Section 4).  A capability set in a software statement is
-   client metadata and remains subject to the request-level override
-   above; signing the statement does not turn a default into a per-
-   request declaration.
+   invalid (Section 4).  An authorization request that uses a
+   request_uri from a pushed authorization request is built as defined
+   in [RFC9101] (Section 4 of [RFC9126]), so the same holds for the
+   parameters that were pushed: a client_capabilities value sent
+   alongside the request_uri is not used.  A capability set in a
+   software statement is client metadata and remains subject to the
+   request-level override above; signing the statement does not turn a
+   default into a per-request declaration.
 
 7.5.  Scope of a Signal
 
@@ -1155,13 +1159,14 @@ Table of Contents
 Appendix A.  Examples
 
    This specification registers no capability values.  The accept-
-   deferred-response value below is illustrative, corresponding to a
-   behavior described in Appendix B.  Line breaks in the form-encoded
-   request bodies are for display only.
+   deferred-response and txn-challenge values below are illustrative,
+   corresponding to behaviors described in Appendix B.  Line breaks in
+   the form-encoded request bodies are for display only.
 
    The following example shows a pushed authorization request carrying
-   the capability; pushing the request keeps the value off the
-   authorization URI:
+   the parameter, which keeps the value off the authorization URI.  The
+   value applies only to that authorization request (Section 7.5); the
+   example illustrates the carrier:
 
    POST /par HTTP/1.1
    Host: as.example.com
@@ -1173,6 +1178,23 @@ Appendix A.  Examples
    &client_capabilities=accept-deferred-response
 
        Figure 4: Capability carried in a pushed authorization request
+
+   The following example shows the claims of a Request Object carrying
+   the parameter.  The value is a JSON string, not an array
+   (Section 7.4):
+
+   {
+     "iss": "https://app.example/client",
+     "aud": "https://as.example.com",
+     "response_type": "code",
+     "client_id": "https://app.example/client",
+     "redirect_uri": "https://app.example/cb",
+     "code_challenge": "W6uP...",
+     "code_challenge_method": "S256",
+     "client_capabilities": "accept-deferred-response"
+   }
+
+           Figure 5: Capability carried in Request Object claims
 
    The following example shows the same capability on the token request;
    the earlier signal does not carry over (Section 7.5):
@@ -1187,7 +1209,24 @@ Appendix A.  Examples
    &code_verifier=dBjftJeZ...
    &client_capabilities=accept-deferred-response
 
-       Figure 5: Signaling at the endpoint where the behavior occurs
+       Figure 6: Signaling at the endpoint where the behavior occurs
+
+   The following example shows a client registration request [RFC7591]
+   that declares a default capability set.  Every instance covered by
+   the registration can process the behavior or overrides the default on
+   its requests (Section 7.3), as the next example shows:
+
+   POST /register HTTP/1.1
+   Host: as.example.com
+   Content-Type: application/json
+
+   {
+     "redirect_uris": ["https://app.example/cb"],
+     "token_endpoint_auth_method": "none",
+     "client_capabilities": ["accept-deferred-response"]
+   }
+
+         Figure 7: Default capability set in a registration request
 
    The following example shows a registered client retracting the
    capability its metadata declares, on a request made by an instance
@@ -1203,7 +1242,48 @@ Appendix A.  Examples
    &code_verifier=dBjftJeZ...
    &client_capabilities=none
 
-          Figure 6: Explicit retraction by a less-capable instance
+          Figure 8: Explicit retraction by a less-capable instance
+
+   The following examples show excerpts of authorization server metadata
+   [RFC8414] and protected resource metadata [RFC9728] that advertise
+   recognized values (Section 9):
+
+   {
+     "issuer": "https://as.example.com",
+     "token_endpoint": "https://as.example.com/token",
+     "client_capabilities_supported": ["accept-deferred-response"]
+   }
+
+              Figure 9: Authorization server metadata excerpt
+
+   {
+     "resource": "https://api.example.com",
+     "authorization_servers": ["https://as.example.com"],
+     "client_capabilities_supported": ["txn-challenge"]
+   }
+
+               Figure 10: Protected resource metadata excerpt
+
+   The following is an illustrative entry for the deferred-response
+   behavior in Appendix B, filled in as Section 13.1 describes.  It is
+   not a registration request.
+
+   Capability Value:  accept-deferred-response
+
+   Description:  The client can process a deferred token response.
+
+   Status:  current
+
+   Absent-Signal Behavior:  The authorization server responds
+      synchronously or with an error; it does not defer.
+
+   Carriers:  request parameter, client metadata
+
+   Endpoints:  token endpoint
+
+   Change Controller:  The party responsible for the registration
+
+   Specification Document(s):  [DTR]
 
 Appendix B.  Applying This Specification to Existing Drafts
 
@@ -1386,6 +1466,11 @@ C.6.  Trade-offs
    Coordination replaces autonomy.  Registering a dedicated parameter
    requires no shared vocabulary; this registry requires naming
    discipline and agreement on CAP-1 through CAP-3.
+
+   A request set replaces the metadata default rather than adding to it
+   (Section 7.4).  A client that adds one value on a request repeats
+   every default it still wants; in exchange, a less-capable instance
+   can retract a default without a per-value removal syntax.
 
    The current extension count is small.  The registry anticipates
    continued growth and is easier to establish before more incompatible
