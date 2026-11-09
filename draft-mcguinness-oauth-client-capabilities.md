@@ -944,12 +944,13 @@ Reference:
 
 # Examples {#examples}
 
-This document registers no capability values. `accept-deferred-response` below
-is illustrative, corresponding to a behavior described in {{existing-drafts}}.
-Line breaks in the form-encoded request bodies are for display only.
+This specification registers no capability values. The
+`accept-deferred-response` value below is illustrative, corresponding to a
+behavior described in {{existing-drafts}}. Line breaks in the form-encoded
+request bodies are for display only.
 
-A pushed authorization request carrying the capability, keeping it off the
-authorization URI:
+The following example shows a pushed authorization request carrying the
+capability, which keeps it off the authorization URI:
 
 ~~~ http-message
 POST /par HTTP/1.1
@@ -963,8 +964,8 @@ response_type=code&client_id=https%3A%2F%2Fapp.example%2Fclient
 ~~~
 {: title="Capability carried in a pushed authorization request"}
 
-The same capability on the token request. Because the behavior affects the
-token response, the earlier signal does not carry over; see {{signal-scope}}:
+The following example shows the same capability on the token request; the
+earlier signal does not carry over ({{signal-scope}}):
 
 ~~~ http-message
 POST /token HTTP/1.1
@@ -979,8 +980,9 @@ grant_type=authorization_code&code=SplxlOB...
 ~~~
 {: title="Signaling at the endpoint where the behavior occurs"}
 
-A registered client whose metadata declares the capability, retracting it on a
-request made by an instance that cannot outlive the request:
+The following example shows a registered client retracting the capability
+its metadata declares, on a request made by an instance that cannot outlive
+the request:
 
 ~~~ http-message
 POST /token HTTP/1.1
@@ -998,27 +1000,25 @@ grant_type=authorization_code&code=SplxlOB...
 # Applying This Specification to Existing Drafts {#existing-drafts}
 
 This appendix is informative and describes how the two extensions that
-motivated this work would use the mechanism. Neither is required to migrate.
+motivated this work would use the mechanism.
 
 Deferred Token Response:
 : `completion_mode=deferred` becomes `client_capabilities` containing
   `accept-deferred-response`. The authorization server still MUST NOT defer
-  unless the value is in the request's effective set. Because deferral affects
-  the token response, {{signal-scope}} requires the value in the token
-  request's effective set; a signal at an earlier endpoint has no effect on the
-  token response. The proposed single-purpose registry is subsumed by
-  {{iana-registry}},
-  and the
-`deferred_token_response_supported` authorization server metadata Boolean by
-`client_capabilities_supported` containing the value. Either suffices to show
-that a server recognizes the capability, and because an advertisement is not a
-commitment ({{discovery}}), a disagreement between them affects only which
-values a client chooses to send.
+  unless the value is in the request's effective set. {{signal-scope}}
+  requires the value in the token request's effective set; a signal at an
+  earlier endpoint has no effect on the token response. The proposed
+  single-purpose registry is subsumed by {{iana-registry}}, and the
+  `deferred_token_response_supported` authorization server metadata Boolean
+  by `client_capabilities_supported` containing the value. Either suffices to
+  show that a server recognizes the capability, and a disagreement between
+  them affects only which values a client chooses to send ({{discovery}}).
 
 Transaction Authorization Challenge:
-: `Accept-Txn-Challenge: ?1` becomes `OAuth-Client-Capabilities:
-  txn-challenge`. The normative rule and the out-of-band knowledge provision
-  are unchanged. The Boolean becomes list membership; absence expresses false.
+: `Accept-Txn-Challenge: ?1` becomes
+  `OAuth-Client-Capabilities: txn-challenge`. The normative rule and the
+  out-of-band knowledge provision are unchanged. The Boolean becomes list
+  membership; absence expresses false.
 
 # Design Rationale {#rationale}
 
@@ -1034,11 +1034,11 @@ metadata runs only server to client.
 
 Other protocols use shared vocabularies. SIP option tags {{RFC3261}} pair
 `Supported` with `Require`; HTTP `Prefer` {{RFC7240}} registers preferences
-such as `respond-async`, which is semantically what a deferred-completion
-parameter reinvents; and Client Hints {{RFC8942}} lets a server advertise what
-it wants sent. GNAP {{RFC9635}} has generic, registry-backed server-to-client
-discovery and anticipates "any additional capabilities defined by extensions of
-this protocol", yet still represents client-to-server capabilities per feature.
+such as `respond-async`; and Client Hints {{RFC8942}} lets a server advertise
+what it wants sent. GNAP {{RFC9635}} has generic, registry-backed
+server-to-client discovery and anticipates "any additional capabilities
+defined by extensions of this protocol", but represents client-to-server
+capabilities per feature.
 
 The IANA "OAuth Parameters" registry group currently contains no generic client
 capability parameter, field, or registry {{IANA-OAUTH}}.
@@ -1046,32 +1046,30 @@ capability parameter, field, or registry {{IANA-OAUTH}}.
 ## Comparison with HTTP Prefer {#why-not-prefer}
 
 `Prefer` {{RFC7240}} is the closest existing mechanism. A server may ignore a
-preference, as it may decline to exercise a capability, and `respond-async` is
-described as letting a client indicate "its capability and preference for
-handling asynchronous responses" ({{Section 4.1 of RFC7240}}). On direct HTTP
-requests, such as token requests and protected resource requests, a registered
-preference could carry each behavior in {{existing-drafts}}.
+preference, as it may decline to exercise a capability, and `respond-async`
+lets a client indicate "its capability and preference for handling
+asynchronous responses" ({{Section 4.1 of RFC7240}}). On direct HTTP
+requests, a registered preference could carry each behavior in
+{{existing-drafts}}.
 
 `Prefer` does not serve the rest of OAuth's topology, which is why a request
 parameter is needed in any case. As an HTTP field, it cannot cross the redirect
 at the authorization endpoint ({{asymmetry}}), cannot be carried in a Request
 Object, does not travel with the authorization request that a pushed
-authorization request represents, and has no client metadata form to supply the
-defaults that {{open-world}} relies on.
+authorization request represents, and has no client metadata form to supply
+defaults ({{open-world}}).
 
-For the HTTP carrier alone, `Prefer` remains a real alternative. A single
-registered preference whose value lists capability values, such as
-`Prefer: oauth-client-capabilities="txn-challenge"`, could draw on the registry
-in {{iana-registry}} and its admission criterion, so the vocabulary would not
-split. The trade-off is in handling. A server that applies a preference in a
-way that affects caching must list `Prefer` in `Vary` whether or not the
-request carried it ({{Section 2 of RFC7240}}), so caches would key on every
-preference a client sends rather than only on its capabilities. The list would
-also sit inside a quoted string, parsed by the `capability-list` rule in
-{{values}}, instead of a Structured Fields List with its own parser and error
-handling ({{field}}). This specification defines a dedicated field for those
-reasons; whether a `Prefer` preference should carry the vocabulary instead is
-an open issue ({{open-issues}}).
+For the HTTP carrier alone, a single registered preference listing capability
+values, such as `Prefer: oauth-client-capabilities="txn-challenge"`, could
+draw on the registry in {{iana-registry}} and its admission criterion. A
+server whose application of a preference affects caching must, however, list
+`Prefer` in `Vary` whether or not the request carried it
+({{Section 2 of RFC7240}}), so caches would key on every preference a client
+sends rather than only on its capabilities. The list would also be a quoted
+string parsed by the `capability-list` rule in {{values}}, not a Structured
+Fields List with its own parser and error handling ({{field}}). Whether such a
+preference should replace the dedicated field is an open issue
+({{open-issues}}).
 
 ## Applying the Admission Criterion {#admission}
 
@@ -1083,22 +1081,21 @@ optional behavior without weakening a security check.
 Similar-looking behaviors do not necessarily qualify. DPoP nonce enforcement
 {{RFC9449}} does not. A removable signal cannot govern a required nonce without
 weakening replay protection, and CAP-2 prevents using it to justify
-longer-lived tokens. DPoP nonce policy is therefore outside this capability
-model.
+longer-lived tokens.
 
 The `redirect_to_web` fallback in {{FIRST-PARTY-APPS}} qualifies only if
 defined as optional server behavior with a safe absent-signal outcome. If
 server metadata can instead make the client behavior conditional, discovery is
 preferable.
 
-Adding a parameter to a response is almost never a capability. {{RFC6749}},
-Sections 4.1.2 and 5.1 already require clients to ignore unrecognized
+Adding a parameter to a response is almost never a capability. Sections
+4.1.2 and 5.1 of {{RFC6749}} already require clients to ignore unrecognized
 authorization response parameters and unrecognized token response members, so
 delivery is safe for any conforming client and needs no gate.
-{{RESOURCE-TOKEN-RESP}} is a near miss of exactly this kind: it returns a
-`resource` parameter so a client can confirm which resource its token is valid
-for, and what it needs is a way for clients to learn that a server implements
-it. That is server metadata, not a client capability.
+{{RESOURCE-TOKEN-RESP}} is a case of this kind: it returns a `resource`
+parameter so a client can confirm which resource its token is valid for, and
+what it needs is a way for clients to learn that a server implements it. That
+is server metadata, not a client capability.
 
 On gating grounds the criterion also rejects client authentication methods,
 endpoint selection, client-initiated parameters, and behavior a specification
@@ -1107,8 +1104,7 @@ makes mandatory to implement.
 Path selection is the one exception. A behavior safe to issue unconditionally
 needs no gating signal, yet can still qualify where a server must choose among
 paths and the signal prevents it selecting one the client cannot complete;
-{{selection}} governs that narrower case and {{extension-guidance}} bounds it.
-{{iana-registry}} records absent-signal behavior to make the test explicit.
+{{selection}} governs that case and {{extension-guidance}} bounds it.
 
 ## Absence of Mandatory-to-Understand Semantics {#no-require}
 
@@ -1116,9 +1112,9 @@ SIP {{RFC3261}} pairs `Supported` with `Require`, letting a client insist an
 extension be understood or the request fail. This specification omits the
 analogue: `Require` answers a different question, whether the client insists
 the server implement something, while a capability states that the client can
-process behavior the server remains free not to exercise. Mixing the two would
-undermine the advisory model. Extensions needing hard failure define their own
-errors; CAP-1 still prevents removal from weakening security.
+process behavior the server remains free not to exercise. Extensions needing
+hard failure define their own errors; CAP-1 still prevents removal from
+weakening security.
 
 ## Capabilities and Profile Selection {#profiles}
 
@@ -1129,50 +1125,37 @@ group list: a per-issuer `oauth_versions_supported` metadata array and a
 per-client `oauth_version` registration field. That proposal notes that neither
 provides a runtime signal {{OAUTH21-VERSIONS-LIST}}.
 
-That is not capability signaling as defined here. The differences OAuth 2.1
-lists from OAuth 2.0 ({{Section 10 of OAUTH21}}) change what a client sends,
-what a server accepts, and what a server issues. None introduces a response
-that a client conforming to {{RFC6749}} cannot process, so decomposing the
-version into behaviors ({{values}}) leaves nothing for a client to signal. What
-a version selector would do instead is select which request-processing rules
-apply. Most of the changes are stricter, and a signal that enables a check is
-what CAP-1 excludes. One is more lenient: OAuth 2.1 drops the token request's
-`redirect_uri` check because PKCE prevents the same attack
-({{Section 10.2 of OAUTH21}}), and a server that skips a check because a signal
-is present relies on that signal, which CAP-3 excludes. OAuth 2.1 states that
-the authorization server's configuration for a client determines which rules
-apply, and defines no version selector ({{Section 1.8 of OAUTH21}}). This
-specification neither defines one nor proposes that version values be
-registered.
+A protocol version is not a capability ({{values}}). Most of the differences
+OAuth 2.1 lists from OAuth 2.0 ({{Section 10 of OAUTH21}}) are stricter, and a
+signal that enables a check is what CAP-1 excludes. One is more lenient: OAuth
+2.1 drops the token request's `redirect_uri` check because PKCE prevents the
+same attack ({{Section 10.2 of OAUTH21}}), and a server that skips a check
+because a signal is present relies on that signal, which CAP-3 excludes. OAuth
+2.1 states that the authorization server's configuration for a client
+determines which rules apply, and defines no version selector
+({{Section 1.8 of OAUTH21}}).
 
-A draft revision is a different case, and one this specification does handle.
-Where a specification changes what a client must parse between revisions, the
-change is a client-side behavior, and {{values}} already covers it: register a
-value for the new processing, keep recognizing the old one, and a server serves
-both populations at once. No version string is needed, because what a client
-signals is the behavior the string stood for, and {{discovery}} lets a client
-learn which revisions a server implements without a version at all. What
-remains out of scope is selecting a framework version or a profile, where the
-label does not correspond to a single client-side behavior.
+A draft revision that changes what a client must parse is, by contrast, a
+change in client-side behavior, which {{values}} covers. What remains out of
+scope is selecting a framework version or a profile, where the label does not
+correspond to a single client-side behavior.
 
 Per-client configuration cannot stage a rollout of protocol-version enforcement
 across native application releases, whose upgrades reach users gradually: every
-deployed instance sharing a `client_id` is subject to the same rules. The
-override in {{precedence}} does not provide such a rollout either. That
-override lets a less-capable instance retract a default, and in a native
-rollout the less-capable instances are the releases that were never updated,
-which cannot send anything; {{metadata}} forbids a default that such instances
-would not override. What can work is the reverse: the client's configured rules
-stay at the earlier version, and updated releases send a version selector on
-each request. Such a selector would not be a capability (CAP-1), and it cannot
-establish a security minimum for the client while requests without it are still
-accepted, because an attacker starting a request under the same `client_id`
-omits it. A server can still attach protection to credentials issued under the
-selector, such as rotation of a refresh token family
-({{Section 4.3.1 of OAUTH21}}), and a later omission does not remove it. The
-client-wide minimum arrives only when the configured rules are raised. Whether
-OAuth 2.1 should define such a selector belongs to that work rather than this
-one.
+deployed instance sharing a `client_id` is subject to the same rules. Nor can
+the override in {{precedence}}: in a native rollout the less-capable instances
+are the releases that were never updated, which cannot send anything, and
+{{metadata}} forbids a default that such instances would not override. What
+can work is the reverse: the client's configured rules stay at the earlier
+version, and updated releases send a version selector on each request. Such a
+selector would not be a capability (CAP-1), and it cannot establish a security
+minimum for the client while requests without it are still accepted, because
+an attacker starting a request under the same `client_id` omits it. A server
+can still attach protection to credentials issued under the selector, such as
+rotation of a refresh token family ({{Section 4.3.1 of OAUTH21}}), and a later
+omission does not remove it. The client-wide minimum arrives only when the
+configured rules are raised. Whether OAuth 2.1 should define such a selector
+belongs to that work rather than this one.
 
 ## Trade-offs {#tradeoffs}
 
@@ -1202,9 +1185,8 @@ and is easier to establish before more incompatible carriers ship.
   `Vary` precise and uses Structured Fields parsing; a preference reuses an
   existing field.
 - Whether the `.` and `:` characters the syntax allows should carry any
-  structure. {{values}} settles that a revision with different client-side
-  processing registers a new value rather than versioning an existing one, so no
-  structure is needed today.
+  structure. No structure is needed today: a revision with different
+  client-side processing registers a new value ({{values}}).
 - Whether client software capabilities and running instance capabilities are
   adequately separated by the replacement rule in {{precedence}}, or whether
   instance-level identity mechanisms should carry a capability set of their
