@@ -224,7 +224,7 @@ Three carriers convey a set, chosen by what the request can hold:
 - The `OAuth-Client-Capabilities` HTTP field, on requests that carry no OAuth
   parameters, chiefly protected resource requests ({{field}}).
 - A `client_capabilities` member in client metadata, supplying a default when a
-  request carries no signal ({{metadata}}).
+  request to an authorization server carries no signal ({{metadata}}).
 
 Whichever carrier applies, the result is the request's effective capability
 set: the values a server may act upon for that request. A request-level signal
