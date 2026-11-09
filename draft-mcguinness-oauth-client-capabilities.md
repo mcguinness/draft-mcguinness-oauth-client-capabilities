@@ -1123,11 +1123,14 @@ a default, and in a native rollout the less-capable instances are the releases
 that were never updated, which cannot send anything; {{metadata}} forbids a
 default that such instances would not override. What can work is the reverse:
 the client's configured rules stay at the earlier version, and updated releases
-signal on each request. Such a signal protects nothing until the configured
-rules are themselves raised, because an attacker sending a request under the
-same `client_id` omits it. It is a rollout aid rather than a security
-mechanism, and whether OAuth 2.1 should define one belongs to that work rather
-than this one.
+signal on each request. Such a signal cannot establish a security minimum for
+the client while requests without it are still accepted, because an attacker
+starting a request under the same `client_id` omits it. A server can still
+attach protection to credentials issued under the signal, such as rotation of
+a refresh token family ({{Section 4.3.1 of OAUTH21}}), and a later omission
+does not remove it. The client-wide minimum arrives only when the configured
+rules are raised. Whether OAuth 2.1 should define such a signal belongs to that
+work rather than this one.
 
 ## Trade-offs
 
