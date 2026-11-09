@@ -163,22 +163,32 @@ Table of Contents
    capability or the server must discover it from client-published
    metadata.
 
-   A change to a published document also reaches everywhere at once.  It
-   applies to every instance using the URL and is cached by each
-   authorization server for its own interval, so a change cannot be
-   staged one authorization server or one release at a time, and rolling
-   it back waits out the same caches.  Every metadata field has that
-   reach: once dpop_bound_access_tokens is true, for example, a
-   supporting authorization server rejects token requests without DPoP
-   [RFC9449].  A field that requires a behavior in this way cannot be a
-   capability (Section 5), but a field that only declares support for
-   optional behavior can be, and capabilities split that declaration.
-   The document then declares only what every instance can process, each
-   request names what its own instance can process (Section 7.4), and an
-   instance can opt in at one authorization server, or stop, without
-   changing the document.  Because the variation travels in requests,
-   every authorization server still sees the same document for a
-   client_id.
+   A published document is also shared.  It applies to every instance
+   using the URL, and a change to it reaches each authorization server
+   only as that server refreshes its cached copy, on a schedule the
+   publisher cannot target [CIMD].  A change therefore cannot be staged
+   one authorization server or one release at a time, and rolling it
+   back waits out the same caches.
+
+   Capabilities let a client stage optional behavior without changing
+   the document.  Suppose an updated release can accept a deferred token
+   response (Appendix B).  The document continues to declare only what
+   every instance can process.  The updated release sends its complete
+   set, including the illustrative accept-deferred-response, to one
+   authorization server, since a request set replaces the metadata
+   default rather than adding to it (Section 7.4).  It sends other
+   authorization servers nothing new, and older releases are unaffected.
+   Stopping is equally local while the value stays out of the document.
+   Once the document declares it, an instance withdraws it only by
+   sending a set without it, or none.  Either way the client publishes
+   one document for every authorization server.
+
+   This works only for optional behavior.  A metadata field that
+   requires a behavior applies at every authorization server that
+   supports it: once dpop_bound_access_tokens is true, such a server
+   rejects token requests without DPoP [RFC9449].  Such a field cannot
+   be a capability (Section 5), and staging a change to it remains a
+   problem for client metadata itself.
 
    Per-extension signals accumulate in both directions.  Each front-
    channel capability can enlarge an authorization URI visible to the
@@ -199,15 +209,16 @@ Table of Contents
    for their use rather than registering values on their behalf.
 
    Two uses are out of scope.  Capability values do not carry
-   deployment-local feature flags or rollout cohorts that a server
-   assigns, which are server-side policy keyed on the client's identity
-   rather than properties a client asserts.  Nor do they signal
-   conformance to a requirement, in either direction.  A claim of
-   conformance cannot be verified and can be omitted by anyone who would
-   violate the requirement, so enforcement keys on the client's identity
-   rather than the claim.  A claim of non-conformance cannot be sent by
-   the clients that need it, which generally cannot be updated to send
-   anything.
+   deployment-local feature flags or rollout cohort membership, whoever
+   assigns it, because neither describes what a client can process.  A
+   client may use its own cohorts to decide which values to signal,
+   which is how it stages adoption (Section 1.2); the cohort itself is
+   not signaled.  Nor do capability values signal conformance to a
+   requirement, in either direction.  A claim of conformance cannot be
+   verified and can be omitted by anyone who would violate the
+   requirement, so enforcement keys on the client's identity rather than
+   the claim.  A claim of non-conformance cannot be sent by the clients
+   that need it, which generally cannot be updated to send anything.
 
 2.  Conventions and Definitions
 
@@ -1350,24 +1361,25 @@ C.4.  Capabilities and Profile Selection
    remains out of scope is selecting a framework version or a profile,
    where the label does not correspond to a single client-side behavior.
 
-   Per-client configuration cannot stage a rollout across native
-   application releases, whose upgrades reach users gradually: every
-   deployed instance sharing a client_id is subject to the same rules.
-   The override in Section 7.4 does not provide such a rollout either.
-   That override lets a less-capable instance retract a default, and in
-   a native rollout the less-capable instances are the releases that
-   were never updated, which cannot send anything; Section 7.3 forbids a
-   default that such instances would not override.  What can work is the
-   reverse: the client's configured rules stay at the earlier version,
-   and updated releases signal on each request.  Such a signal cannot
-   establish a security minimum for the client while requests without it
-   are still accepted, because an attacker starting a request under the
-   same client_id omits it.  A server can still attach protection to
-   credentials issued under the signal, such as rotation of a refresh
-   token family (Section 4.3.1 of [OAUTH21]), and a later omission does
-   not remove it.  The client-wide minimum arrives only when the
-   configured rules are raised.  Whether OAuth 2.1 should define such a
-   signal belongs to that work rather than this one.
+   Per-client configuration cannot stage a rollout of protocol-version
+   enforcement across native application releases, whose upgrades reach
+   users gradually: every deployed instance sharing a client_id is
+   subject to the same rules.  The override in Section 7.4 does not
+   provide such a rollout either.  That override lets a less-capable
+   instance retract a default, and in a native rollout the less-capable
+   instances are the releases that were never updated, which cannot send
+   anything; Section 7.3 forbids a default that such instances would not
+   override.  What can work is the reverse: the client's configured
+   rules stay at the earlier version, and updated releases signal on
+   each request.  Such a signal cannot establish a security minimum for
+   the client while requests without it are still accepted, because an
+   attacker starting a request under the same client_id omits it.  A
+   server can still attach protection to credentials issued under the
+   signal, such as rotation of a refresh token family (Section 4.3.1 of
+   [OAUTH21]), and a later omission does not remove it.  The client-wide
+   minimum arrives only when the configured rules are raised.  Whether
+   OAuth 2.1 should define such a signal belongs to that work rather
+   than this one.
 
 C.5.  Trade-offs
 

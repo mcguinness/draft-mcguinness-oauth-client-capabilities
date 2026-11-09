@@ -1372,26 +1372,33 @@ operate autonomous software instances, or otherwise pair previously unknown
 clients and authorization servers have no registration handshake. The first
 request must carry the relevant capability or the server must discover it from
 client-published metadata.<a href="#section-1.2-2" class="pilcrow">¶</a></p>
-<p id="section-1.2-3">A change to a published document also reaches everywhere at once. It applies to
-every instance using the URL and is cached by each authorization server for its
-own interval, so a change cannot be staged one authorization server or one
-release at a time, and rolling it back waits out the same caches. Every
-metadata field has that reach: once <code>dpop_bound_access_tokens</code> is true, for
-example, a supporting authorization server rejects token requests without DPoP
-<span>[<a href="#RFC9449" class="cite xref">RFC9449</a>]</span>. A field that requires a behavior in this way cannot be a
-capability (<a href="#invariants" class="auto internal xref">Section 5</a>), but a field that only declares support for
-optional behavior can be, and capabilities split that declaration. The document
-then declares only what every instance can process, each request names what its
-own instance can process (<a href="#precedence" class="auto internal xref">Section 7.4</a>), and an instance can opt in at one
-authorization server, or stop, without changing the document. Because the
-variation travels in requests, every authorization server still sees the same
-document for a <code>client_id</code>.<a href="#section-1.2-3" class="pilcrow">¶</a></p>
-<p id="section-1.2-4">Per-extension signals accumulate in both directions. Each front-channel
+<p id="section-1.2-3">A published document is also shared. It applies to every instance using the
+URL, and a change to it reaches each authorization server only as that server
+refreshes its cached copy, on a schedule the publisher cannot target <span>[<a href="#CIMD" class="cite xref">CIMD</a>]</span>.
+A change therefore cannot be staged one authorization server or one release at
+a time, and rolling it back waits out the same caches.<a href="#section-1.2-3" class="pilcrow">¶</a></p>
+<p id="section-1.2-4">Capabilities let a client stage optional behavior without changing the
+document. Suppose an updated release can accept a deferred token response
+(<a href="#existing-drafts" class="auto internal xref">Appendix B</a>). The document continues to declare only what every
+instance can process. The updated release sends its complete set, including the
+illustrative <code>accept-deferred-response</code>, to one authorization server, since a
+request set replaces the metadata default rather than adding to it
+(<a href="#precedence" class="auto internal xref">Section 7.4</a>). It sends other authorization servers nothing new, and older
+releases are unaffected. Stopping is equally local while the value stays out of
+the document. Once the document declares it, an instance withdraws it only by
+sending a set without it, or <code>none</code>. Either way the client publishes one
+document for every authorization server.<a href="#section-1.2-4" class="pilcrow">¶</a></p>
+<p id="section-1.2-5">This works only for optional behavior. A metadata field that requires a
+behavior applies at every authorization server that supports it: once
+<code>dpop_bound_access_tokens</code> is true, such a server rejects token requests
+without DPoP <span>[<a href="#RFC9449" class="cite xref">RFC9449</a>]</span>. Such a field cannot be a capability (<a href="#invariants" class="auto internal xref">Section 5</a>),
+and staging a change to it remains a problem for client metadata itself.<a href="#section-1.2-5" class="pilcrow">¶</a></p>
+<p id="section-1.2-6">Per-extension signals accumulate in both directions. Each front-channel
 capability can enlarge an authorization URI visible to the user agent. Each
 resource capability adds a field to protected resource requests; an <code>Accept-*</code>
 design is one field per feature. A per-extension signal also needs its own
 registrations and metadata. A shared vocabulary pays those costs once across
-both sides of the asymmetry in <a href="#asymmetry" class="auto internal xref">Section 1.1</a>.<a href="#section-1.2-4" class="pilcrow">¶</a></p>
+both sides of the asymmetry in <a href="#asymmetry" class="auto internal xref">Section 1.1</a>.<a href="#section-1.2-6" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="what-this-specification-does-not-change">
@@ -1407,13 +1414,15 @@ extensions in <a href="#existing-drafts" class="auto internal xref">Appendix B</
 document proposes the mechanism for their use rather than registering values on
 their behalf.<a href="#section-1.3-1" class="pilcrow">¶</a></p>
 <p id="section-1.3-2">Two uses are out of scope. Capability values do not carry deployment-local
-feature flags or rollout cohorts that a server assigns, which are server-side
-policy keyed on the client's identity rather than properties a client asserts.
-Nor do they signal conformance to a requirement, in either direction. A claim
-of conformance cannot be verified and can be omitted by anyone who would
-violate the requirement, so enforcement keys on the client's identity rather
-than the claim. A claim of non-conformance cannot be sent by the clients that
-need it, which generally cannot be updated to send anything.<a href="#section-1.3-2" class="pilcrow">¶</a></p>
+feature flags or rollout cohort membership, whoever assigns it, because neither
+describes what a client can process. A client may use its own cohorts to decide
+which values to signal, which is how it stages adoption (<a href="#open-world" class="auto internal xref">Section 1.2</a>); the
+cohort itself is not signaled. Nor do capability values signal conformance to a
+requirement, in either direction. A claim of conformance cannot be verified and
+can be omitted by anyone who would violate the requirement, so enforcement keys
+on the client's identity rather than the claim. A claim of non-conformance
+cannot be sent by the clients that need it, which generally cannot be updated
+to send anything.<a href="#section-1.3-2" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -2792,22 +2801,23 @@ signals is the behavior the string stood for, and <a href="#discovery" class="au
 learn which revisions a server implements without a version at all. What
 remains out of scope is selecting a framework version or a profile, where the
 label does not correspond to a single client-side behavior.<a href="#appendix-C.4-3" class="pilcrow">¶</a></p>
-<p id="appendix-C.4-4">Per-client configuration cannot stage a rollout across native application
-releases, whose upgrades reach users gradually: every deployed instance sharing
-a <code>client_id</code> is subject to the same rules. The override in <a href="#precedence" class="auto internal xref">Section 7.4</a> does
-not provide such a rollout either. That override lets a less-capable instance
-retract a default, and in a native rollout the less-capable instances are the
-releases that were never updated, which cannot send anything; <a href="#metadata" class="auto internal xref">Section 7.3</a>
-forbids a default that such instances would not override. What can work is the
-reverse: the client's configured rules stay at the earlier version, and updated
-releases signal on each request. Such a signal cannot establish a security
-minimum for the client while requests without it are still accepted, because an
-attacker starting a request under the same <code>client_id</code> omits it. A server can
-still attach protection to credentials issued under the signal, such as
-rotation of a refresh token family (<span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-17#section-4.3.1" class="relref">Section 4.3.1</a> of [<a href="#OAUTH21" class="cite xref">OAUTH21</a>]</span>), and a later
-omission does not remove it. The client-wide minimum arrives only when the
-configured rules are raised. Whether OAuth 2.1 should define such a signal
-belongs to that work rather than this one.<a href="#appendix-C.4-4" class="pilcrow">¶</a></p>
+<p id="appendix-C.4-4">Per-client configuration cannot stage a rollout of protocol-version enforcement
+across native application releases, whose upgrades reach users gradually: every
+deployed instance sharing a <code>client_id</code> is subject to the same rules. The
+override in <a href="#precedence" class="auto internal xref">Section 7.4</a> does not provide such a rollout either. That
+override lets a less-capable instance retract a default, and in a native
+rollout the less-capable instances are the releases that were never updated,
+which cannot send anything; <a href="#metadata" class="auto internal xref">Section 7.3</a> forbids a default that such instances
+would not override. What can work is the reverse: the client's configured rules
+stay at the earlier version, and updated releases signal on each request. Such
+a signal cannot establish a security minimum for the client while requests
+without it are still accepted, because an attacker starting a request under the
+same <code>client_id</code> omits it. A server can still attach protection to credentials
+issued under the signal, such as rotation of a refresh token family
+(<span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-17#section-4.3.1" class="relref">Section 4.3.1</a> of [<a href="#OAUTH21" class="cite xref">OAUTH21</a>]</span>), and a later omission does not remove it. The
+client-wide minimum arrives only when the configured rules are raised. Whether
+OAuth 2.1 should define such a signal belongs to that work rather than this
+one.<a href="#appendix-C.4-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="trade-offs">
