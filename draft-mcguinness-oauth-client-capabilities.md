@@ -1073,6 +1073,26 @@ this protocol", yet still represents client-to-server capabilities per feature.
 The IANA "OAuth Parameters" registry group currently contains no generic client
 capability parameter, field, or registry {{IANA-OAUTH}}.
 
+## Why Not HTTP Prefer {#why-not-prefer}
+
+`Prefer` {{RFC7240}} is the closest existing mechanism. A server may ignore a
+preference, as it may decline to exercise a capability, and `respond-async` is
+described as letting a client indicate "its capability and preference for
+handling asynchronous responses" ({{RFC7240}}, Section 4.1). On direct HTTP
+requests, such as token requests and protected resource requests, a registered
+preference could carry each behavior in {{existing-drafts}}.
+
+`Prefer` does not serve the rest of OAuth's topology. As an HTTP field, it
+cannot cross the redirect at the authorization endpoint ({{asymmetry}}), cannot
+be carried in a Request Object, does not travel with the authorization request
+that a pushed authorization request represents, and has no client metadata form
+to supply the defaults that {{open-world}} relies on. Using `Prefer` only where
+it works would split one vocabulary across two registries, and the Registry of
+Preferences ({{RFC7240}}, Section 5.1), which serves all of HTTP, has no
+counterpart to the admission criterion in {{invariants}}. This specification
+therefore defines its own field over the same vocabulary as its request
+parameter.
+
 ## Applying the Admission Criterion
 
 The behaviors in {{existing-drafts}} qualify if their registrations state the
