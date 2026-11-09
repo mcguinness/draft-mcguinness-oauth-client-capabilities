@@ -220,7 +220,7 @@ Three carriers convey a set, chosen by what the request can hold:
 - The `client_capabilities` request parameter, on requests a client makes to an
   authorization server ({{param}}).
 - The `OAuth-Client-Capabilities` HTTP field, on requests that carry no OAuth
-  parameters, chiefly protected resource requests ({{field}}).
+  parameters, such as protected resource requests ({{field}}).
 - A `client_capabilities` member in client metadata, supplying a default when a
   request to an authorization server carries no signal ({{metadata}}).
 
@@ -249,10 +249,9 @@ capability-list   = capability *( SP capability )
 This character set satisfies two constraints at once, and is narrower than
 either: the value is valid as a sequence of `NQCHAR` in a form-encoded OAuth
 parameter ({{Appendix A of RFC6749}}), and valid as an `sf-token` in a
-structured field ({{Section 3.3.4 of RFC9651}}). Structured Fields encourages
-new fields to use Strings rather than Tokens ({{Section 3.3.4 of RFC9651}});
-this specification uses Tokens so that a value has the same form in both
-carriers, without quoting.
+structured field ({{Section 3.3.4 of RFC9651}}). That section also encourages
+new fields to use Strings rather than Tokens; this specification uses Tokens so
+that a value has the same form in both carriers, without quoting.
 
 Capability values are case-sensitive. Four rules apply wherever a capability
 value appears, in every carrier in {{carriers}} and in {{discovery}}:
@@ -335,7 +334,8 @@ field or client metadata carriers.
 
 `none` MUST NOT appear together with any capability value. A server that
 receives `none` alongside other values MUST treat the value as signaling the
-empty set.
+empty set. Resolving the conflict to the empty set, rather than rejecting the
+request, keeps the signal non-fatal ({{server-behavior}}).
 
 # Capability Invariants {#invariants}
 
@@ -466,11 +466,11 @@ accountable for the assertion. Because the field does not necessarily identify
 the OAuth client, client metadata supplies no default for it ({{precedence}}).
 
 A client MUST NOT use the field on a request at an endpoint where the
-`client_capabilities` parameter is defined; it uses {{param}} there instead. An
-authorization server MUST ignore the field on any request to such an endpoint.
-Using only the parameter at authorization server endpoints gives each request
-one unambiguous effective set, and allows Request Object or pushed-request
-protections where those apply.
+`client_capabilities` parameter is defined; it uses the request parameter
+({{param}}) there instead. An authorization server MUST ignore the field on any
+request to such an endpoint. Using only the parameter at authorization server
+endpoints gives each request one unambiguous effective set, and allows Request
+Object or pushed-request protections where those apply.
 
 The field's value is a Structured Fields List ({{Section 3.1 of RFC9651}}). Each
 member MUST be an Item whose bare item is a Token containing a capability value
@@ -548,8 +548,9 @@ is determined as follows:
    effective set.
 3. If neither is present, the effective set is empty.
 
-The `OAuth-Client-Capabilities` field plays no part in this determination
-({{field}}).
+The `OAuth-Client-Capabilities` field plays no part in this determination. As
+specified in {{field}}, an authorization server ignores the field at any
+endpoint where the request parameter is defined.
 
 Request values replace rather than augment metadata so that a less-capable
 instance can retract a default. To retract everything, it sends
@@ -590,7 +591,7 @@ Signaling a capability does not entitle a client to the corresponding behavior.
 A server retains discretion over whether to exercise optional behavior.
 
 This specification does not define an error for an absent capability and does
-not give any capability mandatory-to-understand semantics; see {{rationale}}.
+not give any capability mandatory-to-understand semantics; see {{no-require}}.
 An extension MAY define an error for a case in which the server cannot proceed
 without a particular client-side behavior. Such an error reports the
 extension's condition; it does not turn the signal into an authorization input.
@@ -647,14 +648,14 @@ An extension that needs a client to signal a processing capability SHOULD
 register a value in the registry established in {{iana-registry}} rather than
 define a dedicated request parameter, HTTP field, or client metadata field.
 
-The invariants in {{invariants}} decide admission. A value may be justified on
-either of two grounds: that a server cannot safely exercise the behavior
-without it, or that a server choosing among several paths would otherwise
-select one the client cannot complete ({{selection}}). The second requires that
-the signal can change whether the operation completes, not merely make an
-already-workable path more convenient.
+The invariants in {{invariants}} are the admission criterion. A value may be
+justified on either of two grounds: that a server cannot safely exercise the
+behavior without it, or that a server choosing among several paths would
+otherwise select one the client cannot complete ({{selection}}). The second
+requires that the signal can change whether the operation completes, not merely
+make an already-workable path more convenient.
 
-One heuristic catches most misclassifications:
+One heuristic identifies most misclassifications:
 
 > If an implementer would want the value to be attested, it is not a
 > capability.
@@ -789,8 +790,7 @@ Status:
 
 Absent-Signal Behavior:
 : What the server does when the value is not in the effective set. Recording
-  this makes CAP-1 in {{invariants}} checkable at registration time rather than
-  aspirational.
+  this makes CAP-1 in {{invariants}} checkable at registration time.
 
 Carriers:
 : The carriers in which the value is meaningful: any of "request parameter",
@@ -950,7 +950,7 @@ behavior described in {{existing-drafts}}. Line breaks in the form-encoded
 request bodies are for display only.
 
 The following example shows a pushed authorization request carrying the
-capability, which keeps it off the authorization URI:
+capability; pushing the request keeps the value off the authorization URI:
 
 ~~~ http-message
 POST /par HTTP/1.1
@@ -995,7 +995,7 @@ grant_type=authorization_code&code=SplxlOB...
 &code_verifier=dBjftJeZ...
 &client_capabilities=none
 ~~~
-{: title="Explicit retraction by a constrained instance"}
+{: title="Explicit retraction by a less-capable instance"}
 
 # Applying This Specification to Existing Drafts {#existing-drafts}
 
@@ -1047,10 +1047,10 @@ capability parameter, field, or registry {{IANA-OAUTH}}.
 
 `Prefer` {{RFC7240}} is the closest existing mechanism. A server may ignore a
 preference, as it may decline to exercise a capability, and `respond-async`
-lets a client indicate "its capability and preference for handling
-asynchronous responses" ({{Section 4.1 of RFC7240}}). On direct HTTP
-requests, a registered preference could carry each behavior in
-{{existing-drafts}}.
+lets a client indicate "its capability and preference for handling asynchronous
+responses" ({{Section 4.1 of RFC7240}}). A registered preference could carry
+each behavior in {{existing-drafts}} on direct HTTP requests, such as token
+requests and protected resource requests.
 
 `Prefer` does not serve the rest of OAuth's topology, which is why a request
 parameter is needed in any case. As an HTTP field, it cannot cross the redirect
@@ -1125,14 +1125,15 @@ group list: a per-issuer `oauth_versions_supported` metadata array and a
 per-client `oauth_version` registration field. That proposal notes that neither
 provides a runtime signal {{OAUTH21-VERSIONS-LIST}}.
 
-A protocol version is not a capability ({{values}}). Most of the differences
-OAuth 2.1 lists from OAuth 2.0 ({{Section 10 of OAUTH21}}) are stricter, and a
-signal that enables a check is what CAP-1 excludes. One is more lenient: OAuth
-2.1 drops the token request's `redirect_uri` check because PKCE prevents the
-same attack ({{Section 10.2 of OAUTH21}}), and a server that skips a check
-because a signal is present relies on that signal, which CAP-3 excludes. OAuth
-2.1 states that the authorization server's configuration for a client
-determines which rules apply, and defines no version selector
+A protocol version is not a capability ({{values}}). None of the differences
+OAuth 2.1 lists from OAuth 2.0 ({{Section 10 of OAUTH21}}) introduces a
+response that a client conforming to {{RFC6749}} cannot process. Most are
+stricter, and a signal that enables a check is what CAP-1 excludes. One is more
+lenient: OAuth 2.1 drops the token request's `redirect_uri` check because PKCE
+prevents the same attack ({{Section 10.2 of OAUTH21}}), and a server that skips
+a check because a signal is present relies on that signal, which CAP-3
+excludes. OAuth 2.1 states that the authorization server's configuration for a
+client determines which rules apply, and defines no version selector
 ({{Section 1.8 of OAUTH21}}).
 
 A draft revision that changes what a client must parse is, by contrast, a
@@ -1143,19 +1144,20 @@ correspond to a single client-side behavior.
 Per-client configuration cannot stage a rollout of protocol-version enforcement
 across native application releases, whose upgrades reach users gradually: every
 deployed instance sharing a `client_id` is subject to the same rules. Nor can
-the override in {{precedence}}: in a native rollout the less-capable instances
-are the releases that were never updated, which cannot send anything, and
-{{metadata}} forbids a default that such instances would not override. What
-can work is the reverse: the client's configured rules stay at the earlier
-version, and updated releases send a version selector on each request. Such a
-selector would not be a capability (CAP-1), and it cannot establish a security
-minimum for the client while requests without it are still accepted, because
-an attacker starting a request under the same `client_id` omits it. A server
-can still attach protection to credentials issued under the selector, such as
-rotation of a refresh token family ({{Section 4.3.1 of OAUTH21}}), and a later
-omission does not remove it. The client-wide minimum arrives only when the
-configured rules are raised. Whether OAuth 2.1 should define such a selector
-belongs to that work rather than this one.
+the override in {{precedence}}, which lets a less-capable instance retract a
+default: in a native rollout the less-capable instances are the releases that
+were never updated, which cannot send anything, and {{metadata}} forbids a
+default that such instances would not override. What can work is the reverse:
+the client's configured rules stay at the earlier version, and updated releases
+send a version selector on each request. Such a selector would not be a
+capability (CAP-1), and it cannot establish a security minimum for the client
+while requests without it are still accepted, because an attacker starting a
+request under the same `client_id` omits it. A server can still attach
+protection to credentials issued under the selector, such as rotation of a
+refresh token family ({{Section 4.3.1 of OAUTH21}}), and a later omission does
+not remove it. The client-wide minimum arrives only when the configured rules
+are raised. Whether OAuth 2.1 should define such a selector belongs to that
+work rather than this one.
 
 ## Trade-offs {#tradeoffs}
 
