@@ -174,13 +174,12 @@ both sides of the asymmetry in {{asymmetry}}.
 
 ## What This Specification Does Not Change
 
-This specification defines carriers and a vocabulary. It does not define any
-capability values, reserves the `none` sentinel in {{none-value}}, does not
-change any existing parameter, and does not require existing extensions to
-migrate. It is designed so that extensions may adopt it incrementally. The
-extensions in {{existing-drafts}} are the intended first adopters; this
-document proposes the mechanism for their use rather than registering values on
-their behalf.
+This specification defines carriers and a vocabulary, and reserves the `none`
+sentinel ({{none-value}}). It does not define any capability values, change any
+existing parameter, or require existing extensions to migrate. It is designed
+so that extensions may adopt it incrementally. The extensions in
+{{existing-drafts}} are the intended first adopters; this document proposes the
+mechanism for their use rather than registering values on their behalf.
 
 Two uses are out of scope. Capability values do not carry deployment-local
 feature flags or rollout cohort membership, whoever assigns it, because neither
@@ -234,7 +233,7 @@ deployment can retract what its metadata declares ({{precedence}}).
 A server advertises the values it recognizes in its own metadata
 ({{discovery}}). Signaling never obliges a server to act, and the invariants in
 {{invariants}} confine what a capability may do, so a signal that is absent,
-stripped, or untrue leaves the protocol no weaker.
+stripped, or untrue leaves the protocol no less secure.
 
 # Capability Values {#values}
 
@@ -493,9 +492,9 @@ authorization server endpoints also gives each request one unambiguous
 effective set, and allows Request Object or pushed-request protections where
 those apply.
 
-Its value is a Structured Fields List ({{RFC9651}}, Section 3.1). Each member
-MUST be an Item whose bare item is a Token containing a capability value as
-defined in {{values}}:
+The field's value is a Structured Fields List ({{RFC9651}}, Section 3.1). Each
+member MUST be an Item whose bare item is a Token containing a capability value
+as defined in {{values}}:
 
 ~~~ http-message
 GET /transfers/42 HTTP/1.1
@@ -637,8 +636,8 @@ choose a path the client asserts it can complete.
 
 A server MUST determine the assurance a request requires without reference to
 the capability set. It MAY use the set to choose among paths that meet that
-requirement. If no such path is available, it MUST refuse the request.
-Otherwise, removing a value could steer the server to a weaker path,
+requirement. If no such path is available, it MUST refuse the request. Without
+this rule, removing a value could steer the server to a weaker path,
 reintroducing the downgrade CAP-1 prevents.
 
 A path safe to issue unconditionally needs no gating signal, but may warrant
@@ -705,7 +704,7 @@ Additional points of discipline:
   be specified as a requirement conditioned on something the server advertises
   in its own metadata ({{RFC8414}} or {{RFC9728}}), specify it that way and
   register no capability. A capability is for behavior that cannot be made
-  mandatory because the server cannot discover conformance.
+  mandatory because the server cannot learn whether the client implements it.
 - State, in the registration, the carriers and endpoints at which the value is
   meaningful.
 
@@ -722,9 +721,9 @@ in request-processing rules, such as OAuth 2.1, is not a behavior a capability
 can gate; see {{profiles}}.
 
 This specification provides no delivery guarantee, and an extension MUST NOT
-rely on a capability signal or an advertisement to supply one;
-{{server-behavior}} leaves delivery to the server. An extension that needs a
-delivery commitment defines it itself, along with how a client learns the
+rely on a capability signal or on `client_capabilities_supported` to supply
+one; {{server-behavior}} leaves delivery to the server. An extension that needs
+a delivery commitment defines it itself, along with how a client learns the
 server will honor it.
 
 # Security Considerations {#security-considerations}
@@ -1105,9 +1104,9 @@ On gating grounds the criterion also rejects client authentication methods,
 endpoint selection, client-initiated parameters, and behavior a specification
 makes mandatory to implement.
 
-Selection is the one exception. A behavior safe to issue unconditionally needs
-no gating signal, yet can still qualify where a server must choose among paths
-and the signal prevents it selecting one the client cannot complete;
+Path selection is the one exception. A behavior safe to issue unconditionally
+needs no gating signal, yet can still qualify where a server must choose among
+paths and the signal prevents it selecting one the client cannot complete;
 {{selection}} governs that narrower case and {{extension-guidance}} bounds it.
 {{iana-registry}} records absent-signal behavior to make the test explicit.
 
