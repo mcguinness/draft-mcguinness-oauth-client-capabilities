@@ -2027,9 +2027,9 @@ becomes all-or-nothing for every client of the issuer; gate it on a capability
 instead. <span>[<a href="#RFC9207" class="cite xref">RFC9207</a>]</span> illustrates the tradeoff
 rather than a mistake: coupling the advertisement to a server-wide delivery
 commitment is what allows a client to enforce that <code>iss</code> is present, and the
-cost is that the feature cannot be rolled out per client. Rolling out stricter
-enforcement, such as OAuth 2.1 rules, is not a behavior a capability can gate;
-see <a href="#profiles" class="auto internal xref">Appendix C.4</a>.<a href="#section-10-8" class="pilcrow">¶</a></p>
+cost is that the feature cannot be rolled out per client. Rolling out a change
+in request-processing rules, such as OAuth 2.1, is not a behavior a capability
+can gate; see <a href="#profiles" class="auto internal xref">Appendix C.4</a>.<a href="#section-10-8" class="pilcrow">¶</a></p>
 <p id="section-10-9">This specification provides no delivery guarantee, and an extension <span class="bcp14">MUST NOT</span>
 rely on a capability signal or an advertisement to supply one;
 <a href="#server-behavior" class="auto internal xref">Section 8</a> leaves delivery to the server. An extension that needs a
@@ -2749,16 +2749,20 @@ group list: a per-issuer <code>oauth_versions_supported</code> metadata array an
 per-client <code>oauth_version</code> registration field. That proposal notes that neither
 provides a runtime signal <span>[<a href="#OAUTH21-VERSIONS-LIST" class="cite xref">OAUTH21-VERSIONS-LIST</a>]</span>.<a href="#appendix-C.4-1" class="pilcrow">¶</a></p>
 <p id="appendix-C.4-2">That is not capability signaling as defined here. The differences OAuth 2.1
-lists from OAuth 2.0 (<span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-17#section-10" class="relref">Section 10</a> of [<a href="#OAUTH21" class="cite xref">OAUTH21</a>]</span>) restrict what a client sends,
+lists from OAuth 2.0 (<span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-17#section-10" class="relref">Section 10</a> of [<a href="#OAUTH21" class="cite xref">OAUTH21</a>]</span>) change what a client sends,
 what a server accepts, and what a server issues. None introduces a response
 that a client conforming to <span>[<a href="#RFC6749" class="cite xref">RFC6749</a>]</span> cannot process, so decomposing the
 version into behaviors (<a href="#values" class="auto internal xref">Section 4</a>) leaves nothing for a client to signal. What
-a version signal would do instead is enable stricter validation of the client's
-own requests, which CAP-1 excludes: an attacker sending a request under the
-same <code>client_id</code> omits the signal. OAuth 2.1 states that the authorization
-server's configuration for a client determines which rules apply, and defines
-no version signal (<span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-17#section-1.8" class="relref">Section 1.8</a> of [<a href="#OAUTH21" class="cite xref">OAUTH21</a>]</span>). This specification neither
-defines one nor proposes that version values be registered.<a href="#appendix-C.4-2" class="pilcrow">¶</a></p>
+a version signal would do instead is select which request-processing rules
+apply. Most of the changes are stricter, and a signal that enables a check is
+what CAP-1 excludes. One is more lenient: OAuth 2.1 drops the token request's
+<code>redirect_uri</code> check because PKCE prevents the same attack
+(<span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-17#section-10.2" class="relref">Section 10.2</a> of [<a href="#OAUTH21" class="cite xref">OAUTH21</a>]</span>), and a server that skips a check because a signal
+is present relies on that signal, which CAP-3 excludes. OAuth 2.1 states that
+the authorization server's configuration for a client determines which rules
+apply, and defines no version signal (<span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-17#section-1.8" class="relref">Section 1.8</a> of [<a href="#OAUTH21" class="cite xref">OAUTH21</a>]</span>). This
+specification neither defines one nor proposes that version values be
+registered.<a href="#appendix-C.4-2" class="pilcrow">¶</a></p>
 <p id="appendix-C.4-3">A draft revision is a different case, and one this specification does handle.
 Where a specification changes what a client must parse between revisions, the
 change is a client-side behavior, and <a href="#values" class="auto internal xref">Section 4</a> already covers it: register a
@@ -2778,11 +2782,14 @@ a default, and in a native rollout the less-capable instances are the releases
 that were never updated, which cannot send anything; <a href="#metadata" class="auto internal xref">Section 7.3</a> forbids a
 default that such instances would not override. What can work is the reverse:
 the client's configured rules stay at the earlier version, and updated releases
-signal on each request. Such a signal protects nothing until the configured
-rules are themselves raised, because an attacker sending a request under the
-same <code>client_id</code> omits it. It is a rollout aid rather than a security
-mechanism, and whether OAuth 2.1 should define one belongs to that work rather
-than this one.<a href="#appendix-C.4-4" class="pilcrow">¶</a></p>
+signal on each request. Such a signal cannot establish a security minimum for
+the client while requests without it are still accepted, because an attacker
+starting a request under the same <code>client_id</code> omits it. A server can still
+attach protection to credentials issued under the signal, such as rotation of
+a refresh token family (<span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-17#section-4.3.1" class="relref">Section 4.3.1</a> of [<a href="#OAUTH21" class="cite xref">OAUTH21</a>]</span>), and a later omission
+does not remove it. The client-wide minimum arrives only when the configured
+rules are raised. Whether OAuth 2.1 should define such a signal belongs to that
+work rather than this one.<a href="#appendix-C.4-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="trade-offs">
