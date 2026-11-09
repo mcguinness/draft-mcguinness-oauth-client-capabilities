@@ -1015,8 +1015,7 @@ Content-Type: application/json
 
 {
   "redirect_uris": ["https://app.example/cb"],
-  "token_endpoint_auth_method": "private_key_jwt",
-  "jwks_uri": "https://app.example/jwks.json",
+  "token_endpoint_auth_method": "none",
   "client_capabilities": ["accept-deferred-response"]
 }
 ~~~
