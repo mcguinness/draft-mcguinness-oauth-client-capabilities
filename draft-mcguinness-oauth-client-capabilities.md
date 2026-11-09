@@ -410,12 +410,11 @@ client_capabilities:
   {{values}}.
 
 The parameter is defined for use at the authorization endpoint and token
-endpoint. Because a pushed authorization request carries authorization request
-parameters, it can carry this parameter as specified by {{RFC9126}}. The
-parameter MAY appear inside a Request Object {{RFC9101}}. An extension MAY
-define its use at another endpoint that accepts OAuth request parameters. An
-extension registering a capability value states every endpoint at which the
-value is meaningful.
+endpoint. A pushed authorization request can carry it, like any other
+authorization request parameter {{RFC9126}}. The parameter MAY appear inside a
+Request Object {{RFC9101}}. An extension MAY define its use at another endpoint
+that accepts OAuth request parameters. An extension registering a capability
+value states every endpoint at which the value is meaningful.
 
 ~~~ http-message
 POST /token HTTP/1.1
@@ -428,9 +427,8 @@ grant_type=refresh_token&refresh_token=tGzv3JOkF0XG5Qx2TlKWIA
 ~~~
 {: title="A capability signaled on a token request"}
 
-The parameter is not defined for the client registration endpoint. A
-registration request carries a JSON body rather than form-encoded parameters,
-so a client declares capabilities there using the metadata field in
+The parameter is not defined for the client registration endpoint. A client
+declares capabilities there using the `client_capabilities` metadata field in
 {{metadata}}.
 
 A client MAY send `client_capabilities` to any authorization server without
@@ -451,16 +449,14 @@ space-delimited value, not as repeated parameters.
 
 Where the parameter would otherwise be carried in the query component of an
 authorization request URI, clients SHOULD instead use a pushed authorization
-request {{RFC9126}} to bound URI growth and keep the list off the user agent. A
-Request Object {{RFC9101}} provides integrity protection, and encryption adds
-confidentiality, but passing one by value does not reduce URI size.
+request {{RFC9126}} to bound URI growth and keep the list off the user agent.
+Passing a Request Object {{RFC9101}} by value does not reduce URI size.
 
 ## The `OAuth-Client-Capabilities` HTTP Field {#field}
 
 The `OAuth-Client-Capabilities` HTTP field allows a client to signal
-capabilities on a request that has no OAuth request parameter surface, most
-importantly a protected resource request, which is also where alternative
-challenge paths most often coexist; see {{selection}}.
+capabilities on a request that has no OAuth request parameter surface, such as
+a protected resource request.
 
 The field asserts that the path which will process the response can process the
 behavior. That path may be the sender alone, or the sender together with
@@ -472,11 +468,9 @@ the OAuth client, client metadata supplies no default for it ({{precedence}}).
 A client MUST NOT use the field on a request at an endpoint where the
 `client_capabilities` parameter is defined; it uses {{param}} there instead. An
 authorization server MUST ignore the field on any request to such an endpoint.
-At the authorization endpoint a user agent issues the HTTP request, so its
-fields cannot be attributed to the client. Using only the parameter at
-authorization server endpoints also gives each request one unambiguous
-effective set, and allows Request Object or pushed-request protections where
-those apply.
+Using only the parameter at authorization server endpoints gives each request
+one unambiguous effective set, and allows Request Object or pushed-request
+protections where those apply.
 
 The field's value is a Structured Fields List ({{Section 3.1 of RFC9651}}). Each
 member MUST be an Item whose bare item is a Token containing a capability value
@@ -494,11 +488,11 @@ Senders MUST NOT generate Inner List members, members of another bare-item
 type, or parameters. A recipient MUST parse the field as a Structured Fields
 List. The field is invalid if parsing fails, if any member is not a Token Item,
 or if any member's Token does not conform to the `capability` production in
-{{values}}. The last case is distinct: a Structured Fields Token can be well
-formed and still violate that production, as `*bad` does. A recipient MUST
-treat an invalid field as absent. It contributes no capabilities, and the rule
-in {{precedence}} for a protected resource request without a valid field then
-applies, including any out-of-band knowledge an extension defines.
+{{values}}. A Structured Fields Token can be well formed and still violate that
+production, as `*bad` does. A recipient MUST treat an invalid field as absent.
+It contributes no capabilities, and the rule in {{precedence}} for a protected
+resource request without a valid field then applies, including any out-of-band
+knowledge an extension defines.
 
 A recipient MUST ignore parameters.
 
@@ -538,9 +532,7 @@ and signal capabilities on each request.
 
 A client metadata document published at a Client Identifier URL {{CIMD}} is
 publicly retrievable, applies uniformly to every deployment using the URL, and
-may be cached. Its capabilities are therefore public and shared by every
-instance, and changes take effect only as authorization servers refresh their
-cached copies. Clients identified this way SHOULD treat the request parameter
+may be cached. Clients identified this way SHOULD treat the request parameter
 in {{param}} as the primary carrier.
 
 ## Precedence {#precedence}
@@ -556,9 +548,8 @@ is determined as follows:
    effective set.
 3. If neither is present, the effective set is empty.
 
-The `OAuth-Client-Capabilities` field plays no part in this determination. As
-specified in {{field}}, an authorization server ignores the field at any
-endpoint where the request parameter is defined.
+The `OAuth-Client-Capabilities` field plays no part in this determination
+({{field}}).
 
 Request values replace rather than augment metadata so that a less-capable
 instance can retract a default. To retract everything, it sends
@@ -591,9 +582,6 @@ request in the grant. Because metadata can be cached or obtained from multiple
 sources, a client SHOULD signal such a capability explicitly on the token
 request rather than rely on a metadata default.
 
-Where a capability is meaningful at more than one endpoint, its registration
-({{iana-registry}}) records which endpoints those are.
-
 # Server Behavior {#server-behavior}
 
 Presence of an unrecognized capability value MUST NOT cause a request to fail.
@@ -602,16 +590,13 @@ Signaling a capability does not entitle a client to the corresponding behavior.
 A server retains discretion over whether to exercise optional behavior.
 
 This specification does not define an error for an absent capability and does
-not give any capability mandatory-to-understand semantics. An extension MAY
-define an error for a case in which the server cannot proceed without a
-particular client-side behavior. Such an error reports the extension's
-condition; it does not turn the signal into an authorization input. This
-specification defines no analogue of the SIP `Require` field {{RFC3261}}; see
-{{rationale}}.
+not give any capability mandatory-to-understand semantics; see {{rationale}}.
+An extension MAY define an error for a case in which the server cannot proceed
+without a particular client-side behavior. Such an error reports the
+extension's condition; it does not turn the signal into an authorization input.
 
 A server SHOULD NOT promote a request-level capability set to durable client
-metadata. Client metadata persists according to the mechanism that provides it,
-but a subsequent request can override that default with a different set.
+metadata.
 
 ## Selecting Among Alternatives {#selection}
 
@@ -699,10 +684,9 @@ per-issuer metadata flag is a legitimate choice. Where per-client or fractional
 rollout of a behavior that meets {{invariants}} is a requirement, however, an
 extension SHOULD NOT couple the behavior to such a flag, because it then
 becomes all-or-nothing for every client of the issuer; gate it on a capability
-instead. {{RFC9207}} illustrates the tradeoff
-rather than a mistake: coupling the advertisement to a server-wide delivery
-commitment is what allows a client to enforce that `iss` is present, and the
-cost is that the feature cannot be rolled out per client. Rolling out a change
+instead. {{RFC9207}} illustrates the trade-off: coupling the advertisement to a
+server-wide delivery commitment allows a client to enforce that `iss` is
+present, but the feature cannot be rolled out per client. Rolling out a change
 in request-processing rules, such as OAuth 2.1, is not a behavior a capability
 can gate; see {{profiles}}.
 
