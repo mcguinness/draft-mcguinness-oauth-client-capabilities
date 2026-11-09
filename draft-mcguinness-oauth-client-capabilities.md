@@ -319,7 +319,10 @@ CAP-1:
   value from the effective capability set MUST NOT cause a server to apply
   weaker client authentication, weaker sender constraining, weaker user
   authentication, or a more permissive policy than it would have applied had
-  the value never been defined. Absence MUST be safe.
+  the value never been defined. A capability MUST NOT enable a security check
+  that the server would otherwise skip, including stricter validation of the
+  client's own requests, because removing the value would remove the check.
+  Absence MUST be safe.
 
 CAP-2:
 : A capability MUST NOT establish what a client is permitted to obtain or be
@@ -701,9 +704,9 @@ define a safe absent-signal fallback. If the enabled behavior is how a server
 obtains something it requires, the fallback is refusal, not proceeding without
 it. Removal costs client functionality, never a server security property.
 
-An extension MUST NOT use a capability to enable a security check that the
-server otherwise skips, because removing the signal would remove the check.
-Such a check belongs in policy or an authenticated negotiation mechanism.
+For the same reason, CAP-1 bars an extension from using a capability to enable
+a security check that the server otherwise skips. Such a check belongs in
+policy or an authenticated negotiation mechanism.
 
 ## Denial of Service {#dos}
 
