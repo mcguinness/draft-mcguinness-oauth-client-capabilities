@@ -138,6 +138,21 @@ clients and authorization servers have no registration handshake. The first
 request must carry the relevant capability or the server must discover it from
 client-published metadata.
 
+A change to a published document also reaches everywhere at once. It applies to
+every instance using the URL and is cached by each authorization server for its
+own interval, so a change cannot be staged one authorization server or one
+release at a time, and rolling it back waits out the same caches. Every
+metadata field has that reach: once `dpop_bound_access_tokens` is true, for
+example, a supporting authorization server rejects token requests without DPoP
+{{RFC9449}}. A field that requires a behavior in this way cannot be a
+capability ({{invariants}}), but a field that only declares support for
+optional behavior can be, and capabilities split that declaration. The document
+then declares only what every instance can process, each request names what its
+own instance can process ({{precedence}}), and an instance can opt in at one
+authorization server, or stop, without changing the document. Because the
+variation travels in requests, every authorization server still sees the same
+document for a `client_id`.
+
 Per-extension signals accumulate in both directions. Each front-channel
 capability can enlarge an authorization URI visible to the user agent. Each
 resource capability adds a field to protected resource requests; an `Accept-*`
