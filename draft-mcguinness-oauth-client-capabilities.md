@@ -502,8 +502,9 @@ List. The field is invalid if parsing fails, if any member is not a Token Item,
 or if any member's Token does not conform to the `capability` production in
 {{values}}. The last case is distinct: a Structured Fields Token can be well
 formed and still violate that production, as `*bad` does. A recipient MUST
-treat an invalid field as absent, matching the treatment of an invalid request
-parameter in {{values}}.
+treat an invalid field as absent. Because client metadata supplies no default
+for the field ({{precedence}}), an invalid field yields the empty set, as an
+invalid request parameter does ({{values}}).
 
 A recipient MUST ignore parameters.
 
@@ -553,7 +554,8 @@ For requests directed to an authorization server, the effective capability set
 is determined as follows:
 
 1. If the request's OAuth parameters contain `client_capabilities`, its value
-   is the effective set.
+   is the effective set. A value that is invalid ({{values}}) or exceeds a limit
+   ({{dos}}) is still present, and its effective set is empty.
 2. Otherwise, the `client_capabilities` value from the client metadata that the
    authorization server considers authoritative for that client is the
    effective set.
