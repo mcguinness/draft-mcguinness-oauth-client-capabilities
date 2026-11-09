@@ -17,7 +17,10 @@ a protected resource request has no OAuth request parameter surface.
 carriers for them: a  client_capabilities  request parameter, an
  OAuth-Client-Capabilities  HTTP field, and a  client_capabilities  client
 metadata field. Capability values are advisory and are constrained to enable
-only optional server behavior, so that their absence is always safe. 
+only optional server behavior, so that their absence is always safe. Because a
+signal on a request replaces the metadata default, a client can roll out a
+capability one instance, release, or authorization server at a time, without
+changing metadata that every instance shares. 
     " name="description">
 <meta content="xml2rfc 3.35.0" name="generator">
 <meta content="OAuth" name="keyword">
@@ -1100,7 +1103,10 @@ a protected resource request has no OAuth request parameter surface.<a href="#se
 carriers for them: a <code>client_capabilities</code> request parameter, an
 <code>OAuth-Client-Capabilities</code> HTTP field, and a <code>client_capabilities</code> client
 metadata field. Capability values are advisory and are constrained to enable
-only optional server behavior, so that their absence is always safe.<a href="#section-abstract-2" class="pilcrow">¶</a></p>
+only optional server behavior, so that their absence is always safe. Because a
+signal on a request replaces the metadata default, a client can roll out a
+capability one instance, release, or authorization server at a time, without
+changing metadata that every instance shares.<a href="#section-abstract-2" class="pilcrow">¶</a></p>
 </section>
 <div id="status-of-memo">
 <section id="section-boilerplate.1">
@@ -1366,12 +1372,26 @@ operate autonomous software instances, or otherwise pair previously unknown
 clients and authorization servers have no registration handshake. The first
 request must carry the relevant capability or the server must discover it from
 client-published metadata.<a href="#section-1.2-2" class="pilcrow">¶</a></p>
-<p id="section-1.2-3">Per-extension signals accumulate in both directions. Each front-channel
+<p id="section-1.2-3">A change to a published document also reaches everywhere at once. It applies to
+every instance using the URL and is cached by each authorization server for its
+own interval, so a change cannot be staged one authorization server or one
+release at a time, and rolling it back waits out the same caches. Every
+metadata field has that reach: once <code>dpop_bound_access_tokens</code> is true, for
+example, a supporting authorization server rejects token requests without DPoP
+<span>[<a href="#RFC9449" class="cite xref">RFC9449</a>]</span>. A field that requires a behavior in this way cannot be a
+capability (<a href="#invariants" class="auto internal xref">Section 5</a>), but a field that only declares support for
+optional behavior can be, and capabilities split that declaration. The document
+then declares only what every instance can process, each request names what its
+own instance can process (<a href="#precedence" class="auto internal xref">Section 7.4</a>), and an instance can opt in at one
+authorization server, or stop, without changing the document. Because the
+variation travels in requests, every authorization server still sees the same
+document for a <code>client_id</code>.<a href="#section-1.2-3" class="pilcrow">¶</a></p>
+<p id="section-1.2-4">Per-extension signals accumulate in both directions. Each front-channel
 capability can enlarge an authorization URI visible to the user agent. Each
 resource capability adds a field to protected resource requests; an <code>Accept-*</code>
 design is one field per feature. A per-extension signal also needs its own
 registrations and metadata. A shared vocabulary pays those costs once across
-both sides of the asymmetry in <a href="#asymmetry" class="auto internal xref">Section 1.1</a>.<a href="#section-1.2-3" class="pilcrow">¶</a></p>
+both sides of the asymmetry in <a href="#asymmetry" class="auto internal xref">Section 1.1</a>.<a href="#section-1.2-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="what-this-specification-does-not-change">
@@ -1387,13 +1407,13 @@ extensions in <a href="#existing-drafts" class="auto internal xref">Appendix B</
 document proposes the mechanism for their use rather than registering values on
 their behalf.<a href="#section-1.3-1" class="pilcrow">¶</a></p>
 <p id="section-1.3-2">Two uses are out of scope. Capability values do not carry deployment-local
-feature flags or rollout cohort membership, which are server-side policy keyed
-on the client's identity rather than properties a client asserts. Nor do they
-signal conformance to a requirement, in either direction. A claim of
-conformance cannot be verified and can be omitted by anyone who would violate
-the requirement, so enforcement keys on the client's identity rather than the
-claim. A claim of non-conformance cannot be sent by the clients that need it,
-which generally cannot be updated to send anything.<a href="#section-1.3-2" class="pilcrow">¶</a></p>
+feature flags or rollout cohorts that a server assigns, which are server-side
+policy keyed on the client's identity rather than properties a client asserts.
+Nor do they signal conformance to a requirement, in either direction. A claim
+of conformance cannot be verified and can be omitted by anyone who would
+violate the requirement, so enforcement keys on the client's identity rather
+than the claim. A claim of non-conformance cannot be sent by the clients that
+need it, which generally cannot be updated to send anything.<a href="#section-1.3-2" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -1978,7 +1998,7 @@ fails to support this specification.<a href="#section-9-5" class="pilcrow">¶</a
       </h2>
 <p id="section-10-1">An extension that needs a client to signal a processing capability <span class="bcp14">SHOULD</span>
 register a value in the registry established in <a href="#iana-registry" class="auto internal xref">Section 13.1</a> rather than
-define a dedicated parameter or field.<a href="#section-10-1" class="pilcrow">¶</a></p>
+define a dedicated request parameter, HTTP field, or client metadata field.<a href="#section-10-1" class="pilcrow">¶</a></p>
 <p id="section-10-2">The invariants in <a href="#invariants" class="auto internal xref">Section 5</a> decide admission. A value may be justified on
 either of two grounds: that a server cannot safely exercise the behavior
 without it, or that a server choosing among several paths would otherwise

@@ -26,7 +26,10 @@ Abstract
    an OAuth-Client-Capabilities HTTP field, and a client_capabilities
    client metadata field.  Capability values are advisory and are
    constrained to enable only optional server behavior, so that their
-   absence is always safe.
+   absence is always safe.  Because a signal on a request replaces the
+   metadata default, a client can roll out a capability one instance,
+   release, or authorization server at a time, without changing metadata
+   that every instance shares.
 
 Status of This Memo
 
@@ -160,6 +163,23 @@ Table of Contents
    capability or the server must discover it from client-published
    metadata.
 
+   A change to a published document also reaches everywhere at once.  It
+   applies to every instance using the URL and is cached by each
+   authorization server for its own interval, so a change cannot be
+   staged one authorization server or one release at a time, and rolling
+   it back waits out the same caches.  Every metadata field has that
+   reach: once dpop_bound_access_tokens is true, for example, a
+   supporting authorization server rejects token requests without DPoP
+   [RFC9449].  A field that requires a behavior in this way cannot be a
+   capability (Section 5), but a field that only declares support for
+   optional behavior can be, and capabilities split that declaration.
+   The document then declares only what every instance can process, each
+   request names what its own instance can process (Section 7.4), and an
+   instance can opt in at one authorization server, or stop, without
+   changing the document.  Because the variation travels in requests,
+   every authorization server still sees the same document for a
+   client_id.
+
    Per-extension signals accumulate in both directions.  Each front-
    channel capability can enlarge an authorization URI visible to the
    user agent.  Each resource capability adds a field to protected
@@ -179,14 +199,15 @@ Table of Contents
    for their use rather than registering values on their behalf.
 
    Two uses are out of scope.  Capability values do not carry
-   deployment-local feature flags or rollout cohort membership, which
-   are server-side policy keyed on the client's identity rather than
-   properties a client asserts.  Nor do they signal conformance to a
-   requirement, in either direction.  A claim of conformance cannot be
-   verified and can be omitted by anyone who would violate the
-   requirement, so enforcement keys on the client's identity rather than
-   the claim.  A claim of non-conformance cannot be sent by the clients
-   that need it, which generally cannot be updated to send anything.
+   deployment-local feature flags or rollout cohorts that a server
+   assigns, which are server-side policy keyed on the client's identity
+   rather than properties a client asserts.  Nor do they signal
+   conformance to a requirement, in either direction.  A claim of
+   conformance cannot be verified and can be omitted by anyone who would
+   violate the requirement, so enforcement keys on the client's identity
+   rather than the claim.  A claim of non-conformance cannot be sent by
+   the clients that need it, which generally cannot be updated to send
+   anything.
 
 2.  Conventions and Definitions
 
@@ -701,7 +722,8 @@ Table of Contents
 
    An extension that needs a client to signal a processing capability
    SHOULD register a value in the registry established in Section 13.1
-   rather than define a dedicated parameter or field.
+   rather than define a dedicated request parameter, HTTP field, or
+   client metadata field.
 
    The invariants in Section 5 decide admission.  A value may be
    justified on either of two grounds: that a server cannot safely
