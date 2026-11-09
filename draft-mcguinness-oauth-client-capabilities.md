@@ -1113,24 +1113,22 @@ learn which revisions a server implements without a version at all. What
 remains out of scope is selecting a framework version or a profile, where the
 label does not correspond to a single client-side behavior.
 
-Comments on {{OAUTH21-VERSIONS}} list a slow rollout for native applications,
-whose upgrades reach users gradually, among the requirements.
-Per-client configuration alone cannot provide it: every deployed instance
-sharing a `client_id` is subject to the same rules, so a rollout staged across
-native application releases cannot be expressed. The override in {{precedence}}
-does not provide it either. That override lets a less-capable instance retract
-a default, and in a native rollout the less-capable instances are the releases
-that were never updated, which cannot send anything; {{metadata}} forbids a
-default that such instances would not override. What can work is the reverse:
-the client's configured rules stay at the earlier version, and updated releases
-signal on each request. Such a signal cannot establish a security minimum for
-the client while requests without it are still accepted, because an attacker
-starting a request under the same `client_id` omits it. A server can still
-attach protection to credentials issued under the signal, such as rotation of
-a refresh token family ({{Section 4.3.1 of OAUTH21}}), and a later omission
-does not remove it. The client-wide minimum arrives only when the configured
-rules are raised. Whether OAuth 2.1 should define such a signal belongs to that
-work rather than this one.
+Per-client configuration cannot stage a rollout across native application
+releases, whose upgrades reach users gradually: every deployed instance sharing
+a `client_id` is subject to the same rules. The override in {{precedence}} does
+not provide such a rollout either. That override lets a less-capable instance
+retract a default, and in a native rollout the less-capable instances are the
+releases that were never updated, which cannot send anything; {{metadata}}
+forbids a default that such instances would not override. What can work is the
+reverse: the client's configured rules stay at the earlier version, and updated
+releases signal on each request. Such a signal cannot establish a security
+minimum for the client while requests without it are still accepted, because an
+attacker starting a request under the same `client_id` omits it. A server can
+still attach protection to credentials issued under the signal, such as
+rotation of a refresh token family ({{Section 4.3.1 of OAUTH21}}), and a later
+omission does not remove it. The client-wide minimum arrives only when the
+configured rules are raised. Whether OAuth 2.1 should define such a signal
+belongs to that work rather than this one.
 
 ## Trade-offs
 
