@@ -949,8 +949,8 @@ Reference:
 # Examples {#examples}
 
 This specification registers no capability values. The
-`accept-deferred-response` value below is illustrative, corresponding to a
-behavior described in {{existing-drafts}}. Line breaks in the form-encoded
+`accept-deferred-response` and `txn-challenge` values below are illustrative,
+corresponding to behaviors described in {{existing-drafts}}. Line breaks in the form-encoded
 request bodies are for display only.
 
 The following example shows a pushed authorization request carrying the
@@ -968,6 +968,23 @@ response_type=code&client_id=https%3A%2F%2Fapp.example%2Fclient
 ~~~
 {: title="Capability carried in a pushed authorization request"}
 
+The following example shows the claims of a Request Object carrying the same
+capability. The value is a JSON string, not an array ({{precedence}}):
+
+~~~ json
+{
+  "iss": "https://app.example/client",
+  "aud": "https://as.example.com",
+  "response_type": "code",
+  "client_id": "https://app.example/client",
+  "redirect_uri": "https://app.example/cb",
+  "code_challenge": "W6uP...",
+  "code_challenge_method": "S256",
+  "client_capabilities": "accept-deferred-response"
+}
+~~~
+{: title="Capability carried in Request Object claims"}
+
 The following example shows the same capability on the token request; the
 earlier signal does not carry over ({{signal-scope}}):
 
@@ -983,6 +1000,24 @@ grant_type=authorization_code&code=SplxlOB...
 &client_capabilities=accept-deferred-response
 ~~~
 {: title="Signaling at the endpoint where the behavior occurs"}
+
+The following example shows a client registration request {{RFC7591}} that
+declares a default capability set, for a client whose every instance can
+process the behavior ({{metadata}}):
+
+~~~ http-message
+POST /register HTTP/1.1
+Host: as.example.com
+Content-Type: application/json
+
+{
+  "redirect_uris": ["https://client.example.org/cb"],
+  "token_endpoint_auth_method": "private_key_jwt",
+  "jwks_uri": "https://client.example.org/jwks.json",
+  "client_capabilities": ["accept-deferred-response"]
+}
+~~~
+{: title="Default capability set in a registration request"}
 
 The following example shows a registered client retracting the capability
 its metadata declares, on a request made by an instance that cannot outlive
@@ -1000,6 +1035,28 @@ grant_type=authorization_code&code=SplxlOB...
 &client_capabilities=none
 ~~~
 {: title="Explicit retraction by a less-capable instance"}
+
+The following examples show excerpts of authorization server metadata
+{{RFC8414}} and protected resource metadata {{RFC9728}} that advertise
+recognized values ({{discovery}}):
+
+~~~ json
+{
+  "issuer": "https://as.example.com",
+  "token_endpoint": "https://as.example.com/token",
+  "client_capabilities_supported": ["accept-deferred-response"]
+}
+~~~
+{: title="Authorization server metadata excerpt"}
+
+~~~ json
+{
+  "resource": "https://api.example.com",
+  "authorization_servers": ["https://as.example.com"],
+  "client_capabilities_supported": ["txn-challenge"]
+}
+~~~
+{: title="Protected resource metadata excerpt"}
 
 # Applying This Specification to Existing Drafts {#existing-drafts}
 
