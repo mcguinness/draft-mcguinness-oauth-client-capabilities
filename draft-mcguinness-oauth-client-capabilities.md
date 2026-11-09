@@ -651,7 +651,7 @@ Advertising a value is not a commitment to exercise the behavior; see
 
 An extension that needs a client to signal a processing capability SHOULD
 register a value in the registry established in {{iana-registry}} rather than
-define a dedicated parameter or field.
+define a dedicated request parameter, HTTP field, or client metadata field.
 
 The invariants in {{invariants}} decide admission. A value may be justified on
 either of two grounds: that a server cannot safely exercise the behavior
