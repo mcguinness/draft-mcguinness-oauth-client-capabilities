@@ -95,7 +95,7 @@ that every instance shares.
 
 --- middle
 
-# Introduction
+# Introduction {#intro}
 
 A growing number of OAuth 2.0 {{RFC6749}} extensions share one normative shape:
 
@@ -172,7 +172,7 @@ design is one field per feature. A per-extension signal also needs its own
 registrations and metadata. A shared vocabulary pays those costs once across
 both sides of the asymmetry in {{asymmetry}}.
 
-## What This Specification Does Not Change
+## What This Specification Does Not Change {#scope}
 
 This specification defines carriers and a vocabulary, and reserves the `none`
 sentinel ({{none-value}}). It does not define any capability values, change any
@@ -192,7 +192,7 @@ on the client's identity rather than the claim. A claim of non-conformance
 cannot be sent by the clients that need it, which generally cannot be updated
 to send anything.
 
-# Conventions and Definitions
+# Conventions and Definitions {#terms}
 
 {::boilerplate bcp14-tagged}
 
@@ -237,7 +237,7 @@ stripped, or untrue leaves the protocol no less secure.
 
 # Capability Values {#values}
 
-## Syntax
+## Syntax {#syntax}
 
 A capability value is a bare token. The syntax uses ABNF {{RFC5234}}, including
 its `ALPHA`, `DIGIT`, and `SP` core rules:
@@ -279,7 +279,7 @@ Capability values MUST NOT carry parameters. An extension that needs structured
 detail alongside a capability defines a companion request parameter, or uses
 `authorization_details` {{RFC9396}}. The registry is a flat vocabulary.
 
-## Naming Guidance
+## Naming Guidance {#naming}
 
 A capability value names a specific client behavior that a server may exercise
 after receiving the value, not a document. `accept-deferred-response` is a
@@ -730,7 +730,7 @@ server will honor it.
 
 The security properties of this mechanism rest on {{invariants}}.
 
-## Signals Are Not Proof
+## Signals Are Not Proof {#unverified-signals}
 
 A capability signal asserts, but does not prove, that the client implements the
 capability. Depending on their use, transport security, client authentication,
@@ -748,7 +748,7 @@ client software version, or client trustworthiness. Where a Request Object
 {{RFC9101}} or software statement carries a set, the signature prevents
 third-party modification but does not prove implementation. See {{precedence}}.
 
-## Downgrade
+## Downgrade {#downgrade}
 
 Because capability signals may be removed by an adversary, an extension MUST
 define a safe absent-signal fallback. If the enabled behavior is how a server
@@ -795,7 +795,7 @@ deployment environment MUST assess whether signaling them creates a useful
 fingerprint and SHOULD choose names that describe behavior without exposing
 implementation details.
 
-# IANA Considerations
+# IANA Considerations {#iana}
 
 ## OAuth Client Capabilities Registry {#iana-registry}
 
@@ -881,7 +881,7 @@ Change Controller:
 Specification Document(s):
 : This specification, {{none-value}}
 
-## OAuth Parameters Registry
+## OAuth Parameters Registry {#iana-params}
 
 This specification requests registration of the following value in the IANA
 "OAuth Parameters" registry established by {{RFC6749}}:
@@ -898,7 +898,7 @@ Change Controller:
 Specification Document(s):
 : This specification, {{param}}
 
-## OAuth Dynamic Client Registration Metadata Registry
+## OAuth Dynamic Client Registration Metadata Registry {#iana-dcr}
 
 This specification requests registration of the following value in the IANA
 "OAuth Dynamic Client Registration Metadata" registry established by
@@ -917,7 +917,7 @@ Change Controller:
 Specification Document(s):
 : This specification, {{metadata}}
 
-## OAuth Authorization Server Metadata Registry
+## OAuth Authorization Server Metadata Registry {#iana-as-metadata}
 
 This specification requests registration of the following value in the IANA
 "OAuth Authorization Server Metadata" registry established by {{RFC8414}}:
@@ -935,7 +935,7 @@ Change Controller:
 Specification Document(s):
 : This specification, {{discovery}}
 
-## OAuth Protected Resource Metadata Registry
+## OAuth Protected Resource Metadata Registry {#iana-pr-metadata}
 
 This specification requests registration of the following value in the IANA
 "OAuth Protected Resource Metadata" registry established by {{RFC9728}}:
@@ -953,7 +953,7 @@ Change Controller:
 Specification Document(s):
 : This specification, {{discovery}}
 
-## HTTP Field Name Registry
+## HTTP Field Name Registry {#iana-field}
 
 This specification requests registration of the following value in the
 "Hypertext Transfer Protocol (HTTP) Field Name" registry:
@@ -972,7 +972,7 @@ Reference:
 
 --- back
 
-# Examples
+# Examples {#examples}
 
 This document registers no capability values. `accept-deferred-response` below
 is illustrative, corresponding to a behavior described in {{existing-drafts}}.
@@ -1054,7 +1054,7 @@ Transaction Authorization Challenge:
 
 This appendix is informative.
 
-## Survey of Existing Mechanisms
+## Survey of Existing Mechanisms {#survey}
 
 OAuth has static client declarations {{RFC7591}}, extensible server metadata
 {{RFC8414}} {{RFC9728}}, and per-extension request parameters, HTTP fields, or
@@ -1103,7 +1103,7 @@ handling ({{field}}). This specification defines a dedicated field for those
 reasons; whether a `Prefer` preference should carry the vocabulary instead is
 an open issue ({{open-issues}}).
 
-## Applying the Admission Criterion
+## Applying the Admission Criterion {#admission}
 
 The behaviors in {{existing-drafts}} qualify if their registrations state the
 safe fallback: a synchronous response or error for deferred response, and
@@ -1140,7 +1140,7 @@ paths and the signal prevents it selecting one the client cannot complete;
 {{selection}} governs that narrower case and {{extension-guidance}} bounds it.
 {{iana-registry}} records absent-signal behavior to make the test explicit.
 
-## Why No Mandatory-to-Understand Semantics
+## Why No Mandatory-to-Understand Semantics {#no-require}
 
 SIP {{RFC3261}} pairs `Supported` with `Require`, letting a client insist an
 extension be understood or the request fail. This specification omits the
@@ -1204,7 +1204,7 @@ client-wide minimum arrives only when the configured rules are raised. Whether
 OAuth 2.1 should define such a selector belongs to that work rather than this
 one.
 
-## Trade-offs
+## Trade-offs {#tradeoffs}
 
 Cache keys become coarser. A protected resource whose responses vary by
 capability sends `Vary: OAuth-Client-Capabilities`, keying the cache on the
