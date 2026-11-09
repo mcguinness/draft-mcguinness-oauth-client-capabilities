@@ -250,11 +250,11 @@ capability-list   = capability *( SP capability )
 
 This character set deliberately satisfies two constraints at once, and is
 narrower than either: the value is valid as a sequence of `NQCHAR` in a
-form-encoded OAuth parameter ({{RFC6749}}, Appendix A), and valid as an
-`sf-token` in a structured field ({{RFC9651}}, Section 3.3.4). A single
+form-encoded OAuth parameter ({{Appendix A of RFC6749}}), and valid as an
+`sf-token` in a structured field ({{Section 3.3.4 of RFC9651}}). A single
 registered value is therefore usable in both carriers with no transformation.
 Structured Fields encourages new fields to use Strings rather than Tokens
-({{RFC9651}}, Section 3.3.4); this specification uses Tokens so that a value
+({{Section 3.3.4 of RFC9651}}); this specification uses Tokens so that a value
 has the same form in both carriers, without quoting.
 
 Capability values are case-sensitive. Four rules apply wherever a capability
@@ -449,7 +449,7 @@ so a client declares capabilities there using the metadata field in
 
 A client MAY send `client_capabilities` to any authorization server without
 prior knowledge of whether the server implements this specification at the
-authorization or token endpoint. {{RFC6749}}, Sections 3.1 and 3.2 require an
+authorization or token endpoint. Sections 3.1 and 3.2 of {{RFC6749}} require an
 authorization server to ignore unrecognized request parameters at those
 endpoints. Specifications that define its use at another endpoint MUST ensure
 that unrecognized request parameters are ignored there. No negotiation
@@ -460,7 +460,7 @@ empty effective set omits the parameter when no metadata default applies and
 sends `none` when it needs to override such a default.
 
 Like any OAuth request parameter, `client_capabilities` is not included more
-than once ({{RFC6749}}, Sections 3.1 and 3.2). A client sends its list as one
+than once (Sections 3.1 and 3.2 of {{RFC6749}}). A client sends its list as one
 space-delimited value, not as repeated parameters.
 
 Where the parameter would otherwise be carried in the query component of an
@@ -492,7 +492,7 @@ authorization server endpoints also gives each request one unambiguous
 effective set, and allows Request Object or pushed-request protections where
 those apply.
 
-The field's value is a Structured Fields List ({{RFC9651}}, Section 3.1). Each
+The field's value is a Structured Fields List ({{Section 3.1 of RFC9651}}). Each
 member MUST be an Item whose bare item is a Token containing a capability value
 as defined in {{values}}:
 
@@ -521,7 +521,7 @@ recipient MUST ignore a member whose value is `none`.
 
 A server whose response varies with the field MUST include
 `OAuth-Client-Capabilities` in the `Vary` field of the response, or use
-`Vary: *` ({{RFC9110}}, Section 12.5.5).
+`Vary: *` ({{Section 12.5.5 of RFC9110}}).
 
 An empty List and an absent field are equivalent: both signal the empty set.
 
@@ -583,7 +583,7 @@ one, the set is empty, subject to any out-of-band knowledge an extension
 defines.
 
 When an authorization request uses a Request Object, the authorization server
-uses only the parameters inside it ({{RFC9101}}, Section 6.3). A
+uses only the parameters inside it ({{Section 6.3 of RFC9101}}). A
 `client_capabilities` value outside the Request Object is not used, and if the
 Request Object contains no such value, step 2 applies. Inside a Request Object,
 the value is a JSON string containing a `capability-list`; a value of any other
@@ -801,7 +801,7 @@ implementation details.
 
 This specification requests that IANA establish an "OAuth Client Capabilities"
 registry in the "OAuth Parameters" registry group. Values are registered on a
-Specification Required basis as defined in {{RFC8126}}, Section 4.6.
+Specification Required basis as defined in {{Section 4.6 of RFC8126}}.
 
 The registry contains the following fields:
 
@@ -1078,7 +1078,7 @@ capability parameter, field, or registry {{IANA-OAUTH}}.
 `Prefer` {{RFC7240}} is the closest existing mechanism. A server may ignore a
 preference, as it may decline to exercise a capability, and `respond-async` is
 described as letting a client indicate "its capability and preference for
-handling asynchronous responses" ({{RFC7240}}, Section 4.1). On direct HTTP
+handling asynchronous responses" ({{Section 4.1 of RFC7240}}). On direct HTTP
 requests, such as token requests and protected resource requests, a registered
 preference could carry each behavior in {{existing-drafts}}.
 
@@ -1095,7 +1095,7 @@ registered preference whose value lists capability values, such as
 in {{iana-registry}} and its admission criterion, so the vocabulary would not
 split. The trade-off is in handling. A server that applies a preference in a
 way that affects caching must list `Prefer` in `Vary` whether or not the
-request carried it ({{RFC7240}}, Section 2), so caches would key on every
+request carried it ({{Section 2 of RFC7240}}), so caches would key on every
 preference a client sends rather than only on its capabilities. The list would
 also sit inside a quoted string, parsed by the `capability-list` rule in
 {{values}}, instead of a Structured Fields List with its own parser and error
