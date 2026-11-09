@@ -1170,6 +1170,11 @@ Coordination replaces autonomy. Registering a dedicated parameter requires no
 shared vocabulary; this registry requires naming discipline and agreement on
 CAP-1 through CAP-3.
 
+A request set replaces the metadata default rather than adding to it
+({{precedence}}). A client that adds one value on a request repeats every
+default it still wants; in exchange, a less-capable instance can retract a
+default without a separate removal syntax.
+
 The current extension count is small. The registry anticipates continued growth
 and is easier to establish before more incompatible carriers ship.
 
