@@ -101,9 +101,8 @@ A growing number of OAuth 2.0 {{RFC6749}} extensions share one normative shape:
 
 > The server MUST NOT do X unless the client has signaled that it can process X.
 
-The constraint exists because these extensions change what a client receives in
-response to an otherwise ordinary request. A client that cannot process the new
-response fails, so the server must know the client's capability before acting.
+These extensions change what a client receives in response to an otherwise
+ordinary request, and a client that cannot process the new response fails.
 
 Two current extensions illustrate the pattern, and disagree on how to carry it.
 {{DTR}} requires an authorization server not to defer a response unless the
@@ -123,9 +122,9 @@ endpoint, the client constructs a URI for a user agent, which issues the HTTP
 request with its own fields; a client-originated field cannot cross that
 redirect boundary.
 
-A general mechanism therefore cannot be an HTTP field alone, and cannot be a
-request parameter alone. Two request carriers over one shared vocabulary is the
-minimum that covers OAuth's actual topology.
+A general mechanism cannot be an HTTP field alone, and cannot be a request
+parameter alone. Two request carriers over one shared vocabulary is the minimum
+that covers OAuth's topology.
 
 ## Open-World Deployment {#open-world}
 
@@ -167,19 +166,19 @@ and staging a change to it remains a problem for client metadata itself.
 
 Per-extension signals accumulate in both directions. Each front-channel
 capability can enlarge an authorization URI visible to the user agent. Each
-resource capability adds a field to protected resource requests; an `Accept-*`
-design is one field per feature. A per-extension signal also needs its own
-registrations and metadata. A shared vocabulary pays those costs once across
-both sides of the asymmetry in {{asymmetry}}.
+resource capability adds a field to protected resource requests. A
+per-extension signal also needs its own registrations and metadata. A shared
+vocabulary incurs those costs once across both sides of the asymmetry in
+{{asymmetry}}.
 
 ## Scope {#scope}
 
 This specification defines carriers and a vocabulary, and reserves the `none`
 sentinel ({{none-value}}). It does not define any capability values, change any
-existing parameter, or require existing extensions to migrate. It is designed
-so that extensions may adopt it incrementally. The extensions in
-{{existing-drafts}} are the intended first adopters; this document proposes the
-mechanism for their use rather than registering values on their behalf.
+existing parameter, or require existing extensions to migrate. The extensions
+in {{existing-drafts}} are the intended first adopters; this specification
+proposes the mechanism for their use rather than registering values on their
+behalf.
 
 Two uses are out of scope. Capability values do not carry deployment-local
 feature flags or rollout cohort membership, whoever assigns it, because neither
@@ -198,7 +197,7 @@ to send anything.
 
 Capability:
 : A named behavior that a client asserts it can process and that a server may
-  therefore choose to exercise.
+  choose to exercise.
 
 Signal:
 : To convey capability values to a server through one of the carriers defined
@@ -214,7 +213,7 @@ Terms not otherwise defined are used as in {{RFC6749}} and {{RFC9110}}.
 
 A client tells a server what optional behavior it can process by signaling
 capability values. A capability value is a short token drawn from a single
-registry ({{iana-registry}}), so one vocabulary serves every extension.
+registry ({{iana-registry}}) shared by every extension.
 
 Three carriers convey a set, chosen by what the request can hold:
 
@@ -227,13 +226,12 @@ Three carriers convey a set, chosen by what the request can hold:
 
 Whichever carrier applies, the result is the request's effective capability
 set: the values a server may act upon for that request. A request-level signal
-replaces any metadata default rather than adding to it, so a constrained
-instance can retract what its metadata declares ({{precedence}}).
+replaces any metadata default rather than adding to it ({{precedence}}).
 
 A server advertises the values it recognizes in its own metadata
-({{discovery}}). Signaling never obliges a server to act, and the invariants in
-{{invariants}} confine what a capability may do, so a signal that is absent,
-stripped, or untrue leaves the protocol no less secure.
+({{discovery}}). Signaling never obliges a server to act. Under the invariants
+in {{invariants}}, a signal that is absent, removed, or untrue leaves the
+protocol no less secure.
 
 # Capability Values {#values}
 
@@ -248,14 +246,13 @@ capability-list   = capability *( SP capability )
 ~~~
 {: title="Capability value syntax"}
 
-This character set deliberately satisfies two constraints at once, and is
-narrower than either: the value is valid as a sequence of `NQCHAR` in a
-form-encoded OAuth parameter ({{Appendix A of RFC6749}}), and valid as an
-`sf-token` in a structured field ({{Section 3.3.4 of RFC9651}}). A single
-registered value is therefore usable in both carriers with no transformation.
-Structured Fields encourages new fields to use Strings rather than Tokens
-({{Section 3.3.4 of RFC9651}}); this specification uses Tokens so that a value
-has the same form in both carriers, without quoting.
+This character set satisfies two constraints at once, and is narrower than
+either: the value is valid as a sequence of `NQCHAR` in a form-encoded OAuth
+parameter ({{Appendix A of RFC6749}}), and valid as an `sf-token` in a
+structured field ({{Section 3.3.4 of RFC9651}}). Structured Fields encourages
+new fields to use Strings rather than Tokens ({{Section 3.3.4 of RFC9651}});
+this specification uses Tokens so that a value has the same form in both
+carriers, without quoting.
 
 Capability values are case-sensitive. Four rules apply wherever a capability
 value appears, in every carrier in {{carriers}} and in {{discovery}}:
@@ -288,12 +285,11 @@ specification MAY register more than one value where a client can usefully
 implement part of it.
 
 A new revision of an extension whose client-side processing differs registers a
-new value rather than reusing the old one, so that a server can distinguish the
-two. Registering the new value does not retire the old one: its change
-controller MAY mark the old value obsolete, and a server MAY continue to
-recognize it. A server that recognizes several revisions of a behavior serves
-clients built against each of them from a single deployment, which is how
-concurrent support for incompatible revisions is achieved.
+new value rather than reusing the old one. Registering the new value does not
+retire the old one: its change controller MAY mark the old value obsolete, and
+a server MAY continue to recognize it. A server that recognizes several
+revisions of a behavior serves clients built against each of them from a single
+deployment.
 
 Because client-side processing may change while an extension is being revised,
 an extension SHOULD register a value only once the processing it names is
@@ -312,7 +308,7 @@ behavior can be named, name it. Where it cannot, because a format changed in
 many small ways at once, a bare sequence suffix indexes variants without
 pointing at a document.
 
-The following non-normative example illustrates the distinction. Suppose an
+The following non-normative example shows the distinction. Suppose an
 extension defines a transaction authorization challenge, and a later revision
 changes the challenge from a set of form-encoded parameters to a JWT, so that a
 client built against the earlier revision cannot parse the later one:
@@ -324,9 +320,6 @@ client built against the earlier revision cannot parse the later one:
 - `txn-challenge-11` is not, because the suffix names a draft revision rather
   than a behavior.
 
-A server that recognizes both `txn-challenge` and `txn-challenge-jwt` serves
-clients built against either revision from a single deployment.
-
 A protocol version is not a capability under any name, such as `oauth-2.1`,
 because it changes which requests a server accepts rather than what a client
 must process; see {{profiles}}.
@@ -335,23 +328,19 @@ must process; see {{profiles}}.
 
 The token `none` is reserved for use as the complete value of the
 `client_capabilities` request parameter. It denotes the empty set: the client
-signals no capabilities. It exists so that a client can explicitly retract a
-statically declared set, as described in {{precedence}}. It is registered only
-to reserve the token ({{iana-registry}}); it is not a capability and has no
-meaning in the HTTP field or client metadata carriers.
+signals no capabilities. A client uses it to retract a statically declared set
+({{precedence}}). It is registered only to reserve the token
+({{iana-registry}}); it is not a capability and has no meaning in the HTTP
+field or client metadata carriers.
 
 `none` MUST NOT appear together with any capability value. A server that
 receives `none` alongside other values MUST treat the value as signaling the
-empty set. Resolving the conflict in favor of the empty set rather than
-rejecting the request keeps the semantics of a capability signal non-fatal,
-consistent with {{server-behavior}}, and errs toward the direction CAP-1 makes
-safe.
+empty set.
 
 # Capability Invariants {#invariants}
 
-The following three constraints apply to every registered capability value and
-to every use of the carriers in {{carriers}}. They are the basis on which the
-security analysis in {{security-considerations}} rests, and they are normative.
+The following three constraints are normative and apply to every registered
+capability value and to every use of the carriers in {{carriers}}.
 
 CAP-1:
 : A capability MUST only enable optional server behavior. Removing a capability
@@ -377,14 +366,12 @@ CAP-3:
   authentication, proof of possession, protocol validation, or other evidence
   required by the behavior it enables.
 
-Two consequences follow. Capabilities are self-asserted, so a client claiming
-one it lacks can receive a response it cannot process. CAP-2 and CAP-3 keep a
-false claim from being accepted as authorization, authentication, or proof of a
-security-relevant property, though an extension must still analyze its
-operational cost ({{dos}}). And an adversary who removes values degrades the
-client to the behavior it would receive with no capabilities, which under CAP-1
-is the safe direction at the cost of optional functionality; see
-{{security-considerations}}.
+Two consequences follow. A client that claims a capability it lacks can receive
+a response it cannot process, but CAP-2 and CAP-3 keep the false claim from
+being accepted as authorization, authentication, or proof of a
+security-relevant property. An adversary who removes values degrades the client
+to the behavior it would receive with no capabilities, which under CAP-1 is the
+safe direction; see {{security-considerations}}.
 
 These invariants also serve as the admission criterion for the registry; see
 {{extension-guidance}}.
@@ -395,8 +382,7 @@ scope:
 : `scope` is an authorization construct. Its values are consented to, are often
   displayed to a user, and are carried in the resulting grant and access token.
   Capabilities are protocol mechanics: not consented to, not displayed, and by
-  CAP-2 barred from affecting the grant. Overloading `scope` would place
-  non-authorization values in front of users and inside issued tokens.
+  CAP-2 barred from affecting the grant.
 
 grant_types and response_types:
 : These select protocol flows and constrain which requests a registered client
@@ -411,9 +397,9 @@ Server metadata:
   carriers in {{carriers}} for the client-to-server direction.
 
 Client attestation:
-: See {{extension-guidance}}. The two mechanisms are complementary and address
-  different questions: what the client can do, versus what can be proven about
-  the client.
+: The two mechanisms are complementary and address different questions: what
+  the client can do, versus what can be proven about the client. See
+  {{extension-guidance}}.
 
 # Carriers {#carriers}
 
