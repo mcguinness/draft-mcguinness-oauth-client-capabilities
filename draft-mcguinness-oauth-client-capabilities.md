@@ -455,6 +455,10 @@ The parameter MUST NOT be sent with an empty value. A client that wants an
 empty effective set omits the parameter when no metadata default applies and
 sends `none` when it needs to override such a default.
 
+Like any OAuth request parameter, `client_capabilities` is not included more
+than once ({{RFC6749}}, Sections 3.1 and 3.2). A client sends its list as one
+space-delimited value, not as repeated parameters.
+
 Where the parameter would otherwise be carried in the query component of an
 authorization request URI, clients SHOULD instead use a pushed authorization
 request {{RFC9126}} to bound URI growth and keep the list off the user agent. A
