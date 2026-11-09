@@ -675,9 +675,9 @@ becomes all-or-nothing for every client of the issuer; gate it on a capability
 instead. {{RFC9207}} illustrates the tradeoff
 rather than a mistake: coupling the advertisement to a server-wide delivery
 commitment is what allows a client to enforce that `iss` is present, and the
-cost is that the feature cannot be rolled out per client. Rolling out stricter
-enforcement, such as OAuth 2.1 rules, is not a behavior a capability can gate;
-see {{profiles}}.
+cost is that the feature cannot be rolled out per client. Rolling out a change
+in request-processing rules, such as OAuth 2.1, is not a behavior a capability
+can gate; see {{profiles}}.
 
 This specification provides no delivery guarantee, and an extension MUST NOT
 rely on a capability signal or an advertisement to supply one;
@@ -1088,16 +1088,20 @@ per-client `oauth_version` registration field. That proposal notes that neither
 provides a runtime signal {{OAUTH21-VERSIONS-LIST}}.
 
 That is not capability signaling as defined here. The differences OAuth 2.1
-lists from OAuth 2.0 ({{Section 10 of OAUTH21}}) restrict what a client sends,
+lists from OAuth 2.0 ({{Section 10 of OAUTH21}}) change what a client sends,
 what a server accepts, and what a server issues. None introduces a response
 that a client conforming to {{RFC6749}} cannot process, so decomposing the
 version into behaviors ({{values}}) leaves nothing for a client to signal. What
-a version signal would do instead is enable stricter validation of the client's
-own requests, which CAP-1 excludes: an attacker sending a request under the
-same `client_id` omits the signal. OAuth 2.1 states that the authorization
-server's configuration for a client determines which rules apply, and defines
-no version signal ({{Section 1.8 of OAUTH21}}). This specification neither
-defines one nor proposes that version values be registered.
+a version signal would do instead is select which request-processing rules
+apply. Most of the changes are stricter, and a signal that enables a check is
+what CAP-1 excludes. One is more lenient: OAuth 2.1 drops the token request's
+`redirect_uri` check because PKCE prevents the same attack
+({{Section 10.2 of OAUTH21}}), and a server that skips a check because a signal
+is present relies on that signal, which CAP-3 excludes. OAuth 2.1 states that
+the authorization server's configuration for a client determines which rules
+apply, and defines no version signal ({{Section 1.8 of OAUTH21}}). This
+specification neither defines one nor proposes that version values be
+registered.
 
 A draft revision is a different case, and one this specification does handle.
 Where a specification changes what a client must parse between revisions, the
