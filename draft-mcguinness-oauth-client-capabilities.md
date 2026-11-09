@@ -521,8 +521,8 @@ The `none` sentinel ({{none-value}}) MUST NOT be sent in this field, and a
 recipient MUST ignore a member whose value is `none`.
 
 A server whose response varies with the field MUST include
-`OAuth-Client-Capabilities` in the `Vary` field of the response, or use `Vary:
-*`, per {{RFC9110}}, Section 12.5.5.
+`OAuth-Client-Capabilities` in the `Vary` field of the response, or use
+`Vary: *` ({{RFC9110}}, Section 12.5.5).
 
 An empty List and an absent field are equivalent: both signal the empty set.
 
