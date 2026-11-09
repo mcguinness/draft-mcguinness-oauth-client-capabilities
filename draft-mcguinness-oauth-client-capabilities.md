@@ -510,9 +510,9 @@ List. The field is invalid if parsing fails, if any member is not a Token Item,
 or if any member's Token does not conform to the `capability` production in
 {{values}}. The last case is distinct: a Structured Fields Token can be well
 formed and still violate that production, as `*bad` does. A recipient MUST
-treat an invalid field as absent. Because client metadata supplies no default
-for the field ({{precedence}}), an invalid field yields the empty set, as an
-invalid request parameter does ({{values}}).
+treat an invalid field as absent. It contributes no capabilities, and the rule
+in {{precedence}} for a protected resource request without a valid field then
+applies, including any out-of-band knowledge an extension defines.
 
 A recipient MUST ignore parameters.
 
