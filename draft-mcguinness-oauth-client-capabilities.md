@@ -663,12 +663,15 @@ Additional points of discipline:
 
 Issuer-wide behavior is often the intended design, and coupling it to a
 per-issuer metadata flag is a legitimate choice. Where per-client or fractional
-rollout is a requirement, however, an extension SHOULD NOT couple the behavior
-to such a flag, because it then becomes all-or-nothing for every client of the
-issuer; gate it on a capability instead. {{RFC9207}} illustrates the tradeoff
+rollout of a behavior that meets {{invariants}} is a requirement, however, an
+extension SHOULD NOT couple the behavior to such a flag, because it then
+becomes all-or-nothing for every client of the issuer; gate it on a capability
+instead. {{RFC9207}} illustrates the tradeoff
 rather than a mistake: coupling the advertisement to a server-wide delivery
 commitment is what allows a client to enforce that `iss` is present, and the
-cost is that the feature cannot be rolled out per client.
+cost is that the feature cannot be rolled out per client. Rolling out stricter
+enforcement, such as OAuth 2.1 rules, is not a behavior a capability can gate;
+see {{profiles}}.
 
 This specification provides no delivery guarantee, and an extension MUST NOT
 rely on a capability signal or an advertisement to supply one;
