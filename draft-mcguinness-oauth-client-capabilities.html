@@ -1163,10 +1163,10 @@ that every instance shares.<a href="#section-abstract-2" class="pilcrow">¶</a><
                 <p id="section-toc.1-1.1.2.1.1" class="keepWithNext"><a href="#section-1.1" class="auto internal xref">1.1</a>.  <a href="#name-the-carrier-asymmetry" class="internal xref">The Carrier Asymmetry</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1.2.2">
-                <p id="section-toc.1-1.1.2.2.1" class="keepWithNext"><a href="#section-1.2" class="auto internal xref">1.2</a>.  <a href="#name-why-open-world-deployment-m" class="internal xref">Why Open-World Deployment Makes This Urgent</a></p>
+                <p id="section-toc.1-1.1.2.2.1" class="keepWithNext"><a href="#section-1.2" class="auto internal xref">1.2</a>.  <a href="#name-open-world-deployment" class="internal xref">Open-World Deployment</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1.2.3">
-                <p id="section-toc.1-1.1.2.3.1" class="keepWithNext"><a href="#section-1.3" class="auto internal xref">1.3</a>.  <a href="#name-what-this-specification-doe" class="internal xref">What This Specification Does Not Change</a></p>
+                <p id="section-toc.1-1.1.2.3.1" class="keepWithNext"><a href="#section-1.3" class="auto internal xref">1.3</a>.  <a href="#name-scope" class="internal xref">Scope</a></p>
 </li>
             </ul>
 </li>
@@ -1234,7 +1234,7 @@ that every instance shares.<a href="#section-abstract-2" class="pilcrow">¶</a><
             <p id="section-toc.1-1.11.1"><a href="#section-11" class="auto internal xref">11</a>. <a href="#name-security-considerations" class="internal xref">Security Considerations</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11.2.1">
-                <p id="section-toc.1-1.11.2.1.1"><a href="#section-11.1" class="auto internal xref">11.1</a>.  <a href="#name-signals-are-not-proof" class="internal xref">Signals Are Not Proof</a></p>
+                <p id="section-toc.1-1.11.2.1.1"><a href="#section-11.1" class="auto internal xref">11.1</a>.  <a href="#name-unverified-signals" class="internal xref">Unverified Signals</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11.2.2">
                 <p id="section-toc.1-1.11.2.2.1"><a href="#section-11.2" class="auto internal xref">11.2</a>.  <a href="#name-downgrade" class="internal xref">Downgrade</a></p>
@@ -1294,13 +1294,13 @@ that every instance shares.<a href="#section-abstract-2" class="pilcrow">¶</a><
                 <p id="section-toc.1-1.17.2.1.1"><a href="#appendix-C.1" class="auto internal xref">C.1</a>.  <a href="#name-survey-of-existing-mechanis" class="internal xref">Survey of Existing Mechanisms</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.17.2.2">
-                <p id="section-toc.1-1.17.2.2.1"><a href="#appendix-C.2" class="auto internal xref">C.2</a>.  <a href="#name-why-not-http-prefer" class="internal xref">Why Not HTTP Prefer</a></p>
+                <p id="section-toc.1-1.17.2.2.1"><a href="#appendix-C.2" class="auto internal xref">C.2</a>.  <a href="#name-comparison-with-http-prefer" class="internal xref">Comparison with HTTP Prefer</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.17.2.3">
                 <p id="section-toc.1-1.17.2.3.1"><a href="#appendix-C.3" class="auto internal xref">C.3</a>.  <a href="#name-applying-the-admission-crit" class="internal xref">Applying the Admission Criterion</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.17.2.4">
-                <p id="section-toc.1-1.17.2.4.1"><a href="#appendix-C.4" class="auto internal xref">C.4</a>.  <a href="#name-why-no-mandatory-to-underst" class="internal xref">Why No Mandatory-to-Understand Semantics</a></p>
+                <p id="section-toc.1-1.17.2.4.1"><a href="#appendix-C.4" class="auto internal xref">C.4</a>.  <a href="#name-absence-of-mandatory-to-und" class="internal xref">Absence of Mandatory-to-Understand Semantics</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.17.2.5">
                 <p id="section-toc.1-1.17.2.5.1"><a href="#appendix-C.5" class="auto internal xref">C.5</a>.  <a href="#name-capabilities-and-profile-se" class="internal xref">Capabilities and Profile Selection</a></p>
@@ -1323,7 +1323,7 @@ that every instance shares.<a href="#section-abstract-2" class="pilcrow">¶</a><
 </nav>
 </section>
 </div>
-<div id="introduction">
+<div id="intro">
 <section id="section-1">
       <h2 id="name-introduction">
 <a href="#section-1" class="section-number selfRef">1. </a><a href="#name-introduction" class="section-name selfRef">Introduction</a>
@@ -1334,9 +1334,8 @@ that every instance shares.<a href="#section-abstract-2" class="pilcrow">¶</a><
           <p id="section-1-2.1.1">The server <span class="bcp14">MUST NOT</span> do X unless the client has signaled that it can process X.<a href="#section-1-2.1.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
-<p id="section-1-3">The constraint exists because these extensions change what a client receives in
-response to an otherwise ordinary request. A client that cannot process the new
-response fails, so the server must know the client's capability before acting.<a href="#section-1-3" class="pilcrow">¶</a></p>
+<p id="section-1-3">These extensions change what a client receives in response to an otherwise
+ordinary request, and a client that cannot process the new response fails.<a href="#section-1-3" class="pilcrow">¶</a></p>
 <p id="section-1-4">Two current extensions illustrate the pattern, and disagree on how to carry it.
 <span>[<a href="#DTR" class="cite xref">DTR</a>]</span> requires an authorization server not to defer a response unless the
 <code>completion_mode</code> request parameter includes <code>deferred</code>. <span>[<a href="#TXN-CHALLENGE" class="cite xref">TXN-CHALLENGE</a>]</span>
@@ -1355,15 +1354,15 @@ HTTP, but that request has no OAuth parameter surface. At the authorization
 endpoint, the client constructs a URI for a user agent, which issues the HTTP
 request with its own fields; a client-originated field cannot cross that
 redirect boundary.<a href="#section-1.1-1" class="pilcrow">¶</a></p>
-<p id="section-1.1-2">A general mechanism therefore cannot be an HTTP field alone, and cannot be a
-request parameter alone. Two request carriers over one shared vocabulary is the
-minimum that covers OAuth's actual topology.<a href="#section-1.1-2" class="pilcrow">¶</a></p>
+<p id="section-1.1-2">A general mechanism cannot be an HTTP field alone, and cannot be a request
+parameter alone. Two request carriers over one shared vocabulary is the minimum
+that covers OAuth's topology.<a href="#section-1.1-2" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="open-world">
 <section id="section-1.2">
-        <h3 id="name-why-open-world-deployment-m">
-<a href="#section-1.2" class="section-number selfRef">1.2. </a><a href="#name-why-open-world-deployment-m" class="section-name selfRef">Why Open-World Deployment Makes This Urgent</a>
+        <h3 id="name-open-world-deployment">
+<a href="#section-1.2" class="section-number selfRef">1.2. </a><a href="#name-open-world-deployment" class="section-name selfRef">Open-World Deployment</a>
         </h3>
 <p id="section-1.2-1">Classic OAuth establishes client behavior at registration. Metadata fields such
 as <code>grant_types</code>, <code>response_types</code>, <code>token_endpoint_auth_method</code>,
@@ -1398,23 +1397,23 @@ without DPoP <span>[<a href="#RFC9449" class="cite xref">RFC9449</a>]</span>. Su
 and staging a change to it remains a problem for client metadata itself.<a href="#section-1.2-5" class="pilcrow">¶</a></p>
 <p id="section-1.2-6">Per-extension signals accumulate in both directions. Each front-channel
 capability can enlarge an authorization URI visible to the user agent. Each
-resource capability adds a field to protected resource requests; an <code>Accept-*</code>
-design is one field per feature. A per-extension signal also needs its own
-registrations and metadata. A shared vocabulary pays those costs once across
-both sides of the asymmetry in <a href="#asymmetry" class="auto internal xref">Section 1.1</a>.<a href="#section-1.2-6" class="pilcrow">¶</a></p>
+resource capability adds a field to protected resource requests. A
+per-extension signal also needs its own registrations and metadata. A shared
+vocabulary incurs those costs once across both sides of the asymmetry in
+<a href="#asymmetry" class="auto internal xref">Section 1.1</a>.<a href="#section-1.2-6" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="what-this-specification-does-not-change">
+<div id="scope">
 <section id="section-1.3">
-        <h3 id="name-what-this-specification-doe">
-<a href="#section-1.3" class="section-number selfRef">1.3. </a><a href="#name-what-this-specification-doe" class="section-name selfRef">What This Specification Does Not Change</a>
+        <h3 id="name-scope">
+<a href="#section-1.3" class="section-number selfRef">1.3. </a><a href="#name-scope" class="section-name selfRef">Scope</a>
         </h3>
 <p id="section-1.3-1">This specification defines carriers and a vocabulary, and reserves the <code>none</code>
 sentinel (<a href="#none-value" class="auto internal xref">Section 4.3</a>). It does not define any capability values, change any
-existing parameter, or require existing extensions to migrate. It is designed
-so that extensions may adopt it incrementally. The extensions in
-<a href="#existing-drafts" class="auto internal xref">Appendix B</a> are the intended first adopters; this document proposes the
-mechanism for their use rather than registering values on their behalf.<a href="#section-1.3-1" class="pilcrow">¶</a></p>
+existing parameter, or require existing extensions to migrate. The extensions
+in <a href="#existing-drafts" class="auto internal xref">Appendix B</a> are the intended first adopters; this specification
+proposes the mechanism for their use rather than registering values on their
+behalf.<a href="#section-1.3-1" class="pilcrow">¶</a></p>
 <p id="section-1.3-2">Two uses are out of scope. Capability values do not carry deployment-local
 feature flags or rollout cohort membership, whoever assigns it, because neither
 describes what a client can process. A client may use its own cohorts to decide
@@ -1429,7 +1428,7 @@ to send anything.<a href="#section-1.3-2" class="pilcrow">¶</a></p>
 </div>
 </section>
 </div>
-<div id="conventions-and-definitions">
+<div id="terms">
 <section id="section-2">
       <h2 id="name-conventions-and-definitions">
 <a href="#section-2" class="section-number selfRef">2. </a><a href="#name-conventions-and-definitions" class="section-name selfRef">Conventions and Definitions</a>
@@ -1442,7 +1441,7 @@ appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶<
         <dt id="section-2-2.1">Capability:</dt>
         <dd style="margin-left: 1.5em" id="section-2-2.2">
           <p id="section-2-2.2.1">A named behavior that a client asserts it can process and that a server may
-therefore choose to exercise.<a href="#section-2-2.2.1" class="pilcrow">¶</a></p>
+choose to exercise.<a href="#section-2-2.2.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
 <dt id="section-2-2.3">Signal:</dt>
@@ -1468,7 +1467,7 @@ rules in <a href="#carriers" class="auto internal xref">Section 7</a> have been 
       </h2>
 <p id="section-3-1">A client tells a server what optional behavior it can process by signaling
 capability values. A capability value is a short token drawn from a single
-registry (<a href="#iana-registry" class="auto internal xref">Section 13.1</a>), so one vocabulary serves every extension.<a href="#section-3-1" class="pilcrow">¶</a></p>
+registry (<a href="#iana-registry" class="auto internal xref">Section 13.1</a>) shared by every extension.<a href="#section-3-1" class="pilcrow">¶</a></p>
 <p id="section-3-2">Three carriers convey a set, chosen by what the request can hold:<a href="#section-3-2" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-3-3.1">
@@ -1477,7 +1476,7 @@ authorization server (<a href="#param" class="auto internal xref">Section 7.1</a
 </li>
         <li class="normal" id="section-3-3.2">
           <p id="section-3-3.2.1">The <code>OAuth-Client-Capabilities</code> HTTP field, on requests that carry no OAuth
-parameters, chiefly protected resource requests (<a href="#field" class="auto internal xref">Section 7.2</a>).<a href="#section-3-3.2.1" class="pilcrow">¶</a></p>
+parameters, such as protected resource requests (<a href="#field" class="auto internal xref">Section 7.2</a>).<a href="#section-3-3.2.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-3-3.3">
           <p id="section-3-3.3.1">A <code>client_capabilities</code> member in client metadata, supplying a default when a
@@ -1486,12 +1485,11 @@ request to an authorization server carries no signal (<a href="#metadata" class=
       </ul>
 <p id="section-3-4">Whichever carrier applies, the result is the request's effective capability
 set: the values a server may act upon for that request. A request-level signal
-replaces any metadata default rather than adding to it, so a constrained
-instance can retract what its metadata declares (<a href="#precedence" class="auto internal xref">Section 7.4</a>).<a href="#section-3-4" class="pilcrow">¶</a></p>
+replaces any metadata default rather than adding to it (<a href="#precedence" class="auto internal xref">Section 7.4</a>).<a href="#section-3-4" class="pilcrow">¶</a></p>
 <p id="section-3-5">A server advertises the values it recognizes in its own metadata
-(<a href="#discovery" class="auto internal xref">Section 9</a>). Signaling never obliges a server to act, and the invariants in
-<a href="#invariants" class="auto internal xref">Section 5</a> confine what a capability may do, so a signal that is absent,
-stripped, or untrue leaves the protocol no less secure.<a href="#section-3-5" class="pilcrow">¶</a></p>
+(<a href="#discovery" class="auto internal xref">Section 9</a>). Signaling never obliges a server to act. Under the invariants
+in <a href="#invariants" class="auto internal xref">Section 5</a>, a signal that is absent, removed, or untrue leaves the
+protocol no less secure.<a href="#section-3-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="values">
@@ -1516,14 +1514,12 @@ capability-list   = capability *( SP capability )
 <figcaption><a href="#figure-1" class="selfRef">Figure 1</a>:
 <a href="#name-capability-value-syntax" class="selfRef">Capability value syntax</a>
           </figcaption></figure>
-<p id="section-4.1-3">This character set deliberately satisfies two constraints at once, and is
-narrower than either: the value is valid as a sequence of <code>NQCHAR</code> in a
-form-encoded OAuth parameter (<span>[<a href="#RFC6749" class="cite xref">RFC6749</a>]</span>, Appendix A), and valid as an
-<code>sf-token</code> in a structured field (<span>[<a href="#RFC9651" class="cite xref">RFC9651</a>]</span>, Section 3.3.4). A single
-registered value is therefore usable in both carriers with no transformation.
-Structured Fields encourages new fields to use Strings rather than Tokens
-(<span>[<a href="#RFC9651" class="cite xref">RFC9651</a>]</span>, Section 3.3.4); this specification uses Tokens so that a value
-has the same form in both carriers, without quoting.<a href="#section-4.1-3" class="pilcrow">¶</a></p>
+<p id="section-4.1-3">This character set satisfies two constraints at once, and is narrower than
+either: the value is valid as a sequence of <code>NQCHAR</code> in a form-encoded OAuth
+parameter (<span><a href="https://rfc-editor.org/rfc/rfc6749#appendix-A" class="relref">Appendix A</a> of [<a href="#RFC6749" class="cite xref">RFC6749</a>]</span>), and valid as an <code>sf-token</code> in a
+structured field (<span><a href="https://rfc-editor.org/rfc/rfc9651#section-3.3.4" class="relref">Section 3.3.4</a> of [<a href="#RFC9651" class="cite xref">RFC9651</a>]</span>). That section also encourages
+new fields to use Strings rather than Tokens; this specification uses Tokens so
+that a value has the same form in both carriers, without quoting.<a href="#section-4.1-3" class="pilcrow">¶</a></p>
 <p id="section-4.1-4">Capability values are case-sensitive. Four rules apply wherever a capability
 value appears, in every carrier in <a href="#carriers" class="auto internal xref">Section 7</a> and in <a href="#discovery" class="auto internal xref">Section 9</a>:<a href="#section-4.1-4" class="pilcrow">¶</a></p>
 <ul class="normal">
@@ -1553,7 +1549,7 @@ detail alongside a capability defines a companion request parameter, or uses
 <code>authorization_details</code> <span>[<a href="#RFC9396" class="cite xref">RFC9396</a>]</span>. The registry is a flat vocabulary.<a href="#section-4.1-8" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="naming-guidance">
+<div id="naming">
 <section id="section-4.2">
         <h3 id="name-naming-guidance">
 <a href="#section-4.2" class="section-number selfRef">4.2. </a><a href="#name-naming-guidance" class="section-name selfRef">Naming Guidance</a>
@@ -1564,12 +1560,11 @@ capability; <code>draft-gerber-oauth-deferred-token-response</code> is not. A
 specification <span class="bcp14">MAY</span> register more than one value where a client can usefully
 implement part of it.<a href="#section-4.2-1" class="pilcrow">¶</a></p>
 <p id="section-4.2-2">A new revision of an extension whose client-side processing differs registers a
-new value rather than reusing the old one, so that a server can distinguish the
-two. Registering the new value does not retire the old one: its change
-controller <span class="bcp14">MAY</span> mark the old value obsolete, and a server <span class="bcp14">MAY</span> continue to
-recognize it. A server that recognizes several revisions of a behavior serves
-clients built against each of them from a single deployment, which is how
-concurrent support for incompatible revisions is achieved.<a href="#section-4.2-2" class="pilcrow">¶</a></p>
+new value rather than reusing the old one. Registering the new value does not
+retire the old one: its change controller <span class="bcp14">MAY</span> mark the old value obsolete, and
+a server <span class="bcp14">MAY</span> continue to recognize it. A server that recognizes several
+revisions of a behavior serves clients built against each of them from a single
+deployment.<a href="#section-4.2-2" class="pilcrow">¶</a></p>
 <p id="section-4.2-3">Because client-side processing may change while an extension is being revised,
 an extension <span class="bcp14">SHOULD</span> register a value only once the processing it names is
 stable. Unregistered values are not a general substitute in the interim.
@@ -1585,7 +1580,7 @@ identical client processing would imply as many variants. Where the revised
 behavior can be named, name it. Where it cannot, because a format changed in
 many small ways at once, a bare sequence suffix indexes variants without
 pointing at a document.<a href="#section-4.2-4" class="pilcrow">¶</a></p>
-<p id="section-4.2-5">The following non-normative example illustrates the distinction. Suppose an
+<p id="section-4.2-5">The following non-normative example shows the distinction. Suppose an
 extension defines a transaction authorization challenge, and a later revision
 changes the challenge from a set of form-encoded parameters to a JWT, so that a
 client built against the earlier revision cannot parse the later one:<a href="#section-4.2-5" class="pilcrow">¶</a></p>
@@ -1605,11 +1600,9 @@ parse, and is the preferred registration.<a href="#section-4.2-6.2.1" class="pil
 than a behavior.<a href="#section-4.2-6.4.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-4.2-7">A server that recognizes both <code>txn-challenge</code> and <code>txn-challenge-jwt</code> serves
-clients built against either revision from a single deployment.<a href="#section-4.2-7" class="pilcrow">¶</a></p>
-<p id="section-4.2-8">A protocol version is not a capability under any name, such as <code>oauth-2.1</code>,
+<p id="section-4.2-7">A protocol version is not a capability under any name, such as <code>oauth-2.1</code>,
 because it changes which requests a server accepts rather than what a client
-must process; see <a href="#profiles" class="auto internal xref">Appendix C.5</a>.<a href="#section-4.2-8" class="pilcrow">¶</a></p>
+must process; see <a href="#profiles" class="auto internal xref">Appendix C.5</a>.<a href="#section-4.2-7" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="none-value">
@@ -1619,16 +1612,14 @@ must process; see <a href="#profiles" class="auto internal xref">Appendix C.5</a
         </h3>
 <p id="section-4.3-1">The token <code>none</code> is reserved for use as the complete value of the
 <code>client_capabilities</code> request parameter. It denotes the empty set: the client
-signals no capabilities. It exists so that a client can explicitly retract a
-statically declared set, as described in <a href="#precedence" class="auto internal xref">Section 7.4</a>. It is registered only
-to reserve the token (<a href="#iana-registry" class="auto internal xref">Section 13.1</a>); it is not a capability and has no
-meaning in the HTTP field or client metadata carriers.<a href="#section-4.3-1" class="pilcrow">¶</a></p>
+signals no capabilities. A client uses it to retract a statically declared set
+(<a href="#precedence" class="auto internal xref">Section 7.4</a>). It is registered only to reserve the token
+(<a href="#iana-registry" class="auto internal xref">Section 13.1</a>); it is not a capability and has no meaning in the HTTP
+field or client metadata carriers.<a href="#section-4.3-1" class="pilcrow">¶</a></p>
 <p id="section-4.3-2"><code>none</code> <span class="bcp14">MUST NOT</span> appear together with any capability value. A server that
 receives <code>none</code> alongside other values <span class="bcp14">MUST</span> treat the value as signaling the
-empty set. Resolving the conflict in favor of the empty set rather than
-rejecting the request keeps the semantics of a capability signal non-fatal,
-consistent with <a href="#server-behavior" class="auto internal xref">Section 8</a>, and errs toward the direction CAP-1 makes
-safe.<a href="#section-4.3-2" class="pilcrow">¶</a></p>
+empty set. Resolving the conflict to the empty set, rather than rejecting the
+request, keeps the signal non-fatal (<a href="#server-behavior" class="auto internal xref">Section 8</a>).<a href="#section-4.3-2" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -1638,9 +1629,8 @@ safe.<a href="#section-4.3-2" class="pilcrow">¶</a></p>
       <h2 id="name-capability-invariants">
 <a href="#section-5" class="section-number selfRef">5. </a><a href="#name-capability-invariants" class="section-name selfRef">Capability Invariants</a>
       </h2>
-<p id="section-5-1">The following three constraints apply to every registered capability value and
-to every use of the carriers in <a href="#carriers" class="auto internal xref">Section 7</a>. They are the basis on which the
-security analysis in <a href="#security-considerations" class="auto internal xref">Section 11</a> rests, and they are normative.<a href="#section-5-1" class="pilcrow">¶</a></p>
+<p id="section-5-1">The following three constraints are normative and apply to every registered
+capability value and to every use of the carriers in <a href="#carriers" class="auto internal xref">Section 7</a>.<a href="#section-5-1" class="pilcrow">¶</a></p>
 <span class="break"></span><dl class="dlParallel" id="section-5-2">
         <dt id="section-5-2.1">CAP-1:</dt>
         <dd style="margin-left: 1.5em" id="section-5-2.2">
@@ -1673,14 +1663,12 @@ required by the behavior it enables.<a href="#section-5-2.6.1" class="pilcrow">�
 </dd>
       <dd class="break"></dd>
 </dl>
-<p id="section-5-3">Two consequences follow. Capabilities are self-asserted, so a client claiming
-one it lacks can receive a response it cannot process. CAP-2 and CAP-3 keep a
-false claim from being accepted as authorization, authentication, or proof of a
-security-relevant property, though an extension must still analyze its
-operational cost (<a href="#dos" class="auto internal xref">Section 11.3</a>). And an adversary who removes values degrades the
-client to the behavior it would receive with no capabilities, which under CAP-1
-is the safe direction at the cost of optional functionality; see
-<a href="#security-considerations" class="auto internal xref">Section 11</a>.<a href="#section-5-3" class="pilcrow">¶</a></p>
+<p id="section-5-3">Two consequences follow. A client that claims a capability it lacks can receive
+a response it cannot process, but CAP-2 and CAP-3 keep the false claim from
+being accepted as authorization, authentication, or proof of a
+security-relevant property. An adversary who removes values degrades the client
+to the behavior it would receive with no capabilities, which under CAP-1 is the
+safe direction; see <a href="#security-considerations" class="auto internal xref">Section 11</a>.<a href="#section-5-3" class="pilcrow">¶</a></p>
 <p id="section-5-4">These invariants also serve as the admission criterion for the registry; see
 <a href="#extension-guidance" class="auto internal xref">Section 10</a>.<a href="#section-5-4" class="pilcrow">¶</a></p>
 </section>
@@ -1696,8 +1684,7 @@ is the safe direction at the cost of optional functionality; see
           <p id="section-6-1.2.1"><code>scope</code> is an authorization construct. Its values are consented to, are often
 displayed to a user, and are carried in the resulting grant and access token.
 Capabilities are protocol mechanics: not consented to, not displayed, and by
-CAP-2 barred from affecting the grant. Overloading <code>scope</code> would place
-non-authorization values in front of users and inside issued tokens.<a href="#section-6-1.2.1" class="pilcrow">¶</a></p>
+CAP-2 barred from affecting the grant.<a href="#section-6-1.2.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
 <dt id="section-6-1.3">grant_types and response_types:</dt>
@@ -1718,9 +1705,9 @@ carriers in <a href="#carriers" class="auto internal xref">Section 7</a> for the
         <dd class="break"></dd>
 <dt id="section-6-1.7">Client attestation:</dt>
         <dd style="margin-left: 1.5em" id="section-6-1.8">
-          <p id="section-6-1.8.1">See <a href="#extension-guidance" class="auto internal xref">Section 10</a>. The two mechanisms are complementary and address
-different questions: what the client can do, versus what can be proven about
-the client.<a href="#section-6-1.8.1" class="pilcrow">¶</a></p>
+          <p id="section-6-1.8.1">The two mechanisms are complementary and address different questions: what
+the client can do, versus what can be proven about the client. See
+<a href="#extension-guidance" class="auto internal xref">Section 10</a>.<a href="#section-6-1.8.1" class="pilcrow">¶</a></p>
 </dd>
       <dd class="break"></dd>
 </dl>
@@ -1745,12 +1732,11 @@ the client.<a href="#section-6-1.8.1" class="pilcrow">¶</a></p>
         <dd class="break"></dd>
 </dl>
 <p id="section-7.1-2">The parameter is defined for use at the authorization endpoint and token
-endpoint. Because a pushed authorization request carries authorization request
-parameters, it can carry this parameter as specified by <span>[<a href="#RFC9126" class="cite xref">RFC9126</a>]</span>. The
-parameter <span class="bcp14">MAY</span> appear inside a Request Object <span>[<a href="#RFC9101" class="cite xref">RFC9101</a>]</span>. An extension <span class="bcp14">MAY</span>
-define its use at another endpoint that accepts OAuth request parameters. An
-extension registering a capability value states every endpoint at which the
-value is meaningful.<a href="#section-7.1-2" class="pilcrow">¶</a></p>
+endpoint. A pushed authorization request can carry this parameter as specified
+by <span>[<a href="#RFC9126" class="cite xref">RFC9126</a>]</span>. The parameter <span class="bcp14">MAY</span> appear inside a Request Object <span>[<a href="#RFC9101" class="cite xref">RFC9101</a>]</span>.
+An extension <span class="bcp14">MAY</span> define its use at another endpoint that accepts OAuth request
+parameters. An extension registering a capability value states every endpoint
+at which the value is meaningful.<a href="#section-7.1-2" class="pilcrow">¶</a></p>
 <span id="name-a-capability-signaled-on-a-"></span><figure id="figure-2">
           <div class="lang-http-message sourcecode" id="section-7.1-3.1">
 <pre>
@@ -1766,13 +1752,12 @@ grant_type=refresh_token&amp;refresh_token=tGzv3JOkF0XG5Qx2TlKWIA
 <figcaption><a href="#figure-2" class="selfRef">Figure 2</a>:
 <a href="#name-a-capability-signaled-on-a-" class="selfRef">A capability signaled on a token request</a>
           </figcaption></figure>
-<p id="section-7.1-4">The parameter is not defined for the client registration endpoint. A
-registration request carries a JSON body rather than form-encoded parameters,
-so a client declares capabilities there using the metadata field in
+<p id="section-7.1-4">The parameter is not defined for the client registration endpoint. A client
+declares capabilities there using the <code>client_capabilities</code> metadata field in
 <a href="#metadata" class="auto internal xref">Section 7.3</a>.<a href="#section-7.1-4" class="pilcrow">¶</a></p>
 <p id="section-7.1-5">A client <span class="bcp14">MAY</span> send <code>client_capabilities</code> to any authorization server without
 prior knowledge of whether the server implements this specification at the
-authorization or token endpoint. <span>[<a href="#RFC6749" class="cite xref">RFC6749</a>]</span>, Sections 3.1 and 3.2 require an
+authorization or token endpoint. Sections 3.1 and 3.2 of <span>[<a href="#RFC6749" class="cite xref">RFC6749</a>]</span> require an
 authorization server to ignore unrecognized request parameters at those
 endpoints. Specifications that define its use at another endpoint <span class="bcp14">MUST</span> ensure
 that unrecognized request parameters are ignored there. No negotiation
@@ -1781,13 +1766,12 @@ handshake is defined.<a href="#section-7.1-5" class="pilcrow">¶</a></p>
 empty effective set omits the parameter when no metadata default applies and
 sends <code>none</code> when it needs to override such a default.<a href="#section-7.1-6" class="pilcrow">¶</a></p>
 <p id="section-7.1-7">Like any OAuth request parameter, <code>client_capabilities</code> is not included more
-than once (<span>[<a href="#RFC6749" class="cite xref">RFC6749</a>]</span>, Sections 3.1 and 3.2). A client sends its list as one
+than once (Sections 3.1 and 3.2 of <span>[<a href="#RFC6749" class="cite xref">RFC6749</a>]</span>). A client sends its list as one
 space-delimited value, not as repeated parameters.<a href="#section-7.1-7" class="pilcrow">¶</a></p>
 <p id="section-7.1-8">Where the parameter would otherwise be carried in the query component of an
 authorization request URI, clients <span class="bcp14">SHOULD</span> instead use a pushed authorization
-request <span>[<a href="#RFC9126" class="cite xref">RFC9126</a>]</span> to bound URI growth and keep the list off the user agent. A
-Request Object <span>[<a href="#RFC9101" class="cite xref">RFC9101</a>]</span> provides integrity protection, and encryption adds
-confidentiality, but passing one by value does not reduce URI size.<a href="#section-7.1-8" class="pilcrow">¶</a></p>
+request <span>[<a href="#RFC9126" class="cite xref">RFC9126</a>]</span> to bound URI growth and keep the list off the user agent.
+Passing a Request Object <span>[<a href="#RFC9101" class="cite xref">RFC9101</a>]</span> by value does not reduce URI size.<a href="#section-7.1-8" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="field">
@@ -1796,9 +1780,8 @@ confidentiality, but passing one by value does not reduce URI size.<a href="#sec
 <a href="#section-7.2" class="section-number selfRef">7.2. </a><a href="#name-the-oauth-client-capabiliti" class="section-name selfRef">The <code>OAuth-Client-Capabilities</code> HTTP Field</a>
         </h3>
 <p id="section-7.2-1">The <code>OAuth-Client-Capabilities</code> HTTP field allows a client to signal
-capabilities on a request that has no OAuth request parameter surface, most
-importantly a protected resource request, which is also where alternative
-challenge paths most often coexist; see <a href="#selection" class="auto internal xref">Section 8.1</a>.<a href="#section-7.2-1" class="pilcrow">¶</a></p>
+capabilities on a request that has no OAuth request parameter surface, such as
+a protected resource request.<a href="#section-7.2-1" class="pilcrow">¶</a></p>
 <p id="section-7.2-2">The field asserts that the path which will process the response can process the
 behavior. That path may be the sender alone, or the sender together with
 another component on whose behalf it acts: an agent making a resource request
@@ -1806,14 +1789,12 @@ may relay a challenge to a component that completes it. The sender is
 accountable for the assertion. Because the field does not necessarily identify
 the OAuth client, client metadata supplies no default for it (<a href="#precedence" class="auto internal xref">Section 7.4</a>).<a href="#section-7.2-2" class="pilcrow">¶</a></p>
 <p id="section-7.2-3">A client <span class="bcp14">MUST NOT</span> use the field on a request at an endpoint where the
-<code>client_capabilities</code> parameter is defined; it uses <a href="#param" class="auto internal xref">Section 7.1</a> there instead. An
-authorization server <span class="bcp14">MUST</span> ignore the field on any request to such an endpoint.
-At the authorization endpoint a user agent issues the HTTP request, so its
-fields cannot be attributed to the client. Using only the parameter at
-authorization server endpoints also gives each request one unambiguous
-effective set, and allows Request Object or pushed-request protections where
-those apply.<a href="#section-7.2-3" class="pilcrow">¶</a></p>
-<p id="section-7.2-4">The field's value is a Structured Fields List (<span>[<a href="#RFC9651" class="cite xref">RFC9651</a>]</span>, Section 3.1). Each
+<code>client_capabilities</code> parameter is defined; it uses the request parameter
+(<a href="#param" class="auto internal xref">Section 7.1</a>) there instead. An authorization server <span class="bcp14">MUST</span> ignore the field on any
+request to such an endpoint. Using only the parameter at authorization server
+endpoints gives each request one unambiguous effective set, and allows Request
+Object or pushed-request protections where those apply.<a href="#section-7.2-3" class="pilcrow">¶</a></p>
+<p id="section-7.2-4">The field's value is a Structured Fields List (<span><a href="https://rfc-editor.org/rfc/rfc9651#section-3.1" class="relref">Section 3.1</a> of [<a href="#RFC9651" class="cite xref">RFC9651</a>]</span>). Each
 member <span class="bcp14">MUST</span> be an Item whose bare item is a Token containing a capability value
 as defined in <a href="#values" class="auto internal xref">Section 4</a>:<a href="#section-7.2-4" class="pilcrow">¶</a></p>
 <span id="name-signaling-a-capability-on-a"></span><figure id="figure-3">
@@ -1832,17 +1813,17 @@ OAuth-Client-Capabilities: txn-challenge
 type, or parameters. A recipient <span class="bcp14">MUST</span> parse the field as a Structured Fields
 List. The field is invalid if parsing fails, if any member is not a Token Item,
 or if any member's Token does not conform to the <code>capability</code> production in
-<a href="#values" class="auto internal xref">Section 4</a>. The last case is distinct: a Structured Fields Token can be well
-formed and still violate that production, as <code>*bad</code> does. A recipient <span class="bcp14">MUST</span>
-treat an invalid field as absent. It contributes no capabilities, and the rule
-in <a href="#precedence" class="auto internal xref">Section 7.4</a> for a protected resource request without a valid field then
-applies, including any out-of-band knowledge an extension defines.<a href="#section-7.2-6" class="pilcrow">¶</a></p>
+<a href="#values" class="auto internal xref">Section 4</a>. A Structured Fields Token can be well formed and still violate that
+production, as <code>*bad</code> does. A recipient <span class="bcp14">MUST</span> treat an invalid field as absent.
+It contributes no capabilities, and the rule in <a href="#precedence" class="auto internal xref">Section 7.4</a> for a protected
+resource request without a valid field then applies, including any out-of-band
+knowledge an extension defines.<a href="#section-7.2-6" class="pilcrow">¶</a></p>
 <p id="section-7.2-7">A recipient <span class="bcp14">MUST</span> ignore parameters.<a href="#section-7.2-7" class="pilcrow">¶</a></p>
 <p id="section-7.2-8">The <code>none</code> sentinel (<a href="#none-value" class="auto internal xref">Section 4.3</a>) <span class="bcp14">MUST NOT</span> be sent in this field, and a
 recipient <span class="bcp14">MUST</span> ignore a member whose value is <code>none</code>.<a href="#section-7.2-8" class="pilcrow">¶</a></p>
 <p id="section-7.2-9">A server whose response varies with the field <span class="bcp14">MUST</span> include
 <code>OAuth-Client-Capabilities</code> in the <code>Vary</code> field of the response, or use
-<code>Vary: *</code> (<span>[<a href="#RFC9110" class="cite xref">RFC9110</a>]</span>, Section 12.5.5).<a href="#section-7.2-9" class="pilcrow">¶</a></p>
+<code>Vary: *</code> (<span><a href="https://rfc-editor.org/rfc/rfc9110#section-12.5.5" class="relref">Section 12.5.5</a> of [<a href="#RFC9110" class="cite xref">RFC9110</a>]</span>).<a href="#section-7.2-9" class="pilcrow">¶</a></p>
 <p id="section-7.2-10">An empty List and an absent field are equivalent: both signal the empty set.<a href="#section-7.2-10" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -1877,9 +1858,7 @@ requests. Clients with heterogeneous instances <span class="bcp14">SHOULD</span>
 and signal capabilities on each request.<a href="#section-7.3-4" class="pilcrow">¶</a></p>
 <p id="section-7.3-5">A client metadata document published at a Client Identifier URL <span>[<a href="#CIMD" class="cite xref">CIMD</a>]</span> is
 publicly retrievable, applies uniformly to every deployment using the URL, and
-may be cached. Its capabilities are therefore public and shared by every
-instance, and changes take effect only as authorization servers refresh their
-cached copies. Clients identified this way <span class="bcp14">SHOULD</span> treat the request parameter
+may be cached. Clients identified this way <span class="bcp14">SHOULD</span> treat the request parameter
 in <a href="#param" class="auto internal xref">Section 7.1</a> as the primary carrier.<a href="#section-7.3-5" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -1915,7 +1894,7 @@ instance can retract a default. To retract everything, it sends
 one, the set is empty, subject to any out-of-band knowledge an extension
 defines.<a href="#section-7.4-5" class="pilcrow">¶</a></p>
 <p id="section-7.4-6">When an authorization request uses a Request Object, the authorization server
-uses only the parameters inside it (<span>[<a href="#RFC9101" class="cite xref">RFC9101</a>]</span>, Section 6.3). A
+uses only the parameters inside it (<span><a href="https://rfc-editor.org/rfc/rfc9101#section-6.3" class="relref">Section 6.3</a> of [<a href="#RFC9101" class="cite xref">RFC9101</a>]</span>). A
 <code>client_capabilities</code> value outside the Request Object is not used, and if the
 Request Object contains no such value, step 2 applies. Inside a Request Object,
 the value is a JSON string containing a <code>capability-list</code>; a value of any other
@@ -1939,8 +1918,6 @@ the token request; the authorization server <span class="bcp14">MUST NOT</span> 
 request in the grant. Because metadata can be cached or obtained from multiple
 sources, a client <span class="bcp14">SHOULD</span> signal such a capability explicitly on the token
 request rather than rely on a metadata default.<a href="#section-7.5-2" class="pilcrow">¶</a></p>
-<p id="section-7.5-3">Where a capability is meaningful at more than one endpoint, its registration
-(<a href="#iana-registry" class="auto internal xref">Section 13.1</a>) records which endpoints those are.<a href="#section-7.5-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -1954,15 +1931,12 @@ request rather than rely on a metadata default.<a href="#section-7.5-2" class="p
 <p id="section-8-2">Signaling a capability does not entitle a client to the corresponding behavior.
 A server retains discretion over whether to exercise optional behavior.<a href="#section-8-2" class="pilcrow">¶</a></p>
 <p id="section-8-3">This specification does not define an error for an absent capability and does
-not give any capability mandatory-to-understand semantics. An extension <span class="bcp14">MAY</span>
-define an error for a case in which the server cannot proceed without a
-particular client-side behavior. Such an error reports the extension's
-condition; it does not turn the signal into an authorization input. This
-specification defines no analogue of the SIP <code>Require</code> field <span>[<a href="#RFC3261" class="cite xref">RFC3261</a>]</span>; see
-<a href="#rationale" class="auto internal xref">Appendix C</a>.<a href="#section-8-3" class="pilcrow">¶</a></p>
+not give any capability mandatory-to-understand semantics; see <a href="#no-require" class="auto internal xref">Appendix C.4</a>.
+An extension <span class="bcp14">MAY</span> define an error for a case in which the server cannot proceed
+without a particular client-side behavior. Such an error reports the
+extension's condition; it does not turn the signal into an authorization input.<a href="#section-8-3" class="pilcrow">¶</a></p>
 <p id="section-8-4">A server <span class="bcp14">SHOULD NOT</span> promote a request-level capability set to durable client
-metadata. Client metadata persists according to the mechanism that provides it,
-but a subsequent request can override that default with a different set.<a href="#section-8-4" class="pilcrow">¶</a></p>
+metadata.<a href="#section-8-4" class="pilcrow">¶</a></p>
 <div id="selection">
 <section id="section-8.1">
         <h3 id="name-selecting-among-alternative">
@@ -2022,13 +1996,13 @@ fails to support this specification.<a href="#section-9-5" class="pilcrow">¶</a
 <p id="section-10-1">An extension that needs a client to signal a processing capability <span class="bcp14">SHOULD</span>
 register a value in the registry established in <a href="#iana-registry" class="auto internal xref">Section 13.1</a> rather than
 define a dedicated request parameter, HTTP field, or client metadata field.<a href="#section-10-1" class="pilcrow">¶</a></p>
-<p id="section-10-2">The invariants in <a href="#invariants" class="auto internal xref">Section 5</a> decide admission. A value may be justified on
-either of two grounds: that a server cannot safely exercise the behavior
-without it, or that a server choosing among several paths would otherwise
-select one the client cannot complete (<a href="#selection" class="auto internal xref">Section 8.1</a>). The second requires that
-the signal can change whether the operation completes, not merely make an
-already-workable path more convenient.<a href="#section-10-2" class="pilcrow">¶</a></p>
-<p id="section-10-3">One heuristic catches most misclassifications:<a href="#section-10-3" class="pilcrow">¶</a></p>
+<p id="section-10-2">The invariants in <a href="#invariants" class="auto internal xref">Section 5</a> are the admission criterion. A value may be
+justified on either of two grounds: that a server cannot safely exercise the
+behavior without it, or that a server choosing among several paths would
+otherwise select one the client cannot complete (<a href="#selection" class="auto internal xref">Section 8.1</a>). The second
+requires that the signal can change whether the operation completes, not merely
+make an already-workable path more convenient.<a href="#section-10-2" class="pilcrow">¶</a></p>
+<p id="section-10-3">One heuristic identifies most misclassifications:<a href="#section-10-3" class="pilcrow">¶</a></p>
 <ul class="normal ulEmpty">
 <li class="normal ulEmpty" id="section-10-4.1">
           <p id="section-10-4.1.1">If an implementer would want the value to be attested, it is not a
@@ -2067,10 +2041,9 @@ per-issuer metadata flag is a legitimate choice. Where per-client or fractional
 rollout of a behavior that meets <a href="#invariants" class="auto internal xref">Section 5</a> is a requirement, however, an
 extension <span class="bcp14">SHOULD NOT</span> couple the behavior to such a flag, because it then
 becomes all-or-nothing for every client of the issuer; gate it on a capability
-instead. <span>[<a href="#RFC9207" class="cite xref">RFC9207</a>]</span> illustrates the tradeoff
-rather than a mistake: coupling the advertisement to a server-wide delivery
-commitment is what allows a client to enforce that <code>iss</code> is present, and the
-cost is that the feature cannot be rolled out per client. Rolling out a change
+instead. <span>[<a href="#RFC9207" class="cite xref">RFC9207</a>]</span> illustrates the trade-off: coupling the advertisement to a
+server-wide delivery commitment allows a client to enforce that <code>iss</code> is
+present, but the feature cannot be rolled out per client. Rolling out a change
 in request-processing rules, such as OAuth 2.1, is not a behavior a capability
 can gate; see <a href="#profiles" class="auto internal xref">Appendix C.5</a>.<a href="#section-10-8" class="pilcrow">¶</a></p>
 <p id="section-10-9">This specification provides no delivery guarantee, and an extension <span class="bcp14">MUST NOT</span>
@@ -2086,10 +2059,10 @@ server will honor it.<a href="#section-10-9" class="pilcrow">¶</a></p>
 <a href="#section-11" class="section-number selfRef">11. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
       </h2>
 <p id="section-11-1">The security properties of this mechanism rest on <a href="#invariants" class="auto internal xref">Section 5</a>.<a href="#section-11-1" class="pilcrow">¶</a></p>
-<div id="signals-are-not-proof">
+<div id="unverified-signals">
 <section id="section-11.1">
-        <h3 id="name-signals-are-not-proof">
-<a href="#section-11.1" class="section-number selfRef">11.1. </a><a href="#name-signals-are-not-proof" class="section-name selfRef">Signals Are Not Proof</a>
+        <h3 id="name-unverified-signals">
+<a href="#section-11.1" class="section-number selfRef">11.1. </a><a href="#name-unverified-signals" class="section-name selfRef">Unverified Signals</a>
         </h3>
 <p id="section-11.1-1">A capability signal asserts, but does not prove, that the client implements the
 capability. Depending on their use, transport security, client authentication,
@@ -2163,7 +2136,7 @@ fingerprint and <span class="bcp14">SHOULD</span> choose names that describe beh
 implementation details.<a href="#section-12-3" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="iana-considerations">
+<div id="iana">
 <section id="section-13">
       <h2 id="name-iana-considerations">
 <a href="#section-13" class="section-number selfRef">13. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
@@ -2175,7 +2148,7 @@ implementation details.<a href="#section-12-3" class="pilcrow">¶</a></p>
         </h3>
 <p id="section-13.1-1">This specification requests that IANA establish an "OAuth Client Capabilities"
 registry in the "OAuth Parameters" registry group. Values are registered on a
-Specification Required basis as defined in <span>[<a href="#RFC8126" class="cite xref">RFC8126</a>]</span>, Section 4.6.<a href="#section-13.1-1" class="pilcrow">¶</a></p>
+Specification Required basis as defined in <span><a href="https://rfc-editor.org/rfc/rfc8126#section-4.6" class="relref">Section 4.6</a> of [<a href="#RFC8126" class="cite xref">RFC8126</a>]</span>.<a href="#section-13.1-1" class="pilcrow">¶</a></p>
 <p id="section-13.1-2">The registry contains the following fields:<a href="#section-13.1-2" class="pilcrow">¶</a></p>
 <span class="break"></span><dl class="dlParallel" id="section-13.1-3">
           <dt id="section-13.1-3.1">Capability Value:</dt>
@@ -2199,8 +2172,7 @@ to recognize it.<a href="#section-13.1-3.6.1" class="pilcrow">¶</a></p>
 <dt id="section-13.1-3.7">Absent-Signal Behavior:</dt>
           <dd style="margin-left: 1.5em" id="section-13.1-3.8">
             <p id="section-13.1-3.8.1">What the server does when the value is not in the effective set. Recording
-this makes CAP-1 in <a href="#invariants" class="auto internal xref">Section 5</a> checkable at registration time rather than
-aspirational.<a href="#section-13.1-3.8.1" class="pilcrow">¶</a></p>
+this makes CAP-1 in <a href="#invariants" class="auto internal xref">Section 5</a> checkable at registration time.<a href="#section-13.1-3.8.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
 <dt id="section-13.1-3.9">Carriers:</dt>
@@ -2297,7 +2269,7 @@ Group or its successor, but working group consensus is not required.<a href="#se
 </dl>
 </section>
 </div>
-<div id="oauth-parameters-registry">
+<div id="iana-params">
 <section id="section-13.2">
         <h3 id="name-oauth-parameters-registry">
 <a href="#section-13.2" class="section-number selfRef">13.2. </a><a href="#name-oauth-parameters-registry" class="section-name selfRef">OAuth Parameters Registry</a>
@@ -2328,7 +2300,7 @@ Group or its successor, but working group consensus is not required.<a href="#se
 </dl>
 </section>
 </div>
-<div id="oauth-dynamic-client-registration-metadata-registry">
+<div id="iana-dcr">
 <section id="section-13.3">
         <h3 id="name-oauth-dynamic-client-regist">
 <a href="#section-13.3" class="section-number selfRef">13.3. </a><a href="#name-oauth-dynamic-client-regist" class="section-name selfRef">OAuth Dynamic Client Registration Metadata Registry</a>
@@ -2361,7 +2333,7 @@ able to process<a href="#section-13.3-2.4.1" class="pilcrow">¶</a></p>
 </dl>
 </section>
 </div>
-<div id="oauth-authorization-server-metadata-registry">
+<div id="iana-as-metadata">
 <section id="section-13.4">
         <h3 id="name-oauth-authorization-server-">
 <a href="#section-13.4" class="section-number selfRef">13.4. </a><a href="#name-oauth-authorization-server-" class="section-name selfRef">OAuth Authorization Server Metadata Registry</a>
@@ -2393,7 +2365,7 @@ act upon<a href="#section-13.4-2.4.1" class="pilcrow">¶</a></p>
 </dl>
 </section>
 </div>
-<div id="oauth-protected-resource-metadata-registry">
+<div id="iana-pr-metadata">
 <section id="section-13.5">
         <h3 id="name-oauth-protected-resource-me">
 <a href="#section-13.5" class="section-number selfRef">13.5. </a><a href="#name-oauth-protected-resource-me" class="section-name selfRef">OAuth Protected Resource Metadata Registry</a>
@@ -2425,7 +2397,7 @@ upon<a href="#section-13.5-2.4.1" class="pilcrow">¶</a></p>
 </dl>
 </section>
 </div>
-<div id="http-field-name-registry">
+<div id="iana-field">
 <section id="section-13.6">
         <h3 id="name-http-field-name-registry">
 <a href="#section-13.6" class="section-number selfRef">13.6. </a><a href="#name-http-field-name-registry" class="section-name selfRef">HTTP Field Name Registry</a>
@@ -2608,11 +2580,12 @@ upon<a href="#section-13.5-2.4.1" class="pilcrow">¶</a></p>
       <h2 id="name-examples">
 <a href="#appendix-A" class="section-number selfRef">Appendix A. </a><a href="#name-examples" class="section-name selfRef">Examples</a>
       </h2>
-<p id="appendix-A-1">This document registers no capability values. <code>accept-deferred-response</code> below
-is illustrative, corresponding to a behavior described in <a href="#existing-drafts" class="auto internal xref">Appendix B</a>.
-Line breaks in the form-encoded request bodies are for display only.<a href="#appendix-A-1" class="pilcrow">¶</a></p>
-<p id="appendix-A-2">A pushed authorization request carrying the capability, keeping it off the
-authorization URI:<a href="#appendix-A-2" class="pilcrow">¶</a></p>
+<p id="appendix-A-1">This specification registers no capability values. The
+<code>accept-deferred-response</code> value below is illustrative, corresponding to a
+behavior described in <a href="#existing-drafts" class="auto internal xref">Appendix B</a>. Line breaks in the form-encoded
+request bodies are for display only.<a href="#appendix-A-1" class="pilcrow">¶</a></p>
+<p id="appendix-A-2">The following example shows a pushed authorization request carrying the
+capability; pushing the request keeps the value off the authorization URI:<a href="#appendix-A-2" class="pilcrow">¶</a></p>
 <span id="name-capability-carried-in-a-pus"></span><figure id="figure-4">
         <div class="lang-http-message sourcecode" id="appendix-A-3.1">
 <pre>
@@ -2629,8 +2602,8 @@ response_type=code&amp;client_id=https%3A%2F%2Fapp.example%2Fclient
 <figcaption><a href="#figure-4" class="selfRef">Figure 4</a>:
 <a href="#name-capability-carried-in-a-pus" class="selfRef">Capability carried in a pushed authorization request</a>
         </figcaption></figure>
-<p id="appendix-A-4">The same capability on the token request. Because the behavior affects the
-token response, the earlier signal does not carry over; see <a href="#signal-scope" class="auto internal xref">Section 7.5</a>:<a href="#appendix-A-4" class="pilcrow">¶</a></p>
+<p id="appendix-A-4">The following example shows the same capability on the token request; the
+earlier signal does not carry over (<a href="#signal-scope" class="auto internal xref">Section 7.5</a>):<a href="#appendix-A-4" class="pilcrow">¶</a></p>
 <span id="name-signaling-at-the-endpoint-w"></span><figure id="figure-5">
         <div class="lang-http-message sourcecode" id="appendix-A-5.1">
 <pre>
@@ -2648,9 +2621,10 @@ grant_type=authorization_code&amp;code=SplxlOB...
 <figcaption><a href="#figure-5" class="selfRef">Figure 5</a>:
 <a href="#name-signaling-at-the-endpoint-w" class="selfRef">Signaling at the endpoint where the behavior occurs</a>
         </figcaption></figure>
-<p id="appendix-A-6">A registered client whose metadata declares the capability, retracting it on a
-request made by an instance that cannot outlive the request:<a href="#appendix-A-6" class="pilcrow">¶</a></p>
-<span id="name-explicit-retraction-by-a-co"></span><figure id="figure-6">
+<p id="appendix-A-6">The following example shows a registered client retracting the capability
+its metadata declares, on a request made by an instance that cannot outlive
+the request:<a href="#appendix-A-6" class="pilcrow">¶</a></p>
+<span id="name-explicit-retraction-by-a-le"></span><figure id="figure-6">
         <div class="lang-http-message sourcecode" id="appendix-A-7.1">
 <pre>
 POST /token HTTP/1.1
@@ -2665,7 +2639,7 @@ grant_type=authorization_code&amp;code=SplxlOB...
 </pre>
 </div>
 <figcaption><a href="#figure-6" class="selfRef">Figure 6</a>:
-<a href="#name-explicit-retraction-by-a-co" class="selfRef">Explicit retraction by a constrained instance</a>
+<a href="#name-explicit-retraction-by-a-le" class="selfRef">Explicit retraction by a less-capable instance</a>
         </figcaption></figure>
 </section>
 </div>
@@ -2675,30 +2649,28 @@ grant_type=authorization_code&amp;code=SplxlOB...
 <a href="#appendix-B" class="section-number selfRef">Appendix B. </a><a href="#name-applying-this-specification" class="section-name selfRef">Applying This Specification to Existing Drafts</a>
       </h2>
 <p id="appendix-B-1">This appendix is informative and describes how the two extensions that
-motivated this work would use the mechanism. Neither is required to migrate.<a href="#appendix-B-1" class="pilcrow">¶</a></p>
+motivated this work would use the mechanism.<a href="#appendix-B-1" class="pilcrow">¶</a></p>
 <span class="break"></span><dl class="dlParallel" id="appendix-B-2">
         <dt id="appendix-B-2.1">Deferred Token Response:</dt>
         <dd style="margin-left: 1.5em" id="appendix-B-2.2">
           <p id="appendix-B-2.2.1"><code>completion_mode=deferred</code> becomes <code>client_capabilities</code> containing
 <code>accept-deferred-response</code>. The authorization server still <span class="bcp14">MUST NOT</span> defer
-unless the value is in the request's effective set. Because deferral affects
-the token response, <a href="#signal-scope" class="auto internal xref">Section 7.5</a> requires the value in the token
-request's effective set; a signal at an earlier endpoint has no effect on the
-token response. The proposed single-purpose registry is subsumed by
-<a href="#iana-registry" class="auto internal xref">Section 13.1</a>,
-and the
-<code>deferred_token_response_supported</code> authorization server metadata Boolean by
-<code>client_capabilities_supported</code> containing the value. Either suffices to show
-that a server recognizes the capability, and because an advertisement is not a
-commitment (<a href="#discovery" class="auto internal xref">Section 9</a>), a disagreement between them affects only which
-values a client chooses to send.<a href="#appendix-B-2.2.1" class="pilcrow">¶</a></p>
+unless the value is in the request's effective set. <a href="#signal-scope" class="auto internal xref">Section 7.5</a>
+requires the value in the token request's effective set; a signal at an
+earlier endpoint has no effect on the token response. The proposed
+single-purpose registry is subsumed by <a href="#iana-registry" class="auto internal xref">Section 13.1</a>, and the
+<code>deferred_token_response_supported</code> authorization server metadata Boolean
+by <code>client_capabilities_supported</code> containing the value. Either suffices to
+show that a server recognizes the capability, and a disagreement between
+them affects only which values a client chooses to send (<a href="#discovery" class="auto internal xref">Section 9</a>).<a href="#appendix-B-2.2.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
 <dt id="appendix-B-2.3">Transaction Authorization Challenge:</dt>
         <dd style="margin-left: 1.5em" id="appendix-B-2.4">
-          <p id="appendix-B-2.4.1"><code>Accept-Txn-Challenge: ?1</code> becomes <code>OAuth-Client-Capabilities:
-txn-challenge</code>. The normative rule and the out-of-band knowledge provision
-are unchanged. The Boolean becomes list membership; absence expresses false.<a href="#appendix-B-2.4.1" class="pilcrow">¶</a></p>
+          <p id="appendix-B-2.4.1"><code>Accept-Txn-Challenge: ?1</code> becomes
+<code>OAuth-Client-Capabilities: txn-challenge</code>. The normative rule and the
+out-of-band knowledge provision are unchanged. The Boolean becomes list
+membership; absence expresses false.<a href="#appendix-B-2.4.1" class="pilcrow">¶</a></p>
 </dd>
       <dd class="break"></dd>
 </dl>
@@ -2710,7 +2682,7 @@ are unchanged. The Boolean becomes list membership; absence expresses false.<a h
 <a href="#appendix-C" class="section-number selfRef">Appendix C. </a><a href="#name-design-rationale" class="section-name selfRef">Design Rationale</a>
       </h2>
 <p id="appendix-C-1">This appendix is informative.<a href="#appendix-C-1" class="pilcrow">¶</a></p>
-<div id="survey-of-existing-mechanisms">
+<div id="survey">
 <section id="appendix-C.1">
         <h3 id="name-survey-of-existing-mechanis">
 <a href="#appendix-C.1" class="section-number selfRef">C.1. </a><a href="#name-survey-of-existing-mechanis" class="section-name selfRef">Survey of Existing Mechanisms</a>
@@ -2722,48 +2694,46 @@ metadata cannot express per-request or per-instance variation, while server
 metadata runs only server to client.<a href="#appendix-C.1-1" class="pilcrow">¶</a></p>
 <p id="appendix-C.1-2">Other protocols use shared vocabularies. SIP option tags <span>[<a href="#RFC3261" class="cite xref">RFC3261</a>]</span> pair
 <code>Supported</code> with <code>Require</code>; HTTP <code>Prefer</code> <span>[<a href="#RFC7240" class="cite xref">RFC7240</a>]</span> registers preferences
-such as <code>respond-async</code>, which is semantically what a deferred-completion
-parameter reinvents; and Client Hints <span>[<a href="#RFC8942" class="cite xref">RFC8942</a>]</span> lets a server advertise what
-it wants sent. GNAP <span>[<a href="#RFC9635" class="cite xref">RFC9635</a>]</span> has generic, registry-backed server-to-client
-discovery and anticipates "any additional capabilities defined by extensions of
-this protocol", yet still represents client-to-server capabilities per feature.<a href="#appendix-C.1-2" class="pilcrow">¶</a></p>
+such as <code>respond-async</code>; and Client Hints <span>[<a href="#RFC8942" class="cite xref">RFC8942</a>]</span> lets a server advertise
+what it wants sent. GNAP <span>[<a href="#RFC9635" class="cite xref">RFC9635</a>]</span> has generic, registry-backed
+server-to-client discovery and anticipates "any additional capabilities
+defined by extensions of this protocol", but represents client-to-server
+capabilities per feature.<a href="#appendix-C.1-2" class="pilcrow">¶</a></p>
 <p id="appendix-C.1-3">The IANA "OAuth Parameters" registry group currently contains no generic client
 capability parameter, field, or registry <span>[<a href="#IANA-OAUTH" class="cite xref">IANA-OAUTH</a>]</span>.<a href="#appendix-C.1-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="why-not-prefer">
 <section id="appendix-C.2">
-        <h3 id="name-why-not-http-prefer">
-<a href="#appendix-C.2" class="section-number selfRef">C.2. </a><a href="#name-why-not-http-prefer" class="section-name selfRef">Why Not HTTP Prefer</a>
+        <h3 id="name-comparison-with-http-prefer">
+<a href="#appendix-C.2" class="section-number selfRef">C.2. </a><a href="#name-comparison-with-http-prefer" class="section-name selfRef">Comparison with HTTP Prefer</a>
         </h3>
 <p id="appendix-C.2-1"><code>Prefer</code> <span>[<a href="#RFC7240" class="cite xref">RFC7240</a>]</span> is the closest existing mechanism. A server may ignore a
-preference, as it may decline to exercise a capability, and <code>respond-async</code> is
-described as letting a client indicate "its capability and preference for
-handling asynchronous responses" (<span>[<a href="#RFC7240" class="cite xref">RFC7240</a>]</span>, Section 4.1). On direct HTTP
-requests, such as token requests and protected resource requests, a registered
-preference could carry each behavior in <a href="#existing-drafts" class="auto internal xref">Appendix B</a>.<a href="#appendix-C.2-1" class="pilcrow">¶</a></p>
+preference, as it may decline to exercise a capability, and <code>respond-async</code>
+lets a client indicate "its capability and preference for handling asynchronous
+responses" (<span><a href="https://rfc-editor.org/rfc/rfc7240#section-4.1" class="relref">Section 4.1</a> of [<a href="#RFC7240" class="cite xref">RFC7240</a>]</span>). A registered preference could carry
+each behavior in <a href="#existing-drafts" class="auto internal xref">Appendix B</a> on direct HTTP requests, such as token
+requests and protected resource requests.<a href="#appendix-C.2-1" class="pilcrow">¶</a></p>
 <p id="appendix-C.2-2"><code>Prefer</code> does not serve the rest of OAuth's topology, which is why a request
 parameter is needed in any case. As an HTTP field, it cannot cross the redirect
 at the authorization endpoint (<a href="#asymmetry" class="auto internal xref">Section 1.1</a>), cannot be carried in a Request
 Object, does not travel with the authorization request that a pushed
-authorization request represents, and has no client metadata form to supply the
-defaults that <a href="#open-world" class="auto internal xref">Section 1.2</a> relies on.<a href="#appendix-C.2-2" class="pilcrow">¶</a></p>
-<p id="appendix-C.2-3">For the HTTP carrier alone, <code>Prefer</code> remains a real alternative. A single
-registered preference whose value lists capability values, such as
-<code>Prefer: oauth-client-capabilities="txn-challenge"</code>, could draw on the registry
-in <a href="#iana-registry" class="auto internal xref">Section 13.1</a> and its admission criterion, so the vocabulary would not
-split. The trade-off is in handling. A server that applies a preference in a
-way that affects caching must list <code>Prefer</code> in <code>Vary</code> whether or not the
-request carried it (<span>[<a href="#RFC7240" class="cite xref">RFC7240</a>]</span>, Section 2), so caches would key on every
-preference a client sends rather than only on its capabilities. The list would
-also sit inside a quoted string, parsed by the <code>capability-list</code> rule in
-<a href="#values" class="auto internal xref">Section 4</a>, instead of a Structured Fields List with its own parser and error
-handling (<a href="#field" class="auto internal xref">Section 7.2</a>). This specification defines a dedicated field for those
-reasons; whether a <code>Prefer</code> preference should carry the vocabulary instead is
-an open issue (<a href="#open-issues" class="auto internal xref">Appendix C.7</a>).<a href="#appendix-C.2-3" class="pilcrow">¶</a></p>
+authorization request represents, and has no client metadata form to supply
+defaults (<a href="#open-world" class="auto internal xref">Section 1.2</a>).<a href="#appendix-C.2-2" class="pilcrow">¶</a></p>
+<p id="appendix-C.2-3">For the HTTP carrier alone, a single registered preference listing capability
+values, such as <code>Prefer: oauth-client-capabilities="txn-challenge"</code>, could
+draw on the registry in <a href="#iana-registry" class="auto internal xref">Section 13.1</a> and its admission criterion. A
+server whose application of a preference affects caching must, however, list
+<code>Prefer</code> in <code>Vary</code> whether or not the request carried it
+(<span><a href="https://rfc-editor.org/rfc/rfc7240#section-2" class="relref">Section 2</a> of [<a href="#RFC7240" class="cite xref">RFC7240</a>]</span>), so caches would key on every preference a client
+sends rather than only on its capabilities. The list would also be a quoted
+string parsed by the <code>capability-list</code> rule in <a href="#values" class="auto internal xref">Section 4</a>, not a Structured
+Fields List with its own parser and error handling (<a href="#field" class="auto internal xref">Section 7.2</a>). Whether such a
+preference should replace the dedicated field is an open issue
+(<a href="#open-issues" class="auto internal xref">Appendix C.7</a>).<a href="#appendix-C.2-3" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="applying-the-admission-criterion">
+<div id="admission">
 <section id="appendix-C.3">
         <h3 id="name-applying-the-admission-crit">
 <a href="#appendix-C.3" class="section-number selfRef">C.3. </a><a href="#name-applying-the-admission-crit" class="section-name selfRef">Applying the Admission Criterion</a>
@@ -2775,42 +2745,40 @@ optional behavior without weakening a security check.<a href="#appendix-C.3-1" c
 <p id="appendix-C.3-2">Similar-looking behaviors do not necessarily qualify. DPoP nonce enforcement
 <span>[<a href="#RFC9449" class="cite xref">RFC9449</a>]</span> does not. A removable signal cannot govern a required nonce without
 weakening replay protection, and CAP-2 prevents using it to justify
-longer-lived tokens. DPoP nonce policy is therefore outside this capability
-model.<a href="#appendix-C.3-2" class="pilcrow">¶</a></p>
+longer-lived tokens.<a href="#appendix-C.3-2" class="pilcrow">¶</a></p>
 <p id="appendix-C.3-3">The <code>redirect_to_web</code> fallback in <span>[<a href="#FIRST-PARTY-APPS" class="cite xref">FIRST-PARTY-APPS</a>]</span> qualifies only if
 defined as optional server behavior with a safe absent-signal outcome. If
 server metadata can instead make the client behavior conditional, discovery is
 preferable.<a href="#appendix-C.3-3" class="pilcrow">¶</a></p>
-<p id="appendix-C.3-4">Adding a parameter to a response is almost never a capability. <span>[<a href="#RFC6749" class="cite xref">RFC6749</a>]</span>,
-Sections 4.1.2 and 5.1 already require clients to ignore unrecognized
+<p id="appendix-C.3-4">Adding a parameter to a response is almost never a capability. Sections
+4.1.2 and 5.1 of <span>[<a href="#RFC6749" class="cite xref">RFC6749</a>]</span> already require clients to ignore unrecognized
 authorization response parameters and unrecognized token response members, so
 delivery is safe for any conforming client and needs no gate.
-<span>[<a href="#RESOURCE-TOKEN-RESP" class="cite xref">RESOURCE-TOKEN-RESP</a>]</span> is a near miss of exactly this kind: it returns a
-<code>resource</code> parameter so a client can confirm which resource its token is valid
-for, and what it needs is a way for clients to learn that a server implements
-it. That is server metadata, not a client capability.<a href="#appendix-C.3-4" class="pilcrow">¶</a></p>
+<span>[<a href="#RESOURCE-TOKEN-RESP" class="cite xref">RESOURCE-TOKEN-RESP</a>]</span> is a case of this kind: it returns a <code>resource</code>
+parameter so a client can confirm which resource its token is valid for, and
+what it needs is a way for clients to learn that a server implements it. That
+is server metadata, not a client capability.<a href="#appendix-C.3-4" class="pilcrow">¶</a></p>
 <p id="appendix-C.3-5">On gating grounds the criterion also rejects client authentication methods,
 endpoint selection, client-initiated parameters, and behavior a specification
 makes mandatory to implement.<a href="#appendix-C.3-5" class="pilcrow">¶</a></p>
 <p id="appendix-C.3-6">Path selection is the one exception. A behavior safe to issue unconditionally
 needs no gating signal, yet can still qualify where a server must choose among
 paths and the signal prevents it selecting one the client cannot complete;
-<a href="#selection" class="auto internal xref">Section 8.1</a> governs that narrower case and <a href="#extension-guidance" class="auto internal xref">Section 10</a> bounds it.
-<a href="#iana-registry" class="auto internal xref">Section 13.1</a> records absent-signal behavior to make the test explicit.<a href="#appendix-C.3-6" class="pilcrow">¶</a></p>
+<a href="#selection" class="auto internal xref">Section 8.1</a> governs that case and <a href="#extension-guidance" class="auto internal xref">Section 10</a> bounds it.<a href="#appendix-C.3-6" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="why-no-mandatory-to-understand-semantics">
+<div id="no-require">
 <section id="appendix-C.4">
-        <h3 id="name-why-no-mandatory-to-underst">
-<a href="#appendix-C.4" class="section-number selfRef">C.4. </a><a href="#name-why-no-mandatory-to-underst" class="section-name selfRef">Why No Mandatory-to-Understand Semantics</a>
+        <h3 id="name-absence-of-mandatory-to-und">
+<a href="#appendix-C.4" class="section-number selfRef">C.4. </a><a href="#name-absence-of-mandatory-to-und" class="section-name selfRef">Absence of Mandatory-to-Understand Semantics</a>
         </h3>
 <p id="appendix-C.4-1">SIP <span>[<a href="#RFC3261" class="cite xref">RFC3261</a>]</span> pairs <code>Supported</code> with <code>Require</code>, letting a client insist an
 extension be understood or the request fail. This specification omits the
 analogue: <code>Require</code> answers a different question, whether the client insists
 the server implement something, while a capability states that the client can
-process behavior the server remains free not to exercise. Mixing the two would
-undermine the advisory model. Extensions needing hard failure define their own
-errors; CAP-1 still prevents removal from weakening security.<a href="#appendix-C.4-1" class="pilcrow">¶</a></p>
+process behavior the server remains free not to exercise. Extensions needing
+hard failure define their own errors; CAP-1 still prevents removal from
+weakening security.<a href="#appendix-C.4-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="profiles">
@@ -2824,51 +2792,40 @@ clients concurrently <span>[<a href="#OAUTH21-VERSIONS" class="cite xref">OAUTH2
 group list: a per-issuer <code>oauth_versions_supported</code> metadata array and a
 per-client <code>oauth_version</code> registration field. That proposal notes that neither
 provides a runtime signal <span>[<a href="#OAUTH21-VERSIONS-LIST" class="cite xref">OAUTH21-VERSIONS-LIST</a>]</span>.<a href="#appendix-C.5-1" class="pilcrow">¶</a></p>
-<p id="appendix-C.5-2">That is not capability signaling as defined here. The differences OAuth 2.1
-lists from OAuth 2.0 (<span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-17#section-10" class="relref">Section 10</a> of [<a href="#OAUTH21" class="cite xref">OAUTH21</a>]</span>) change what a client sends,
-what a server accepts, and what a server issues. None introduces a response
-that a client conforming to <span>[<a href="#RFC6749" class="cite xref">RFC6749</a>]</span> cannot process, so decomposing the
-version into behaviors (<a href="#values" class="auto internal xref">Section 4</a>) leaves nothing for a client to signal. What
-a version selector would do instead is select which request-processing rules
-apply. Most of the changes are stricter, and a signal that enables a check is
-what CAP-1 excludes. One is more lenient: OAuth 2.1 drops the token request's
-<code>redirect_uri</code> check because PKCE prevents the same attack
-(<span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-17#section-10.2" class="relref">Section 10.2</a> of [<a href="#OAUTH21" class="cite xref">OAUTH21</a>]</span>), and a server that skips a check because a signal
-is present relies on that signal, which CAP-3 excludes. OAuth 2.1 states that
-the authorization server's configuration for a client determines which rules
-apply, and defines no version selector (<span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-17#section-1.8" class="relref">Section 1.8</a> of [<a href="#OAUTH21" class="cite xref">OAUTH21</a>]</span>). This
-specification neither defines one nor proposes that version values be
-registered.<a href="#appendix-C.5-2" class="pilcrow">¶</a></p>
-<p id="appendix-C.5-3">A draft revision is a different case, and one this specification does handle.
-Where a specification changes what a client must parse between revisions, the
-change is a client-side behavior, and <a href="#values" class="auto internal xref">Section 4</a> already covers it: register a
-value for the new processing, keep recognizing the old one, and a server serves
-both populations at once. No version string is needed, because what a client
-signals is the behavior the string stood for, and <a href="#discovery" class="auto internal xref">Section 9</a> lets a client
-learn which revisions a server implements without a version at all. What
-remains out of scope is selecting a framework version or a profile, where the
-label does not correspond to a single client-side behavior.<a href="#appendix-C.5-3" class="pilcrow">¶</a></p>
+<p id="appendix-C.5-2">A protocol version is not a capability (<a href="#values" class="auto internal xref">Section 4</a>). None of the differences
+OAuth 2.1 lists from OAuth 2.0 (<span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-17#section-10" class="relref">Section 10</a> of [<a href="#OAUTH21" class="cite xref">OAUTH21</a>]</span>) introduces a
+response that a client conforming to <span>[<a href="#RFC6749" class="cite xref">RFC6749</a>]</span> cannot process. Most are
+stricter, and a signal that enables a check is what CAP-1 excludes. One is more
+lenient: OAuth 2.1 drops the token request's <code>redirect_uri</code> check because PKCE
+prevents the same attack (<span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-17#section-10.2" class="relref">Section 10.2</a> of [<a href="#OAUTH21" class="cite xref">OAUTH21</a>]</span>), and a server that skips
+a check because a signal is present relies on that signal, which CAP-3
+excludes. OAuth 2.1 states that the authorization server's configuration for a
+client determines which rules apply, and defines no version selector
+(<span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-17#section-1.8" class="relref">Section 1.8</a> of [<a href="#OAUTH21" class="cite xref">OAUTH21</a>]</span>).<a href="#appendix-C.5-2" class="pilcrow">¶</a></p>
+<p id="appendix-C.5-3">A draft revision that changes what a client must parse is, by contrast, a
+change in client-side behavior, which <a href="#values" class="auto internal xref">Section 4</a> covers. What remains out of
+scope is selecting a framework version or a profile, where the label does not
+correspond to a single client-side behavior.<a href="#appendix-C.5-3" class="pilcrow">¶</a></p>
 <p id="appendix-C.5-4">Per-client configuration cannot stage a rollout of protocol-version enforcement
 across native application releases, whose upgrades reach users gradually: every
-deployed instance sharing a <code>client_id</code> is subject to the same rules. The
-override in <a href="#precedence" class="auto internal xref">Section 7.4</a> does not provide such a rollout either. That
-override lets a less-capable instance retract a default, and in a native
-rollout the less-capable instances are the releases that were never updated,
-which cannot send anything; <a href="#metadata" class="auto internal xref">Section 7.3</a> forbids a default that such instances
-would not override. What can work is the reverse: the client's configured rules
-stay at the earlier version, and updated releases send a version selector on
-each request. Such a selector would not be a capability (CAP-1), and it cannot
-establish a security minimum for the client while requests without it are still
-accepted, because an attacker starting a request under the same <code>client_id</code>
-omits it. A server can still attach protection to credentials issued under the
-selector, such as rotation of a refresh token family
-(<span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-17#section-4.3.1" class="relref">Section 4.3.1</a> of [<a href="#OAUTH21" class="cite xref">OAUTH21</a>]</span>), and a later omission does not remove it. The
-client-wide minimum arrives only when the configured rules are raised. Whether
-OAuth 2.1 should define such a selector belongs to that work rather than this
-one.<a href="#appendix-C.5-4" class="pilcrow">¶</a></p>
+deployed instance sharing a <code>client_id</code> is subject to the same rules. Nor can
+the override in <a href="#precedence" class="auto internal xref">Section 7.4</a>, which lets a less-capable instance retract a
+default: in a native rollout the less-capable instances are the releases that
+were never updated, which cannot send anything, and <a href="#metadata" class="auto internal xref">Section 7.3</a> forbids a
+default that such instances would not override. What can work is the reverse:
+the client's configured rules stay at the earlier version, and updated releases
+send a version selector on each request. Such a selector would not be a
+capability (CAP-1), and it cannot establish a security minimum for the client
+while requests without it are still accepted, because an attacker starting a
+request under the same <code>client_id</code> omits it. A server can still attach
+protection to credentials issued under the selector, such as rotation of a
+refresh token family (<span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-17#section-4.3.1" class="relref">Section 4.3.1</a> of [<a href="#OAUTH21" class="cite xref">OAUTH21</a>]</span>), and a later omission does
+not remove it. The client-wide minimum arrives only when the configured rules
+are raised. Whether OAuth 2.1 should define such a selector belongs to that
+work rather than this one.<a href="#appendix-C.5-4" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="trade-offs">
+<div id="tradeoffs">
 <section id="appendix-C.6">
         <h3 id="name-trade-offs">
 <a href="#appendix-C.6" class="section-number selfRef">C.6. </a><a href="#name-trade-offs" class="section-name selfRef">Trade-offs</a>
@@ -2909,9 +2866,8 @@ existing field.<a href="#appendix-C.7-1.3.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="appendix-C.7-1.4">
             <p id="appendix-C.7-1.4.1">Whether the <code>.</code> and <code>:</code> characters the syntax allows should carry any
-structure. <a href="#values" class="auto internal xref">Section 4</a> settles that a revision with different client-side
-processing registers a new value rather than versioning an existing one, so no
-structure is needed today.<a href="#appendix-C.7-1.4.1" class="pilcrow">¶</a></p>
+structure. No structure is needed today: a revision with different
+client-side processing registers a new value (<a href="#values" class="auto internal xref">Section 4</a>).<a href="#appendix-C.7-1.4.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="appendix-C.7-1.5">
             <p id="appendix-C.7-1.5.1">Whether client software capabilities and running instance capabilities are
