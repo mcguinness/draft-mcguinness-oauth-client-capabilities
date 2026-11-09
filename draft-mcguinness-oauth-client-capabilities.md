@@ -88,10 +88,10 @@ This document defines a single registry of client capability values and three
 carriers for them: a `client_capabilities` request parameter, an
 `OAuth-Client-Capabilities` HTTP field, and a `client_capabilities` client
 metadata field. Capability values are advisory and are constrained to enable
-only optional server behavior, so that their absence is always safe. Because a
-signal on a request replaces the metadata default, a client can roll out a
-capability one instance, release, or authorization server at a time, without
-changing metadata that every instance shares.
+only optional server behavior, so that their absence is always safe. Because
+each request can carry its own set, a client can roll out a capability one
+instance, release, or authorization server at a time, without changing metadata
+that every instance shares.
 
 --- middle
 
