@@ -1834,9 +1834,9 @@ List. The field is invalid if parsing fails, if any member is not a Token Item,
 or if any member's Token does not conform to the <code>capability</code> production in
 <a href="#values" class="auto internal xref">Section 4</a>. The last case is distinct: a Structured Fields Token can be well
 formed and still violate that production, as <code>*bad</code> does. A recipient <span class="bcp14">MUST</span>
-treat an invalid field as absent. Because client metadata supplies no default
-for the field (<a href="#precedence" class="auto internal xref">Section 7.4</a>), an invalid field yields the empty set, as an
-invalid request parameter does (<a href="#values" class="auto internal xref">Section 4</a>).<a href="#section-7.2-6" class="pilcrow">¶</a></p>
+treat an invalid field as absent. It contributes no capabilities, and the rule
+in <a href="#precedence" class="auto internal xref">Section 7.4</a> for a protected resource request without a valid field then
+applies, including any out-of-band knowledge an extension defines.<a href="#section-7.2-6" class="pilcrow">¶</a></p>
 <p id="section-7.2-7">A recipient <span class="bcp14">MUST</span> ignore parameters.<a href="#section-7.2-7" class="pilcrow">¶</a></p>
 <p id="section-7.2-8">The <code>none</code> sentinel (<a href="#none-value" class="auto internal xref">Section 4.3</a>) <span class="bcp14">MUST NOT</span> be sent in this field, and a
 recipient <span class="bcp14">MUST</span> ignore a member whose value is <code>none</code>.<a href="#section-7.2-8" class="pilcrow">¶</a></p>
@@ -2742,16 +2742,25 @@ described as letting a client indicate "its capability and preference for
 handling asynchronous responses" (<span>[<a href="#RFC7240" class="cite xref">RFC7240</a>]</span>, Section 4.1). On direct HTTP
 requests, such as token requests and protected resource requests, a registered
 preference could carry each behavior in <a href="#existing-drafts" class="auto internal xref">Appendix B</a>.<a href="#appendix-C.2-1" class="pilcrow">¶</a></p>
-<p id="appendix-C.2-2"><code>Prefer</code> does not serve the rest of OAuth's topology. As an HTTP field, it
-cannot cross the redirect at the authorization endpoint (<a href="#asymmetry" class="auto internal xref">Section 1.1</a>), cannot
-be carried in a Request Object, does not travel with the authorization request
-that a pushed authorization request represents, and has no client metadata form
-to supply the defaults that <a href="#open-world" class="auto internal xref">Section 1.2</a> relies on. Using <code>Prefer</code> only where
-it works would split one vocabulary across two registries, and the Registry of
-Preferences (<span>[<a href="#RFC7240" class="cite xref">RFC7240</a>]</span>, Section 5.1), which serves all of HTTP, has no
-counterpart to the admission criterion in <a href="#invariants" class="auto internal xref">Section 5</a>. This specification
-therefore defines its own field over the same vocabulary as its request
-parameter.<a href="#appendix-C.2-2" class="pilcrow">¶</a></p>
+<p id="appendix-C.2-2"><code>Prefer</code> does not serve the rest of OAuth's topology, which is why a request
+parameter is needed in any case. As an HTTP field, it cannot cross the redirect
+at the authorization endpoint (<a href="#asymmetry" class="auto internal xref">Section 1.1</a>), cannot be carried in a Request
+Object, does not travel with the authorization request that a pushed
+authorization request represents, and has no client metadata form to supply the
+defaults that <a href="#open-world" class="auto internal xref">Section 1.2</a> relies on.<a href="#appendix-C.2-2" class="pilcrow">¶</a></p>
+<p id="appendix-C.2-3">For the HTTP carrier alone, <code>Prefer</code> remains a real alternative. A single
+registered preference whose value lists capability values, such as
+<code>Prefer: oauth-client-capabilities="txn-challenge"</code>, could draw on the registry
+in <a href="#iana-registry" class="auto internal xref">Section 13.1</a> and its admission criterion, so the vocabulary would not
+split. The trade-off is in handling. A server that applies a preference in a
+way that affects caching must list <code>Prefer</code> in <code>Vary</code> whether or not the
+request carried it (<span>[<a href="#RFC7240" class="cite xref">RFC7240</a>]</span>, Section 2), so caches would key on every
+preference a client sends rather than only on its capabilities. The list would
+also sit inside a quoted string, parsed by the <code>capability-list</code> rule in
+<a href="#values" class="auto internal xref">Section 4</a>, instead of a Structured Fields List with its own parser and error
+handling (<a href="#field" class="auto internal xref">Section 7.2</a>). This specification defines a dedicated field for those
+reasons; whether a <code>Prefer</code> preference should carry the vocabulary instead is
+an open issue (<a href="#open-issues" class="auto internal xref">Appendix C.7</a>).<a href="#appendix-C.2-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="applying-the-admission-criterion">
@@ -2893,16 +2902,22 @@ former is preferred because the field declares client behavior rather than
 negotiating content, but the choice is not settled.<a href="#appendix-C.7-1.2.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="appendix-C.7-1.3">
-            <p id="appendix-C.7-1.3.1">Whether the <code>.</code> and <code>:</code> characters the syntax allows should carry any
-structure. <a href="#values" class="auto internal xref">Section 4</a> settles that a revision with different client-side
-processing registers a new value rather than versioning an existing one, so no
-structure is needed today.<a href="#appendix-C.7-1.3.1" class="pilcrow">¶</a></p>
+            <p id="appendix-C.7-1.3.1">Whether the HTTP carrier should be a single registered <code>Prefer</code> preference
+rather than a dedicated field (<a href="#why-not-prefer" class="auto internal xref">Appendix C.2</a>). The dedicated field keeps
+<code>Vary</code> precise and uses Structured Fields parsing; a preference reuses an
+existing field.<a href="#appendix-C.7-1.3.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="appendix-C.7-1.4">
-            <p id="appendix-C.7-1.4.1">Whether client software capabilities and running instance capabilities are
+            <p id="appendix-C.7-1.4.1">Whether the <code>.</code> and <code>:</code> characters the syntax allows should carry any
+structure. <a href="#values" class="auto internal xref">Section 4</a> settles that a revision with different client-side
+processing registers a new value rather than versioning an existing one, so no
+structure is needed today.<a href="#appendix-C.7-1.4.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="appendix-C.7-1.5">
+            <p id="appendix-C.7-1.5.1">Whether client software capabilities and running instance capabilities are
 adequately separated by the replacement rule in <a href="#precedence" class="auto internal xref">Section 7.4</a>, or whether
 instance-level identity mechanisms should carry a capability set of their
-own.<a href="#appendix-C.7-1.4.1" class="pilcrow">¶</a></p>
+own.<a href="#appendix-C.7-1.5.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>

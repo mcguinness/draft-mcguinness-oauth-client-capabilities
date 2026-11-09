@@ -570,9 +570,10 @@ Table of Contents
    conform to the capability production in Section 4.  The last case is
    distinct: a Structured Fields Token can be well formed and still
    violate that production, as *bad does.  A recipient MUST treat an
-   invalid field as absent.  Because client metadata supplies no default
-   for the field (Section 7.4), an invalid field yields the empty set,
-   as an invalid request parameter does (Section 4).
+   invalid field as absent.  It contributes no capabilities, and the
+   rule in Section 7.4 for a protected resource request without a valid
+   field then applies, including any out-of-band knowledge an extension
+   defines.
 
    A recipient MUST ignore parameters.
 
@@ -1301,17 +1302,28 @@ C.2.  Why Not HTTP Prefer
    requests and protected resource requests, a registered preference
    could carry each behavior in Appendix B.
 
-   Prefer does not serve the rest of OAuth's topology.  As an HTTP
-   field, it cannot cross the redirect at the authorization endpoint
-   (Section 1.1), cannot be carried in a Request Object, does not travel
-   with the authorization request that a pushed authorization request
-   represents, and has no client metadata form to supply the defaults
-   that Section 1.2 relies on.  Using Prefer only where it works would
-   split one vocabulary across two registries, and the Registry of
-   Preferences ([RFC7240], Section 5.1), which serves all of HTTP, has
-   no counterpart to the admission criterion in Section 5.  This
-   specification therefore defines its own field over the same
-   vocabulary as its request parameter.
+   Prefer does not serve the rest of OAuth's topology, which is why a
+   request parameter is needed in any case.  As an HTTP field, it cannot
+   cross the redirect at the authorization endpoint (Section 1.1),
+   cannot be carried in a Request Object, does not travel with the
+   authorization request that a pushed authorization request represents,
+   and has no client metadata form to supply the defaults that
+   Section 1.2 relies on.
+
+   For the HTTP carrier alone, Prefer remains a real alternative.  A
+   single registered preference whose value lists capability values,
+   such as Prefer: oauth-client-capabilities="txn-challenge", could draw
+   on the registry in Section 13.1 and its admission criterion, so the
+   vocabulary would not split.  The trade-off is in handling.  A server
+   that applies a preference in a way that affects caching must list
+   Prefer in Vary whether or not the request carried it ([RFC7240],
+   Section 2), so caches would key on every preference a client sends
+   rather than only on its capabilities.  The list would also sit inside
+   a quoted string, parsed by the capability-list rule in Section 4,
+   instead of a Structured Fields List with its own parser and error
+   handling (Section 7.2).  This specification defines a dedicated field
+   for those reasons; whether a Prefer preference should carry the
+   vocabulary instead is an open issue (Appendix C.7).
 
 C.3.  Applying the Admission Criterion
 
@@ -1450,6 +1462,11 @@ C.7.  Open Issues
       Accept-* family.  The former is preferred because the field
       declares client behavior rather than negotiating content, but the
       choice is not settled.
+
+   *  Whether the HTTP carrier should be a single registered Prefer
+      preference rather than a dedicated field (Appendix C.2).  The
+      dedicated field keeps Vary precise and uses Structured Fields
+      parsing; a preference reuses an existing field.
 
    *  Whether the . and : characters the syntax allows should carry any
       structure.  Section 4 settles that a revision with different
