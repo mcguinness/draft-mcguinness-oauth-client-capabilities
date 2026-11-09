@@ -296,6 +296,10 @@ client built against the earlier revision cannot parse the later one:
 A server that recognizes both `txn-challenge` and `txn-challenge-jwt` serves
 clients built against either revision from a single deployment.
 
+A protocol version is not a capability under any name, such as `oauth-2.1`,
+because it changes which requests a server accepts rather than what a client
+must process; see {{profiles}}.
+
 ## The `none` Sentinel {#none-value}
 
 The token `none` is reserved for use as the complete value of the
