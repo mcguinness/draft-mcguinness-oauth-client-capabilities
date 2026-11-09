@@ -565,9 +565,13 @@ uses only the parameters inside it ({{Section 6.3 of RFC9101}}). A
 `client_capabilities` value outside the Request Object is not used, and if the
 Request Object contains no such value, step 2 applies. Inside a Request Object,
 the value is a JSON string containing a `capability-list`; a value of any other
-JSON type is invalid ({{values}}). A capability set in a software statement is
-client metadata and remains subject to the request-level override above;
-signing the statement does not turn a default into a per-request declaration.
+JSON type is invalid ({{values}}). An authorization request that uses a
+`request_uri` from a pushed authorization request is built as defined in
+{{RFC9101}} ({{Section 4 of RFC9126}}), so the same holds for the parameters
+that were pushed: a `client_capabilities` value sent alongside the
+`request_uri` is not used. A capability set in a software statement is client
+metadata and remains subject to the request-level override above; signing the
+statement does not turn a default into a per-request declaration.
 
 ## Scope of a Signal {#signal-scope}
 
