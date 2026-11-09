@@ -141,20 +141,29 @@ clients and authorization servers have no registration handshake. The first
 request must carry the relevant capability or the server must discover it from
 client-published metadata.
 
-A change to a published document also reaches everywhere at once. It applies to
-every instance using the URL and is cached by each authorization server for its
-own interval, so a change cannot be staged one authorization server or one
-release at a time, and rolling it back waits out the same caches. Every
-metadata field has that reach: once `dpop_bound_access_tokens` is true, for
-example, a supporting authorization server rejects token requests without DPoP
-{{RFC9449}}. A field that requires a behavior in this way cannot be a
-capability ({{invariants}}), but a field that only declares support for
-optional behavior can be, and capabilities split that declaration. The document
-then declares only what every instance can process, each request names what its
-own instance can process ({{precedence}}), and an instance can opt in at one
-authorization server, or stop, without changing the document. Because the
-variation travels in requests, every authorization server still sees the same
-document for a `client_id`.
+A published document is also shared. It applies to every instance using the
+URL, and a change to it reaches each authorization server only as that server
+refreshes its cached copy, on a schedule the publisher cannot target {{CIMD}}.
+A change therefore cannot be staged one authorization server or one release at
+a time, and rolling it back waits out the same caches.
+
+Capabilities let a client stage optional behavior without changing the
+document. Suppose an updated release can accept a deferred token response
+({{existing-drafts}}). The document continues to declare only what every
+instance can process. The updated release sends its complete set, including the
+illustrative `accept-deferred-response`, to one authorization server, since a
+request set replaces the metadata default rather than adding to it
+({{precedence}}). It sends other authorization servers nothing new, and older
+releases are unaffected. Stopping is equally local while the value stays out of
+the document. Once the document declares it, an instance withdraws it only by
+sending a set without it, or `none`. Either way the client publishes one
+document for every authorization server.
+
+This works only for optional behavior. A metadata field that requires a
+behavior applies at every authorization server that supports it: once
+`dpop_bound_access_tokens` is true, such a server rejects token requests
+without DPoP {{RFC9449}}. Such a field cannot be a capability ({{invariants}}),
+and staging a change to it remains a problem for client metadata itself.
 
 Per-extension signals accumulate in both directions. Each front-channel
 capability can enlarge an authorization URI visible to the user agent. Each
