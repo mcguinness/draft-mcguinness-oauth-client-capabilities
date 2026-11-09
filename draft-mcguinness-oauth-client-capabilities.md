@@ -55,6 +55,7 @@ informative:
   OAUTH21-VERSIONS:
     target: https://github.com/oauth-wg/oauth-v2-1/issues/120
     title: "How can an AS support both 2.0 and 2.1 clients concurrently"
+  OAUTH21: I-D.ietf-oauth-v2-1
   DTR:
     target: https://datatracker.ietf.org/doc/draft-gerber-oauth-deferred-token-response
     title: "Deferred Token Response"
@@ -1077,11 +1078,17 @@ group list: a per-issuer `oauth_versions_supported` metadata array and a
 per-client `oauth_version` registration field. That proposal notes that neither
 provides a runtime signal {{OAUTH21-VERSIONS-LIST}}.
 
-That is not capability signaling as defined here. A version names a document
-rather than a behavior a server may exercise ({{values}}), and profile
-membership is closer to the policy input {{invariants}} excludes. This
-specification neither defines it nor proposes that version values be
-registered.
+That is not capability signaling as defined here. The differences OAuth 2.1
+lists from OAuth 2.0 ({{Section 10 of OAUTH21}}) restrict what a client sends,
+what a server accepts, and what a server issues. None introduces a response
+that a client conforming to {{RFC6749}} cannot process, so decomposing the
+version into behaviors ({{values}}) leaves nothing for a client to signal. What
+a version signal would do instead is enable stricter validation of the client's
+own requests, which CAP-1 excludes: an attacker sending a request under the
+same `client_id` omits the signal. OAuth 2.1 states that the authorization
+server's configuration for a client determines which rules apply, and defines
+no version signal ({{Section 1.8 of OAUTH21}}). This specification neither
+defines one nor proposes that version values be registered.
 
 A draft revision is a different case, and one this specification does handle.
 Where a specification changes what a client must parse between revisions, the
