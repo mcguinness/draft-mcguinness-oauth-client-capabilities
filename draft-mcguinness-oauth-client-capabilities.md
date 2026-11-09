@@ -1100,17 +1100,21 @@ learn which revisions a server implements without a version at all. What
 remains out of scope is selecting a framework version or a profile, where the
 label does not correspond to a single client-side behavior.
 
-The two problems do share a carrier shape. Comments on that issue list a slow
-rollout for native applications, whose upgrades reach users gradually, among
-the requirements {{OAUTH21-VERSIONS}}. Reading the requirement as a call for a
-static default that a single request can override is an inference of this
-document rather than a conclusion of that discussion. A registration field
-alone cannot provide it: every deployed instance sharing a `client_id` carries
-the same declared version, so a rollout staged across native application
-releases cannot be expressed. The precedence rule in {{precedence}} is the
-general form of that override. Whether framework version selection should reuse
-it, or should instead be decomposed into the specific behaviors that actually
-need signaling, belongs to that work rather than this one.
+Comments on {{OAUTH21-VERSIONS}} list a slow rollout for native applications,
+whose upgrades reach users gradually, among the requirements.
+Per-client configuration alone cannot provide it: every deployed instance
+sharing a `client_id` is subject to the same rules, so a rollout staged across
+native application releases cannot be expressed. The override in {{precedence}}
+does not provide it either. That override lets a less-capable instance retract
+a default, and in a native rollout the less-capable instances are the releases
+that were never updated, which cannot send anything; {{metadata}} forbids a
+default that such instances would not override. What can work is the reverse:
+the client's configured rules stay at the earlier version, and updated releases
+signal on each request. Such a signal protects nothing until the configured
+rules are themselves raised, because an attacker sending a request under the
+same `client_id` omits it. It is a rollout aid rather than a security
+mechanism, and whether OAuth 2.1 should define one belongs to that work rather
+than this one.
 
 ## Trade-offs
 
