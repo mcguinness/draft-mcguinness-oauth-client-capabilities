@@ -1082,16 +1082,26 @@ handling asynchronous responses" ({{RFC7240}}, Section 4.1). On direct HTTP
 requests, such as token requests and protected resource requests, a registered
 preference could carry each behavior in {{existing-drafts}}.
 
-`Prefer` does not serve the rest of OAuth's topology. As an HTTP field, it
-cannot cross the redirect at the authorization endpoint ({{asymmetry}}), cannot
-be carried in a Request Object, does not travel with the authorization request
-that a pushed authorization request represents, and has no client metadata form
-to supply the defaults that {{open-world}} relies on. Using `Prefer` only where
-it works would split one vocabulary across two registries, and the Registry of
-Preferences ({{RFC7240}}, Section 5.1), which serves all of HTTP, has no
-counterpart to the admission criterion in {{invariants}}. This specification
-therefore defines its own field over the same vocabulary as its request
-parameter.
+`Prefer` does not serve the rest of OAuth's topology, which is why a request
+parameter is needed in any case. As an HTTP field, it cannot cross the redirect
+at the authorization endpoint ({{asymmetry}}), cannot be carried in a Request
+Object, does not travel with the authorization request that a pushed
+authorization request represents, and has no client metadata form to supply the
+defaults that {{open-world}} relies on.
+
+For the HTTP carrier alone, `Prefer` remains a real alternative. A single
+registered preference whose value lists capability values, such as
+`Prefer: oauth-client-capabilities="txn-challenge"`, could draw on the registry
+in {{iana-registry}} and its admission criterion, so the vocabulary would not
+split. The trade-off is in handling. A server that applies a preference in a
+way that affects caching must list `Prefer` in `Vary` whether or not the
+request carried it ({{RFC7240}}, Section 2), so caches would key on every
+preference a client sends rather than only on its capabilities. The list would
+also sit inside a quoted string, parsed by the `capability-list` rule in
+{{values}}, instead of a Structured Fields List with its own parser and error
+handling ({{field}}). This specification defines a dedicated field for those
+reasons; whether a `Prefer` preference should carry the vocabulary instead is
+an open issue ({{open-issues}}).
 
 ## Applying the Admission Criterion
 
@@ -1208,7 +1218,7 @@ CAP-1 through CAP-3.
 The current extension count is small. The registry anticipates continued growth
 and is easier to establish before more incompatible carriers ship.
 
-## Open Issues
+## Open Issues {#open-issues}
 
 - Should a server report which capabilities it acted upon, as {{RFC7240}} does
   with `Preference-Applied`? The current answer is no because the response
@@ -1217,6 +1227,10 @@ and is easier to establish before more incompatible carriers ship.
   {{ABCA}}. `Accept-OAuth-Capabilities` would match the `Accept-*` family. The
   former is preferred because the field declares client behavior rather than
   negotiating content, but the choice is not settled.
+- Whether the HTTP carrier should be a single registered `Prefer` preference
+  rather than a dedicated field ({{why-not-prefer}}). The dedicated field keeps
+  `Vary` precise and uses Structured Fields parsing; a preference reuses an
+  existing field.
 - Whether the `.` and `:` characters the syntax allows should carry any
   structure. {{values}} settles that a revision with different client-side
   processing registers a new value rather than versioning an existing one, so no
