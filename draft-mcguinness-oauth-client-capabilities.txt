@@ -4,8 +4,8 @@
 
 Web Authorization Protocol                                 K. McGuinness
 Internet-Draft                                               Independent
-Intended status: Standards Track                           4 August 2026
-Expires: 5 February 2027
+Intended status: Standards Track                         9 November 2026
+Expires: 13 May 2027
 
 
                      OAuth 2.0 Client Capabilities
@@ -43,7 +43,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 5 February 2027.
+   This Internet-Draft will expire on 13 May 2027.
 
 Copyright Notice
 
@@ -181,10 +181,12 @@ Table of Contents
    Two uses are out of scope.  Capability values do not carry
    deployment-local feature flags or rollout cohort membership, which
    are server-side policy keyed on the client's identity rather than
-   properties a client asserts.  Nor do they signal conformance to an
-   existing requirement: a client that violates a MUST is not made safe
-   by asserting that it does not, and such a client generally cannot be
-   updated to send the assertion in the first place.
+   properties a client asserts.  Nor do they signal conformance to a
+   requirement, in either direction.  A claim of conformance cannot be
+   verified and can be omitted by anyone who would violate the
+   requirement, so enforcement keys on the client's identity rather than
+   the claim.  A claim of non-conformance cannot be sent by the clients
+   that need it, which generally cannot be updated to send anything.
 
 2.  Conventions and Definitions
 
@@ -341,6 +343,10 @@ Table of Contents
    serves clients built against either revision from a single
    deployment.
 
+   A protocol version is not a capability under any name, such as oauth-
+   2.1, because it changes which requests a server accepts rather than
+   what a client must process; see Appendix C.4.
+
 4.3.  The none Sentinel
 
    The token none is reserved for use as the complete value of the
@@ -369,7 +375,10 @@ Table of Contents
       NOT cause a server to apply weaker client authentication, weaker
       sender constraining, weaker user authentication, or a more
       permissive policy than it would have applied had the value never
-      been defined.  Absence MUST be safe.
+      been defined.  A capability MUST NOT enable a security check that
+      the server would otherwise skip, including stricter validation of
+      the client's own requests, because removing the value would remove
+      the check.  Absence MUST be safe.
 
    CAP-2:  A capability MUST NOT establish what a client is permitted to
       obtain or be accepted as evidence in an authorization decision.  A
@@ -734,13 +743,16 @@ Table of Contents
 
    Issuer-wide behavior is often the intended design, and coupling it to
    a per-issuer metadata flag is a legitimate choice.  Where per-client
-   or fractional rollout is a requirement, however, an extension SHOULD
-   NOT couple the behavior to such a flag, because it then becomes all-
-   or-nothing for every client of the issuer; gate it on a capability
-   instead.  [RFC9207] illustrates the tradeoff rather than a mistake:
-   coupling the advertisement to a server-wide delivery commitment is
-   what allows a client to enforce that iss is present, and the cost is
-   that the feature cannot be rolled out per client.
+   or fractional rollout of a behavior that meets Section 5 is a
+   requirement, however, an extension SHOULD NOT couple the behavior to
+   such a flag, because it then becomes all-or-nothing for every client
+   of the issuer; gate it on a capability instead.  [RFC9207]
+   illustrates the tradeoff rather than a mistake: coupling the
+   advertisement to a server-wide delivery commitment is what allows a
+   client to enforce that iss is present, and the cost is that the
+   feature cannot be rolled out per client.  Rolling out a change in
+   request-processing rules, such as OAuth 2.1, is not a behavior a
+   capability can gate; see Appendix C.4.
 
    This specification provides no delivery guarantee, and an extension
    MUST NOT rely on a capability signal or an advertisement to supply
@@ -780,10 +792,9 @@ Table of Contents
    is refusal, not proceeding without it.  Removal costs client
    functionality, never a server security property.
 
-   An extension MUST NOT use a capability to enable a security check
-   that the server otherwise skips, because removing the signal would
-   remove the check.  Such a check belongs in policy or an authenticated
-   negotiation mechanism.
+   For the same reason, CAP-1 bars an extension from using a capability
+   to enable a security check that the server otherwise skips.  Such a
+   check belongs in policy or an authenticated negotiation mechanism.
 
 11.3.  Denial of Service
 
@@ -1060,6 +1071,12 @@ Table of Contents
               "OAuth Parameters", n.d.,
               <https://www.iana.org/assignments/oauth-parameters/>.
 
+   [OAUTH21]  Hardt, D., Parecki, A., and T. Lodderstedt, "The OAuth 2.1
+              Authorization Framework", Work in Progress, Internet-
+              Draft, draft-ietf-oauth-v2-1-17, 30 October 2026,
+              <https://datatracker.ietf.org/doc/html/draft-ietf-oauth-
+              v2-1-17>.
+
    [OAUTH21-VERSIONS]
               "How can an AS support both 2.0 and 2.1 clients
               concurrently", n.d.,
@@ -1283,11 +1300,22 @@ C.4.  Capabilities and Profile Selection
    oauth_version registration field.  That proposal notes that neither
    provides a runtime signal [OAUTH21-VERSIONS-LIST].
 
-   That is not capability signaling as defined here.  A version names a
-   document rather than a behavior a server may exercise (Section 4),
-   and profile membership is closer to the policy input Section 5
-   excludes.  This specification neither defines it nor proposes that
-   version values be registered.
+   That is not capability signaling as defined here.  The differences
+   OAuth 2.1 lists from OAuth 2.0 (Section 10 of [OAUTH21]) change what
+   a client sends, what a server accepts, and what a server issues.
+   None introduces a response that a client conforming to [RFC6749]
+   cannot process, so decomposing the version into behaviors (Section 4)
+   leaves nothing for a client to signal.  What a version signal would
+   do instead is select which request-processing rules apply.  Most of
+   the changes are stricter, and a signal that enables a check is what
+   CAP-1 excludes.  One is more lenient: OAuth 2.1 drops the token
+   request's redirect_uri check because PKCE prevents the same attack
+   (Section 10.2 of [OAUTH21]), and a server that skips a check because
+   a signal is present relies on that signal, which CAP-3 excludes.
+   OAuth 2.1 states that the authorization server's configuration for a
+   client determines which rules apply, and defines no version signal
+   (Section 1.8 of [OAUTH21]).  This specification neither defines one
+   nor proposes that version values be registered.
 
    A draft revision is a different case, and one this specification does
    handle.  Where a specification changes what a client must parse
@@ -1300,19 +1328,27 @@ C.4.  Capabilities and Profile Selection
    remains out of scope is selecting a framework version or a profile,
    where the label does not correspond to a single client-side behavior.
 
-   The two problems do share a carrier shape.  Comments on that issue
-   list a slow rollout for native applications, whose upgrades reach
-   users gradually, among the requirements [OAUTH21-VERSIONS].  Reading
-   the requirement as a call for a static default that a single request
-   can override is an inference of this document rather than a
-   conclusion of that discussion.  A registration field alone cannot
-   provide it: every deployed instance sharing a client_id carries the
-   same declared version, so a rollout staged across native application
-   releases cannot be expressed.  The precedence rule in Section 7.4 is
-   the general form of that override.  Whether framework version
-   selection should reuse it, or should instead be decomposed into the
-   specific behaviors that actually need signaling, belongs to that work
-   rather than this one.
+   Comments on [OAUTH21-VERSIONS] list a slow rollout for native
+   applications, whose upgrades reach users gradually, among the
+   requirements.  Per-client configuration alone cannot provide it:
+   every deployed instance sharing a client_id is subject to the same
+   rules, so a rollout staged across native application releases cannot
+   be expressed.  The override in Section 7.4 does not provide it
+   either.  That override lets a less-capable instance retract a
+   default, and in a native rollout the less-capable instances are the
+   releases that were never updated, which cannot send anything;
+   Section 7.3 forbids a default that such instances would not override.
+   What can work is the reverse: the client's configured rules stay at
+   the earlier version, and updated releases signal on each request.
+   Such a signal cannot establish a security minimum for the client
+   while requests without it are still accepted, because an attacker
+   starting a request under the same client_id omits it.  A server can
+   still attach protection to credentials issued under the signal, such
+   as rotation of a refresh token family (Section 4.3.1 of [OAUTH21]),
+   and a later omission does not remove it.  The client-wide minimum
+   arrives only when the configured rules are raised.  Whether OAuth 2.1
+   should define such a signal belongs to that work rather than this
+   one.
 
 C.5.  Trade-offs
 
