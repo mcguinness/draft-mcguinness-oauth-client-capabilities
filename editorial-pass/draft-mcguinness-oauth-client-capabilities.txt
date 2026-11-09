@@ -459,12 +459,12 @@ Table of Contents
       values, as defined in Section 4.
 
    The parameter is defined for use at the authorization endpoint and
-   token endpoint.  A pushed authorization request can carry it, like
-   any other authorization request parameter [RFC9126].  The parameter
-   MAY appear inside a Request Object [RFC9101].  An extension MAY
-   define its use at another endpoint that accepts OAuth request
-   parameters.  An extension registering a capability value states every
-   endpoint at which the value is meaningful.
+   token endpoint.  A pushed authorization request can carry this
+   parameter as specified by [RFC9126].  The parameter MAY appear inside
+   a Request Object [RFC9101].  An extension MAY define its use at
+   another endpoint that accepts OAuth request parameters.  An extension
+   registering a capability value states every endpoint at which the
+   value is meaningful.
 
    POST /token HTTP/1.1
    Host: as.example.com
