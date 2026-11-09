@@ -950,8 +950,8 @@ Reference:
 
 This specification registers no capability values. The
 `accept-deferred-response` and `txn-challenge` values below are illustrative,
-corresponding to behaviors described in {{existing-drafts}}. Line breaks in the form-encoded
-request bodies are for display only.
+corresponding to behaviors described in {{existing-drafts}}. Line breaks in
+the form-encoded request bodies are for display only.
 
 The following example shows a pushed authorization request carrying the
 capability; pushing the request keeps the value off the authorization URI:
