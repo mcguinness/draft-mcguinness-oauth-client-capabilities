@@ -228,7 +228,7 @@ Three carriers convey a set, chosen by what the request can hold:
 Whichever carrier applies, the result is the request's effective capability
 set: the values a server may act upon for that request. A request-level signal
 replaces any metadata default rather than adding to it, so a constrained
-deployment can retract what its metadata declares ({{precedence}}).
+instance can retract what its metadata declares ({{precedence}}).
 
 A server advertises the values it recognizes in its own metadata
 ({{discovery}}). Signaling never obliges a server to act, and the invariants in
@@ -1009,8 +1009,8 @@ grant_type=authorization_code&code=SplxlOB...
 ~~~
 {: title="Signaling at the endpoint where the behavior occurs"}
 
-A deployment of the same software whose metadata declares the capability,
-retracting it because this process cannot outlive the request:
+A registered client whose metadata declares the capability, retracting it on a
+request made by an instance that cannot outlive the request:
 
 ~~~ http-message
 POST /token HTTP/1.1
@@ -1018,12 +1018,12 @@ Host: as.example.com
 Content-Type: application/x-www-form-urlencoded
 
 grant_type=authorization_code&code=SplxlOB...
-&client_id=https%3A%2F%2Fapp.example%2Fclient
+&client_id=s6BhdRkqt3
 &redirect_uri=https%3A%2F%2Fapp.example%2Fcb
 &code_verifier=dBjftJeZ...
 &client_capabilities=none
 ~~~
-{: title="Explicit retraction by a constrained deployment"}
+{: title="Explicit retraction by a constrained instance"}
 
 # Applying This Specification to Existing Drafts {#existing-drafts}
 
