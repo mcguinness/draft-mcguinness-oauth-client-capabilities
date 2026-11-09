@@ -1031,8 +1031,9 @@ Deferred Token Response:
   `accept-deferred-response`. The authorization server still MUST NOT defer
   unless the value is in the request's effective set. Because deferral affects
   the token response, {{signal-scope}} requires the value in the token
-  request's effective set; signaling at an earlier endpoint remains only a
-  hint. The proposed single-purpose registry is subsumed by {{iana-registry}},
+  request's effective set; a signal at an earlier endpoint has no effect on the
+  token response. The proposed single-purpose registry is subsumed by
+  {{iana-registry}},
   and the
 `deferred_token_response_supported` authorization server metadata Boolean by
 `client_capabilities_supported` containing the value. Either suffices to show
