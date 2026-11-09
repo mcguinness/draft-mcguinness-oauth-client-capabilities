@@ -572,12 +572,13 @@ one, the set is empty, subject to any out-of-band knowledge an extension
 defines.
 
 When an authorization request uses a Request Object, the authorization server
-MUST determine the request parameter value according to {{RFC9101}}. In
-particular, a `client_capabilities` value inside the Request Object takes
-precedence over a duplicate value outside it. A capability set in a software
-statement is client metadata and remains subject to the request-level override
-above; signing the statement does not turn a default into a per-request
-declaration.
+uses only the parameters inside it ({{RFC9101}}, Section 6.3). A
+`client_capabilities` value outside the Request Object is not used, and if the
+Request Object contains no such value, step 2 applies. Inside a Request Object,
+the value is a JSON string containing a `capability-list`; a value of any other
+JSON type is invalid ({{values}}). A capability set in a software statement is
+client metadata and remains subject to the request-level override above;
+signing the statement does not turn a default into a per-request declaration.
 
 ## Scope of a Signal {#signal-scope}
 
