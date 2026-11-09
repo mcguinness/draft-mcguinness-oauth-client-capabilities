@@ -202,8 +202,8 @@ Capability:
   therefore choose to exercise.
 
 Signal:
-: The act of a client conveying a capability value to a server through one of
-  the carriers defined in {{carriers}}.
+: To convey capability values to a server through one of the carriers defined
+  in {{carriers}}; as a noun, the values so conveyed.
 
 Effective capability set:
 : The capability set that applies to a request after the carrier and precedence
@@ -333,16 +333,17 @@ must process; see {{profiles}}.
 
 The token `none` is reserved for use as the complete value of the
 `client_capabilities` request parameter. It denotes the empty set: the client
-signals no capabilities beyond base OAuth. It exists so that a client can
-explicitly retract a statically declared set, as described in {{precedence}}.
-It is not a capability value and has no meaning in the HTTP field or client
-metadata carriers.
+signals no capabilities. It exists so that a client can explicitly retract a
+statically declared set, as described in {{precedence}}. It is registered only
+to reserve the token ({{iana-registry}}); it is not a capability and has no
+meaning in the HTTP field or client metadata carriers.
 
 `none` MUST NOT appear together with any capability value. A server that
-receives `none` alongside other values MUST treat the signaled set as empty.
-Resolving the conflict in favor of the empty set rather than rejecting the
-request keeps the semantics of a capability signal non-fatal, consistent with
-{{server-behavior}}, and errs toward the direction CAP-1 makes safe.
+receives `none` alongside other values MUST treat the value as signaling the
+empty set. Resolving the conflict in favor of the empty set rather than
+rejecting the request keeps the semantics of a capability signal non-fatal,
+consistent with {{server-behavior}}, and errs toward the direction CAP-1 makes
+safe.
 
 # Capability Invariants {#invariants}
 
@@ -379,8 +380,9 @@ one it lacks can receive a response it cannot process. CAP-2 and CAP-3 keep a
 false claim from being accepted as authorization, authentication, or proof of a
 security-relevant property, though an extension must still analyze its
 operational cost ({{dos}}). And an adversary who removes values degrades the
-client to base OAuth, which under CAP-1 is the safe direction at the cost of
-optional functionality; see {{security-considerations}}.
+client to the behavior it would receive with no capabilities, which under CAP-1
+is the safe direction at the cost of optional functionality; see
+{{security-considerations}}.
 
 These invariants also serve as the admission criterion for the registry; see
 {{extension-guidance}}.
