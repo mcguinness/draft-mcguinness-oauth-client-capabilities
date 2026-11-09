@@ -1130,14 +1130,14 @@ lists from OAuth 2.0 ({{Section 10 of OAUTH21}}) change what a client sends,
 what a server accepts, and what a server issues. None introduces a response
 that a client conforming to {{RFC6749}} cannot process, so decomposing the
 version into behaviors ({{values}}) leaves nothing for a client to signal. What
-a version signal would do instead is select which request-processing rules
+a version selector would do instead is select which request-processing rules
 apply. Most of the changes are stricter, and a signal that enables a check is
 what CAP-1 excludes. One is more lenient: OAuth 2.1 drops the token request's
 `redirect_uri` check because PKCE prevents the same attack
 ({{Section 10.2 of OAUTH21}}), and a server that skips a check because a signal
 is present relies on that signal, which CAP-3 excludes. OAuth 2.1 states that
 the authorization server's configuration for a client determines which rules
-apply, and defines no version signal ({{Section 1.8 of OAUTH21}}). This
+apply, and defines no version selector ({{Section 1.8 of OAUTH21}}). This
 specification neither defines one nor proposes that version values be
 registered.
 
@@ -1159,14 +1159,15 @@ override lets a less-capable instance retract a default, and in a native
 rollout the less-capable instances are the releases that were never updated,
 which cannot send anything; {{metadata}} forbids a default that such instances
 would not override. What can work is the reverse: the client's configured rules
-stay at the earlier version, and updated releases signal on each request. Such
-a signal cannot establish a security minimum for the client while requests
-without it are still accepted, because an attacker starting a request under the
-same `client_id` omits it. A server can still attach protection to credentials
-issued under the signal, such as rotation of a refresh token family
+stay at the earlier version, and updated releases send a version selector on
+each request. Such a selector would not be a capability (CAP-1), and it cannot
+establish a security minimum for the client while requests without it are still
+accepted, because an attacker starting a request under the same `client_id`
+omits it. A server can still attach protection to credentials issued under the
+selector, such as rotation of a refresh token family
 ({{Section 4.3.1 of OAUTH21}}), and a later omission does not remove it. The
 client-wide minimum arrives only when the configured rules are raised. Whether
-OAuth 2.1 should define such a signal belongs to that work rather than this
+OAuth 2.1 should define such a selector belongs to that work rather than this
 one.
 
 ## Trade-offs
