@@ -954,7 +954,9 @@ corresponding to behaviors described in {{existing-drafts}}. Line breaks in
 the form-encoded request bodies are for display only.
 
 The following example shows a pushed authorization request carrying the
-capability; pushing the request keeps the value off the authorization URI:
+parameter, which keeps the value off the authorization URI. The value applies
+only to that authorization request ({{signal-scope}}); the example illustrates
+the carrier:
 
 ~~~ http-message
 POST /par HTTP/1.1
@@ -968,8 +970,8 @@ response_type=code&client_id=https%3A%2F%2Fapp.example%2Fclient
 ~~~
 {: title="Capability carried in a pushed authorization request"}
 
-The following example shows the claims of a Request Object carrying the same
-capability. The value is a JSON string, not an array ({{precedence}}):
+The following example shows the claims of a Request Object carrying the
+parameter. The value is a JSON string, not an array ({{precedence}}):
 
 ~~~ json
 {
@@ -1002,8 +1004,9 @@ grant_type=authorization_code&code=SplxlOB...
 {: title="Signaling at the endpoint where the behavior occurs"}
 
 The following example shows a client registration request {{RFC7591}} that
-declares a default capability set, for a client whose every instance can
-process the behavior ({{metadata}}):
+declares a default capability set. Every instance covered by the registration
+can process the behavior or overrides the default on its requests
+({{metadata}}), as the next example shows:
 
 ~~~ http-message
 POST /register HTTP/1.1
@@ -1011,9 +1014,9 @@ Host: as.example.com
 Content-Type: application/json
 
 {
-  "redirect_uris": ["https://client.example.org/cb"],
+  "redirect_uris": ["https://app.example/cb"],
   "token_endpoint_auth_method": "private_key_jwt",
-  "jwks_uri": "https://client.example.org/jwks.json",
+  "jwks_uri": "https://app.example/jwks.json",
   "client_capabilities": ["accept-deferred-response"]
 }
 ~~~
@@ -1082,7 +1085,7 @@ Endpoints:
 : token endpoint
 
 Change Controller:
-: The party responsible for {{DTR}}
+: The party responsible for the registration
 
 Specification Document(s):
 : {{DTR}}
@@ -1263,7 +1266,7 @@ CAP-1 through CAP-3.
 A request set replaces the metadata default rather than adding to it
 ({{precedence}}). A client that adds one value on a request repeats every
 default it still wants; in exchange, a less-capable instance can retract a
-default without a separate removal syntax.
+default without a per-value removal syntax.
 
 The current extension count is small. The registry anticipates continued growth
 and is easier to establish before more incompatible carriers ship.
