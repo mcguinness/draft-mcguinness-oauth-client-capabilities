@@ -171,13 +171,13 @@ document proposes the mechanism for their use rather than registering values on
 their behalf.
 
 Two uses are out of scope. Capability values do not carry deployment-local
-feature flags or rollout cohort membership, which are server-side policy keyed
-on the client's identity rather than properties a client asserts. Nor do they
-signal conformance to a requirement, in either direction. A claim of
-conformance cannot be verified and can be omitted by anyone who would violate
-the requirement, so enforcement keys on the client's identity rather than the
-claim. A claim of non-conformance cannot be sent by the clients that need it,
-which generally cannot be updated to send anything.
+feature flags or rollout cohorts that a server assigns, which are server-side
+policy keyed on the client's identity rather than properties a client asserts.
+Nor do they signal conformance to a requirement, in either direction. A claim
+of conformance cannot be verified and can be omitted by anyone who would
+violate the requirement, so enforcement keys on the client's identity rather
+than the claim. A claim of non-conformance cannot be sent by the clients that
+need it, which generally cannot be updated to send anything.
 
 # Conventions and Definitions
 
