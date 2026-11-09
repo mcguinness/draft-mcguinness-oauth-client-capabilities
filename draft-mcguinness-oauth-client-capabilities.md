@@ -1058,6 +1058,35 @@ recognized values ({{discovery}}):
 ~~~
 {: title="Protected resource metadata excerpt"}
 
+The following is an illustrative entry for the deferred-response behavior in
+{{existing-drafts}}, filled in as {{iana-registry}} describes. It is not a
+registration request.
+
+Capability Value:
+: `accept-deferred-response`
+
+Description:
+: The client can process a deferred token response.
+
+Status:
+: current
+
+Absent-Signal Behavior:
+: The authorization server responds synchronously or with an error; it does
+  not defer.
+
+Carriers:
+: request parameter, client metadata
+
+Endpoints:
+: token endpoint
+
+Change Controller:
+: The party responsible for {{DTR}}
+
+Specification Document(s):
+: {{DTR}}
+
 # Applying This Specification to Existing Drafts {#existing-drafts}
 
 This appendix is informative and describes how the two extensions that
