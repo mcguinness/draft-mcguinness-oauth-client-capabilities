@@ -249,11 +249,14 @@ capability-list   = capability *( SP capability )
 ~~~
 {: title="Capability value syntax"}
 
-This character set is deliberately the intersection of two constraints: the
-value is valid as a sequence of `NQCHAR` in a form-encoded OAuth parameter
-({{RFC6749}}, Appendix A), and valid as an `sf-token` in a structured field
-({{RFC9651}}, Section 3.3.4). A single registered value is therefore usable in
-both carriers with no transformation.
+This character set deliberately satisfies two constraints at once, and is
+narrower than either: the value is valid as a sequence of `NQCHAR` in a
+form-encoded OAuth parameter ({{RFC6749}}, Appendix A), and valid as an
+`sf-token` in a structured field ({{RFC9651}}, Section 3.3.4). A single
+registered value is therefore usable in both carriers with no transformation.
+Structured Fields encourages new fields to use Strings rather than Tokens
+({{RFC9651}}, Section 3.3.4); this specification uses Tokens so that a value
+has the same form in both carriers, without quoting.
 
 Capability values are case-sensitive. Four rules apply wherever a capability
 value appears, in every carrier in {{carriers}} and in {{discovery}}:
