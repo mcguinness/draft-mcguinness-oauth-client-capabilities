@@ -56,7 +56,7 @@ informative:
     target: https://github.com/oauth-wg/oauth-v2-1/issues/120
     title: "How can an AS support both 2.0 and 2.1 clients concurrently"
   OAUTH21: I-D.ietf-oauth-v2-1
-  DTR: I-D.gerber-oauth-deferred-token-response
+  DTR: I-D.ietf-oauth-deferred-token-response
   TXN-CHALLENGE: I-D.rosomakho-oauth-txn-challenge
   CIMD: I-D.ietf-oauth-client-id-metadata-document
   FIRST-PARTY-APPS: I-D.ietf-oauth-first-party-apps
@@ -292,7 +292,7 @@ detail alongside a capability defines a companion request parameter, or uses
 
 A capability value names a specific client behavior that a server may exercise
 after receiving the value, not a document. `accept-deferred-response` is a
-capability; `draft-gerber-oauth-deferred-token-response` is not. A
+capability; `draft-ietf-oauth-deferred-token-response` is not. A
 specification MAY register more than one value where a client can usefully
 implement part of it.
 
@@ -1239,7 +1239,7 @@ The authorization server advertises `accept-deferred-response` in
 excerpt above. A client release that can process a deferred response signals
 the value explicitly on its token request, as in the token request example
 above. The authorization server elects to defer and, in place of a token
-response, returns the deferred response defined in Section 5.4 of {{DTR}}:
+response, returns the deferred response defined in Section 6.4 of {{DTR}}:
 
 ~~~ http-message
 HTTP/1.1 400 Bad Request
@@ -1260,7 +1260,7 @@ that the original request elicited; a registration of the value states whether
 they also carry it ({{signal-scope}}). A token request whose effective set does
 not contain the value never elicits a deferral: the authorization server
 completes it
-synchronously, or returns an error under the grant's rules (Section 4.3 of
+synchronously, or returns an error under the grant's rules (Section 5.3 of
 {{DTR}}). Omitting the value rules out deferral, not failure. The following
 response to the same token request without the value assumes that the
 authorization server can complete every check it requires without deferral:
@@ -1294,21 +1294,25 @@ motivated this work would use the mechanism.
 
 Deferred Token Response:
 : `completion_mode=deferred` becomes `client_capabilities` containing
-  `accept-deferred-response`. The authorization server still defers only when
-  the value is in the token request's effective set ({{signal-scope}}). The
-  pre-token hint of {{DTR}} becomes the value in the effective set of the
-  authorization request or pushed authorization request. The authorization
-  server can act on the hint for the originating grant as Section 4.2 of
-  {{DTR}} describes, provided it decides the assurance the grant requires
-  without it ({{selection}}) and relaxes no consent requirement (CAP-2); the
-  hint does not by itself permit a deferred token response. Adoption drops the
-  rule in Section 4.2 of {{DTR}} that a token request omitting `deferred` after
-  a hint is rejected with `invalid_request`. A request-level signal applies
-  only to that request ({{signal-scope}}), and CAP-1 bars a capability from
-  enabling stricter validation of the client's own requests ({{invariants}}).
-  A token request without the value after a hint is therefore answered without
-  deferral, synchronously or with an error under the grant's rules (Section 4.3
-  of {{DTR}}). The proposed
+  `accept-deferred-response`, and `deferred_interactive` would become a second
+  value that a client sends together with it. The authorization server still
+  defers only when `accept-deferred-response` is in the token request's
+  effective set ({{signal-scope}}). The pre-token hint of {{DTR}} becomes that
+  value in the effective set of the preceding request; where that request goes
+  to an endpoint other than the authorization or pushed authorization request
+  endpoint, such as the device authorization endpoint, {{DTR}} would define the
+  request parameter there ({{param}}). The authorization server can act on the
+  hint for the originating grant as Section 5.2 of {{DTR}} describes, provided
+  it decides the assurance the grant requires without it ({{selection}}) and
+  relaxes no consent requirement (CAP-2); the hint does not by itself permit a
+  deferred token response. Adoption drops the rule in Section 5.2 of {{DTR}}
+  that a token request omitting `deferred` after a hint is rejected with
+  `invalid_request`. A request-level signal applies only to that request
+  ({{signal-scope}}), and CAP-1 bars a capability from enabling stricter
+  validation of the client's own requests ({{invariants}}). A token request
+  without the value after a hint is therefore answered without deferral,
+  synchronously or with an error under the grant's rules (Section 5.3 of
+  {{DTR}}). The proposed
   single-purpose registry is subsumed by {{iana-registry}}, and the
   `deferred_token_response_supported` authorization server metadata Boolean
   by `client_capabilities_supported` containing the value. Either suffices to

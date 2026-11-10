@@ -18,7 +18,7 @@ OAuth extensions increasingly need the server to know, before it acts, whether t
 
 Both define the same normative shape with different carriers. Either could adopt this mechanism; neither is required to.
 
-* [Deferred Token Response](https://datatracker.ietf.org/doc/draft-gerber-oauth-deferred-token-response/): `completion_mode=deferred` request parameter
+* [Deferred Token Response](https://datatracker.ietf.org/doc/draft-ietf-oauth-deferred-token-response/): `completion_mode=deferred` request parameter
 * [Transaction Authorization Challenge](https://datatracker.ietf.org/doc/draft-rosomakho-oauth-txn-challenge/): `Accept-Txn-Challenge: ?1` HTTP field
 
 ## Related Drafts
