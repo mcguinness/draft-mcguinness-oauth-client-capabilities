@@ -544,10 +544,11 @@ and parses an empty field value as an empty List.
 
 A browser-based client that sends the field on a cross-origin request causes a
 CORS preflight, because `OAuth-Client-Capabilities` is not a CORS-safelisted
-request header {{FETCH}}. A protected resource that serves such clients
-includes the field name in `Access-Control-Allow-Headers`; otherwise the
-browser does not send the request, and ignoring unrecognized values cannot
-help.
+request header {{FETCH}}. A protected resource that serves such clients has to
+allow the field in its preflight response, most simply by listing the field
+name in `Access-Control-Allow-Headers`; a `*` value there covers the field only
+when the request's credentials mode is not `include`. Otherwise the browser
+does not send the request, and ignoring unrecognized values cannot help.
 
 ## Client Metadata Declaration {#metadata}
 
