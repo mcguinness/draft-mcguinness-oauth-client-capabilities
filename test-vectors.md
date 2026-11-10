@@ -5,6 +5,8 @@ rather than in the draft for the -00 submission. Section names refer to the
 draft. Each row applies the rules of the specification to one input, and names
 the rule where it is not obvious. The values `a`, `b` and `c` are placeholders
 that the server recognizes; `x` and `B` are values it does not recognize.
+`none` is never recognized, so a set containing only `none` is shown as
+(empty).
 Signals are within the size limits in "Denial of Service" unless a row says
 otherwise.
 
@@ -21,7 +23,7 @@ form decoding.
 | `c b b` | b, c | Order and duplicates are ignored |
 | `B` | B, not recognized | Values are case-sensitive |
 | `none` | (empty) | Retracts the default |
-| `none b` | (empty) | `none` with other values |
+| `none b` | b | `none` is not recognized; a sender must not mix it with other values |
 | `b,c` | (empty) | Invalid: a comma is not allowed |
 | `b` and `c` two spaces apart | (empty) | Invalid: repeated spaces |
 | `*b` | (empty) | Invalid: does not start with a letter |
@@ -66,7 +68,7 @@ Without out-of-band knowledge:
 | `b` on one field line and `c` on another | b, c | Field lines are combined |
 | `B` | B, not recognized | Values are case-sensitive |
 | `b;x=1` | b | Parameters are ignored |
-| `b, none` | (empty) | `none` with other members |
+| `b, none` | b | `none` is not recognized; a sender must not mix it with other members |
 | `none;x=1` | (empty) | Parameters are ignored, leaving `none` |
 | `b,` | (empty) | Invalid: trailing comma |
 | `b c` | (empty) | Invalid: not a Structured Fields List |
@@ -83,10 +85,10 @@ When the server knows out of band that the client supports `a`:
 | (empty field value) | a | Treated as absent |
 | `b` | b | A valid field replaces out-of-band knowledge |
 | `x` | x, not recognized | A valid field replaces out-of-band knowledge |
-| `none` | (empty) | Retracts out-of-band knowledge; admitted under any limit |
-| `none, b` | (empty) | `none` with other members |
+| `none` | (empty) | A valid field replaces out-of-band knowledge |
+| `none, b` | b | A valid field replaces out-of-band knowledge; `none` is not recognized |
 | `none, "b"` | a | Invalid, so treated as absent |
-| `none` repeated until the value exceeds the server's limit | a, or the request is rejected | Over the limit, so invalid; only a field whose entire value is `none` is always admitted |
+| `none` repeated until the value exceeds the server's limit | a, or the request is rejected | Over the limit, so invalid |
 | A list over the server's limit | a, or the request is rejected | Treated as invalid ("Denial of Service") |
 *HTTP field test vectors with out-of-band knowledge*
 
@@ -102,7 +104,8 @@ of Service").
 | `["b", "c"]` | b, c | |
 | `["b", "b"]` | b | |
 | `[]` | (empty) | |
-| `["none"]` | (empty) | Invalid: contains `none` |
+| `["none"]` | (empty) | A sender must not include `none`; a recipient does not recognize it |
+| `["none", "b"]` | b | A sender must not include `none`; a recipient does not recognize it |
 | `["b c"]` | (empty) | Invalid: an element contains a space |
 | `["b", 1]` | (empty) | Invalid: an element is not a string |
 | `"b"` | (empty) | Invalid: not an array |
@@ -120,6 +123,6 @@ it, sending `none` where it needs to override a default.
 |---|---|
 | `["a", "b"]` | Only a and b, or `none` where it must override |
 | `[]` | Nothing, or `none` where it must override |
-| `["a", "none"]` | List ignored: contains `none` |
+| `["a", "none"]` | Only a, or `none` where it must override; the server must not list `none` |
 | `"a"` | List ignored: not an array |
 *Discovery test vectors*

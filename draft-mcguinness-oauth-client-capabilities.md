@@ -332,20 +332,16 @@ A protocol version is not a capability under any name, such as `oauth-2.1`
 
 ## The `none` Sentinel {#none-value}
 
-The token `none` is reserved for use as the complete value of the
-`client_capabilities` request parameter or as the only member of the
-`OAuth-Client-Capabilities` field. It denotes the empty set: the client signals
-no capabilities. A client uses it to retract a statically declared set or, at a
-protected resource, any out-of-band knowledge ({{precedence}}). It is
-registered only to reserve the token ({{iana-registry}}); it is not a
-capability and has no meaning in client metadata.
+The token `none` is reserved and is never a capability. A client sends it as
+the complete value of the `client_capabilities` request parameter, or as the
+only member of the `OAuth-Client-Capabilities` field, to send a signal that
+contains no capability. Because a request-level signal replaces any default
+({{precedence}}), this retracts a statically declared set or, at a protected
+resource, out-of-band knowledge.
 
-`none` MUST NOT appear together with any capability value. A server that
-receives `none` alongside other values, in the request parameter or in a valid
-field, MUST treat the signal as the empty set. Resolving the conflict to the
-empty set, rather than rejecting the request, keeps the signal non-fatal
-({{server-behavior}}). An invalid field is treated as absent even if it
-contains `none` ({{field}}).
+`none` MUST NOT appear together with any capability value. It is registered
+only to reserve the token ({{iana-registry}}) and enables no behavior, so a
+recipient acts on it as on a value it does not recognize ({{syntax}}).
 
 # Capability Invariants {#invariants}
 
@@ -512,9 +508,6 @@ knowledge an extension defines.
 
 A recipient MUST ignore parameters.
 
-A field whose only member is `none` ({{none-value}}) is valid and signals the
-empty set. A client sends it to override any out-of-band knowledge an extension
-defines ({{precedence}}).
 
 A server whose response can vary with the field MUST include
 `OAuth-Client-Capabilities` in the `Vary` field of every such response,
@@ -547,8 +540,8 @@ software, a deployed instance, or both; see {{precedence}}.
 
 The array MUST NOT contain `none`. An absent field and an empty array both
 denote the empty set. If the value is not an array, or any element is not a
-string, does not conform to the `capability` production, or is `none`, the
-field is invalid. A recipient MUST ignore an invalid field, deriving no
+string or does not conform to the `capability` production, the field is
+invalid. A recipient MUST ignore an invalid field, deriving no
 capabilities from it, and MUST NOT reject an otherwise-valid metadata document
 or registration request solely because this field is invalid, except as
 permitted by {{dos}}. This rule concerns only the `client_capabilities` field;
@@ -655,12 +648,12 @@ This metadata member is defined for authorization server metadata {{RFC8414}}
 and for protected resource metadata {{RFC9728}}.
 
 The array MUST NOT contain `none`. If the value is not an array, or any element
-is not a string, does not conform to the `capability` production, or is `none`,
-the value of this member is invalid and MUST be ignored in its entirety.
+is not a string or does not conform to the `capability` production, the value
+of this member is invalid and MUST be ignored in its entirety.
 
 A client that holds a server's `client_capabilities_supported` SHOULD signal
 only values that appear in it. This does not apply to `none` ({{none-value}}),
-which the list never contains: if filtering leaves no value and the client
+which a server does not list: if filtering leaves no value and the client
 needs to override a metadata default or out-of-band knowledge, it sends `none`.
 A client that does not hold the list MAY signal values without retrieving it
 first; a server that does not recognize a value ignores it. Advertising
@@ -811,10 +804,6 @@ surrounding message:
 | Client metadata or discovery | The serialized JSON array, including brackets, quotes, whitespace, and escapes |
 {: title="Octets counted toward a limit"}
 
-A limit specific to a capability or a deployment MUST also admit the canonical
-retraction signal: a request parameter or a field whose entire value is `none`.
-This does not extend to a larger input that reduces to `none` only after
-duplicates or parameters are removed.
 
 A signal that exceeds a limit MUST be treated as invalid: a request parameter
 then signals the empty set ({{param}}), a field is treated as absent
@@ -927,13 +916,13 @@ Capability Value:
 : `none`
 
 Description:
-: Reserved. Denotes the empty capability set.
+: Reserved. Never a capability; sent alone, it signals no capability.
 
 Status:
 : current
 
 Absent-Signal Behavior:
-: Not applicable. `none` is a sentinel rather than a capability.
+: Not applicable. `none` is reserved and is never a capability.
 
 Carriers:
 : request parameter, HTTP field
