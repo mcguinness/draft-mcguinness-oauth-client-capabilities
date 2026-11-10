@@ -802,12 +802,30 @@ policy or an authenticated negotiation mechanism.
 
 A capability list is attacker-controllable in size. Servers MUST apply finite
 limits to the encoded length, number of members, and resources consumed while
-parsing a signal. A signal that exceeds a limit MUST be treated as invalid: a
-request parameter then signals the empty set ({{values}}), and a field is
-treated as absent ({{field}}); a server MAY instead reject the request using an
-error response appropriate to the endpoint or application protocol. In
-particular, `invalid_request` is available at OAuth endpoints, while a
-protected resource can use an application-specific response.
+parsing a signal. Those limits MUST admit any otherwise-valid signal of at most
+4096 octets and at most 64 members, counting members before duplicates or
+unrecognized values are removed; a recipient MAY accept larger signals. The
+octets counted are those of the carrier's value, excluding its name and the
+surrounding message:
+
+| Carrier | Octets counted |
+|---|---|
+| Request parameter | The form-encoded value, before percent-decoding |
+| HTTP field | The combined field value, including separators and parameters |
+| Client metadata or discovery | The serialized JSON array, including brackets, quotes, whitespace, and escapes |
+{: title="Octets counted toward a limit"}
+
+A limit specific to a capability or a deployment MUST also admit the canonical
+retraction signal: a request parameter or a field whose entire value is `none`.
+This does not extend to a larger input that reduces to `none` only after
+duplicates or parameters are removed.
+
+A signal that exceeds a limit MUST be treated as invalid: a request parameter
+then signals the empty set ({{values}}), and a field is treated as absent
+({{field}}); a server MAY instead reject the request using an error response
+appropriate to the endpoint or application protocol. In particular,
+`invalid_request` is available at OAuth endpoints, while a protected resource
+can use an application-specific response.
 
 Acting on a falsely asserted capability can also consume server resources. An
 extension specification MUST analyze this cost and define any necessary
