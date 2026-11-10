@@ -94,21 +94,22 @@ When the server knows out of band that the client supports `a`:
 
 ## Request Classification
 
-Each request carries `OAuth-Client-Capabilities: b` and no
-`client_capabilities` parameter, and the client's metadata declares the
-default `["a"]`. Whether the request is an OAuth request or a protected
-resource request decides which carrier counts ("Precedence", and the endpoint
-list in "The `OAuth-Client-Capabilities` HTTP Field"). Authorization with an
-access token does not change the kind.
+Unless a row says otherwise, each request carries
+`OAuth-Client-Capabilities: b` and no `client_capabilities` parameter; the
+client's metadata declares the default `["a"]`, and no out-of-band knowledge
+applies. The kind of request decides which carrier counts and what the default
+is (the kinds of request in "Precedence"). Authorization with an access token
+does not change the kind.
 
 | Request | Kind | Effective set |
 |---|---|---|
 | UserInfo request with an access token | Protected resource request | b |
+| UserInfo request with an access token and no field | Protected resource request | (empty): client metadata is never the default |
 | Request to a resource server with an access token | Protected resource request | b |
 | Token request (the client must not send the field) | OAuth request; the field is ignored | a |
-| Introspection request authorized with a bearer token | OAuth request; the field plays no part | The caller's metadata default, never b |
-| Registration request with an initial access token | OAuth request; the field plays no part | Not applicable: the request's own metadata declares the default |
-| Client configuration request with a registration access token | OAuth request; the field plays no part | Not applicable: the client's metadata declares the default |
+| Introspection request authorized with a bearer token | Other; the field plays no part | No effective set, unless an extension defines the parameter there |
+| Registration request with an initial access token | Other; the field plays no part | No effective set: the request's metadata declares the default |
+| Client configuration request with a registration access token | Other; the field plays no part | No effective set: the client's metadata declares the default |
 *Request classification test vectors*
 
 ## Client Metadata
