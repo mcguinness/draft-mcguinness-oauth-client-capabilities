@@ -374,21 +374,18 @@ Table of Contents
 
 4.3.  The none Sentinel
 
-   The token none is reserved for use as the complete value of the
-   client_capabilities request parameter or as the only member of the
-   OAuth-Client-Capabilities field.  It denotes the empty set: the
-   client signals no capabilities.  A client uses it to retract a
-   statically declared set or, at a protected resource, any out-of-band
-   knowledge (Section 6.4).  It is registered only to reserve the token
-   (Section 12.1); it is not a capability and has no meaning in client
-   metadata.
+   The token none is reserved and is never a capability.  A client sends
+   it as the complete value of the client_capabilities request
+   parameter, or as the only member of the OAuth-Client-Capabilities
+   field, to send a signal that contains no capability.  Because a
+   request-level signal replaces any default (Section 6.4), this
+   retracts a statically declared set or, at a protected resource, out-
+   of-band knowledge.
 
-   none MUST NOT appear together with any capability value.  A server
-   that receives none alongside other values, in the request parameter
-   or in a valid field, MUST treat the signal as the empty set.
-   Resolving the conflict to the empty set, rather than rejecting the
-   request, keeps the signal non-fatal (Section 7).  An invalid field is
-   treated as absent even if it contains none (Section 6.2).
+   none MUST NOT appear together with any capability value.  It is
+   registered only to reserve the token (Section 12.1) and enables no
+   behavior, so a recipient acts on it as on a value it does not
+   recognize (Section 4.1).
 
 5.  Capability Invariants
 
@@ -499,12 +496,11 @@ Table of Contents
    which is not rejected.
 
    Where the parameter would otherwise be carried in the query component
-   of an authorization request URI, and the client holds authorization
-   server metadata that includes pushed_authorization_request_endpoint
-   (Section 5 of [RFC9126]), the client SHOULD use a pushed
-   authorization request instead, to bound URI growth and keep the list
-   off the user agent.  Passing a Request Object [RFC9101] by value does
-   not reduce URI size.
+   of an authorization request URI, a pushed authorization request
+   [RFC9126] bounds URI growth and keeps the list off the user agent;
+   passing a Request Object [RFC9101] by value does not reduce URI size.
+   Section 11 covers a client that considers its capability set
+   sensitive.
 
 6.2.  The OAuth-Client-Capabilities HTTP Field
 
@@ -529,15 +525,18 @@ Table of Contents
    parameter at these endpoints gives each request one unambiguous
    effective set, and allows Request Object or pushed-request
    protections where those apply.  The field plays no part at other
-   authorization server endpoints either, such as the introspection
+   authorization server endpoints either.  At the introspection
    [RFC7662], revocation [RFC7009], and device authorization [RFC8628]
-   endpoints (Section 6.4); an extension that needs a capability at one
-   of them defines the request parameter there (Section 6.1).  At the
-   client registration endpoint, a client declares capabilities in
-   client metadata (Section 6.3).  A resource that an authorization
-   server hosts and that a client accesses with an access token, such as
-   the OpenID Connect UserInfo endpoint [OIDC], is a protected resource
-   for this purpose.
+   endpoints, an extension that needs a capability defines the request
+   parameter there (Section 6.1).  At the client registration [RFC7591]
+   and client configuration [RFC7592] endpoints, a client declares
+   capabilities in client metadata (Section 6.3).  This holds even when
+   a request to one of these endpoints is authorized with an access
+   token, as introspection, registration, and client configuration
+   requests can be.  Any other resource that an authorization server
+   hosts and that a client accesses with an access token, such as the
+   OpenID Connect UserInfo endpoint [OIDC], is a protected resource for
+   this purpose.
 
    The field's value is a Structured Fields List (Section 3.1 of
    [RFC9651]).  Each member MUST be an Item whose bare item is a Token
@@ -562,10 +561,6 @@ Table of Contents
    including any out-of-band knowledge an extension defines.
 
    A recipient MUST ignore parameters.
-
-   A field whose only member is none (Section 4.3) is valid and signals
-   the empty set.  A client sends it to override any out-of-band
-   knowledge an extension defines (Section 6.4).
 
    A server whose response can vary with the field MUST include OAuth-
    Client-Capabilities in the Vary field of every such response,
@@ -600,14 +595,14 @@ Table of Contents
 
    The array MUST NOT contain none.  An absent field and an empty array
    both denote the empty set.  If the value is not an array, or any
-   element is not a string, does not conform to the capability
-   production, or is none, the field is invalid.  A recipient MUST
-   ignore an invalid field, deriving no capabilities from it, and MUST
-   NOT reject an otherwise-valid metadata document or registration
-   request solely because this field is invalid, except as permitted by
-   Section 10.3.  This rule concerns only the client_capabilities field;
-   it does not change how the containing protocol handles invalid JSON,
-   a failed signature, or its other required validation.
+   element is not a string or does not conform to the capability
+   production, the field is invalid.  A recipient MUST ignore an invalid
+   field, deriving no capabilities from it, and MUST NOT reject an
+   otherwise-valid metadata document or registration request solely
+   because this field is invalid, except as permitted by Section 10.3.
+   This rule concerns only the client_capabilities field; it does not
+   change how the containing protocol handles invalid JSON, a failed
+   signature, or its other required validation.
 
    A party publishing or registering this metadata MUST NOT declare a
    capability unless every client instance covered by that metadata can
@@ -623,36 +618,34 @@ Table of Contents
 
 6.4.  Precedence
 
-   For requests directed to an authorization server, the effective
-   capability set is determined as follows:
+   An OAuth request is a request to an authorization server endpoint
+   that Section 6.2 lists, even when it is authorized with an access
+   token.  A protected resource request is any other request to a
+   protected resource, including one that an authorization server hosts,
+   such as UserInfo.  The effective capability set of a request is
+   determined as follows:
 
-   1.  If the request's OAuth parameters contain client_capabilities,
-       its value is the effective set.  A value that is invalid
+   1.  If the request carries a request-level signal, its value is the
+       effective set.  On an OAuth request, that signal is the
+       client_capabilities request parameter; a value that is invalid
        (Section 6.1) or exceeds a limit (Section 10.3) is still present,
-       and its effective set is empty.
+       and its effective set is empty.  On a protected resource request,
+       it is a valid OAuth-Client-Capabilities field with at least one
+       member, even if the server recognizes no value in it; an absent
+       field, an empty List, and an invalid field are treated alike, as
+       no signal.
 
-   2.  Otherwise, the client_capabilities value from the client metadata
-       that the authorization server considers authoritative for that
-       client is the effective set.
+   2.  Otherwise, the default is the effective set: on an OAuth request,
+       the client_capabilities value from the client metadata that the
+       authorization server considers authoritative for that client, and
+       on a protected resource request, any out-of-band knowledge an
+       extension defines.
 
    3.  If neither is present, the effective set is empty.
 
-   The OAuth-Client-Capabilities field plays no part in this
-   determination.  As specified in Section 6.2, an authorization server
-   ignores the field at any endpoint where the request parameter is
-   defined.
-
-   Request values replace rather than augment metadata so that a less-
-   capable instance can retract a default.  To retract everything, it
-   sends client_capabilities=none.
-
-   For a protected resource request, a valid field with at least one
-   member is the effective set and replaces any out-of-band knowledge an
-   extension defines, even if the server recognizes no value in it.
-   Without such a field, the set is empty, subject to that out-of-band
-   knowledge; an absent field, an empty List, and an invalid field are
-   treated alike.  A client that needs the empty set to replace out-of-
-   band knowledge sends none (Section 4.3).
+   A request-level signal replaces the default rather than augmenting
+   it, so that a less-capable instance can retract a default.  To
+   retract everything, a client sends none (Section 4.3).
 
    A capability set in a software statement is client metadata and
    remains subject to the request-level override above; signing the
@@ -670,10 +663,7 @@ Table of Contents
    authorization request represented by the resulting request_uri, and
    nothing else.  A capability governing token endpoint behavior MUST be
    in the effective set for the token request; the authorization server
-   MUST NOT infer it from an earlier request in the grant.  Because
-   metadata can be cached or obtained from multiple sources, a client
-   SHOULD signal such a capability explicitly on the token request
-   rather than rely on a metadata default.
+   MUST NOT infer it from an earlier request in the grant.
 
 7.  Server Behavior
 
@@ -721,13 +711,13 @@ Table of Contents
    [RFC8414] and for protected resource metadata [RFC9728].
 
    The array MUST NOT contain none.  If the value is not an array, or
-   any element is not a string, does not conform to the capability
-   production, or is none, the value of this member is invalid and MUST
-   be ignored in its entirety.
+   any element is not a string or does not conform to the capability
+   production, the value of this member is invalid and MUST be ignored
+   in its entirety.
 
    A client that holds a server's client_capabilities_supported SHOULD
    signal only values that appear in it.  This does not apply to none
-   (Section 4.3), which the list never contains: if filtering leaves no
+   (Section 4.3), which a server does not list: if filtering leaves no
    value and the client needs to override a metadata default or out-of-
    band knowledge, it sends none.  A client that does not hold the list
    MAY signal values without retrieving it first; a server that does not
@@ -899,17 +889,12 @@ Table of Contents
         |                     | including separators and         |
         |                     | parameters                       |
         +---------------------+----------------------------------+
-        | Client metadata or  | The serialized JSON array,       |
-        | discovery           | including brackets, quotes,      |
+        | Client metadata     | The serialized JSON array,       |
+        |                     | including brackets, quotes,      |
         |                     | whitespace, and escapes          |
         +---------------------+----------------------------------+
 
                   Table 1: Octets counted toward a limit
-
-   A limit specific to a capability or a deployment MUST also admit the
-   canonical retraction signal: a request parameter or a field whose
-   entire value is none.  This does not extend to a larger input that
-   reduces to none only after duplicates or parameters are removed.
 
    A signal that exceeds a limit MUST be treated as invalid: a request
    parameter then signals the empty set (Section 6.1), a field is
@@ -1027,12 +1012,13 @@ Table of Contents
 
    Capability Value:  none
 
-   Description:  Reserved.  Denotes the empty capability set.
+   Description:  Reserved.  Never a capability; sent alone, it signals
+      no capability.
 
    Status:  current
 
-   Absent-Signal Behavior:  Not applicable. none is a sentinel rather
-      than a capability.
+   Absent-Signal Behavior:  Not applicable. none is reserved and is
+      never a capability.
 
    Carriers:  request parameter, HTTP field
 
@@ -1237,6 +1223,11 @@ Table of Contents
    [RFC7240]  Snell, J., "Prefer Header for HTTP", RFC 7240,
               DOI 10.17487/RFC7240, June 2014,
               <https://www.rfc-editor.org/rfc/rfc7240>.
+
+   [RFC7592]  Richer, J., Ed., Jones, M., Bradley, J., and M. Machulak,
+              "OAuth 2.0 Dynamic Client Registration Management
+              Protocol", RFC 7592, DOI 10.17487/RFC7592, July 2015,
+              <https://www.rfc-editor.org/rfc/rfc7592>.
 
    [RFC7662]  Richer, J., Ed., "OAuth 2.0 Token Introspection",
               RFC 7662, DOI 10.17487/RFC7662, October 2015,
@@ -1477,10 +1468,10 @@ Appendix B.  Applying This Specification to Existing Drafts
 
    Deferred Token Response:  completion_mode=deferred becomes
       client_capabilities containing accept-deferred-response.  The
-      authorization server still MUST NOT defer unless the value is in
-      the request's effective set.  Section 6.5 requires the value in
-      the token request's effective set; a signal at an earlier endpoint
-      has no effect on the token response.  The proposed single-purpose
+      authorization server still defers only when the value is in the
+      request's effective set.  Section 6.5 requires the value in the
+      token request's effective set; a signal at an earlier endpoint has
+      no effect on the token response.  The proposed single-purpose
       registry is subsumed by Section 12.1, and the
       deferred_token_response_supported authorization server metadata
       Boolean by client_capabilities_supported containing the value.
