@@ -880,7 +880,8 @@ fingerprinting. On the front channel it is visible to the user agent, and in a
 publicly retrievable client metadata document it is visible to anyone. The
 marginal disclosure to an authorization server is smaller, since it already
 receives a `client_id` that often identifies the software, but a capability set
-can still add information.
+can still add information. A set that changes during a staged rollout
+({{open-world}}) can also identify a release or rollout cohort.
 
 Clients that consider their capability set sensitive SHOULD use {{RFC9126}} or
 an encrypted Request Object as defined in {{RFC9101}}, SHOULD, when they hold
