@@ -49,6 +49,7 @@ informative:
   RFC9396:
   RFC9449:
   RFC9635:
+  RFC9700:
   RESOURCE-TOKEN-RESP:
     target: https://datatracker.ietf.org/doc/draft-mcguinness-oauth-resource-token-resp
     title: "Resource Token Response Parameter"
@@ -725,7 +726,9 @@ server will honor it.
 
 # Security Considerations {#security-considerations}
 
-The security properties of this mechanism rest on {{invariants}}.
+For general OAuth security considerations, see {{Section 10 of RFC6749}} and
+{{RFC9700}}. The security properties of capability signaling rest on
+{{invariants}}.
 
 ## Unverified Signals {#unverified-signals}
 
