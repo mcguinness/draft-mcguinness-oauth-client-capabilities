@@ -646,8 +646,9 @@ the effective capability set provides no usable processing path
 ({{selection}}), or a server from rejecting an oversized signal ({{dos}}) or a
 repeated request parameter ({{param}}).
 
-Signaling a capability does not entitle a client to the corresponding behavior.
-A server retains discretion over whether to exercise optional behavior.
+Neither signaling a capability nor advertising it ({{discovery}}) entitles a
+client to the corresponding behavior. A server retains discretion over whether
+to exercise optional behavior.
 
 This specification does not define an error for an absent capability and does
 not give any capability mandatory-to-understand semantics; see {{no-require}}.
@@ -696,9 +697,6 @@ fingerprinting exposure, following the pattern of Client Hints {{RFC8942}}.
 
 Absence of `client_capabilities_supported` does not indicate that the server
 fails to support this specification.
-
-Advertising a value is not a commitment to exercise the behavior; see
-{{server-behavior}}.
 
 # Guidance for Extension Specifications {#extension-guidance}
 
