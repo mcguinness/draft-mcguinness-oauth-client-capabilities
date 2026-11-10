@@ -842,6 +842,10 @@ surrounding message:
 | Client metadata | The serialized JSON array, including brackets, quotes, whitespace, and escapes |
 {: title="Octets counted toward a limit"}
 
+Decoding never lengthens a value, so a recipient that measures decoded octets
+admits at least every signal that this floor requires it to admit; it still
+applies a finite limit to the encoded length.
+
 
 A signal that exceeds a limit MUST be treated as invalid: a request parameter
 then signals the empty set ({{param}}), a field is treated as absent
