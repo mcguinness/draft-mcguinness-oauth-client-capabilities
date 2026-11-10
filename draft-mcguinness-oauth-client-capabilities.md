@@ -384,31 +384,6 @@ CAP-3:
 These invariants also serve as the admission criterion for the registry; see
 {{extension-guidance}}.
 
-# Relationship to Existing Mechanisms {#relationships}
-
-scope:
-: `scope` is an authorization construct. Its values are consented to, are often
-  displayed to a user, and are carried in the resulting grant and access token.
-  Capabilities are protocol mechanics: not consented to, not displayed, and by
-  CAP-2 barred from affecting the grant.
-
-grant_types and response_types:
-: These select protocol flows and constrain which requests a registered client
-  may make. Their absence can cause a request to fail. A capability instead
-  describes optional response processing and has the safe-absence property in
-  CAP-1.
-
-Server metadata:
-: {{RFC8414}} and {{RFC9728}} provide extensible discovery documents for
-  authorization servers and protected resources. This specification defines a
-  common member in both documents for the server-to-client direction and the
-  carriers in {{carriers}} for the client-to-server direction.
-
-Client attestation:
-: The two mechanisms are complementary and address different questions: what
-  the client can do, versus what can be proven about the client. See
-  {{extension-guidance}}.
-
 # Carriers {#carriers}
 
 ## The `client_capabilities` Request Parameter {#param}
@@ -1299,6 +1274,17 @@ OAuth has static client declarations {{RFC7591}}, extensible server metadata
 signals implied by construction, such as a DPoP proof {{RFC9449}}. Static
 metadata cannot express per-request or per-instance variation, while server
 metadata runs only server to client.
+
+Capabilities also differ from existing constructs. `scope` is an
+authorization construct: its values are consented to, are often displayed to a
+user, and are carried in the resulting grant and access token, while
+capabilities are not consented to, not displayed, and by CAP-2 barred from
+affecting the grant. `grant_types` and `response_types` select protocol flows
+and constrain which requests a registered client may make, so their absence can
+cause a request to fail; a capability describes optional response processing
+and has the safe-absence property in CAP-1. Client attestation {{ABCA}}
+addresses what can be proven about the client rather than what it can do
+({{extension-guidance}}).
 
 Other protocols use shared vocabularies. SIP option tags {{RFC3261}} pair
 `Supported` with `Require`; HTTP `Prefer` {{RFC7240}} registers preferences
