@@ -220,6 +220,10 @@ Effective capability set:
 : The capability set that applies to a request after the carrier and precedence
   rules in {{carriers}} have been applied. Also called the effective set.
 
+Out-of-band knowledge:
+: Knowledge, where an extension defines it, that a protected resource has of a
+  client's capabilities other than from a signal on the request.
+
 Terms not otherwise defined are used as in {{RFC6749}} and {{RFC9110}}.
 
 # Overview {#overview}
