@@ -375,7 +375,8 @@ CAP-2:
 CAP-3:
 : A server MUST NOT rely on a capability signal being truthful. The security
   properties of the enabled behavior MUST hold even when the client does not
-  implement the capability, and when a party other than the client asserts it.
+  implement the capability, and when a party other than the client asserts it,
+  including one that relays the enabled behavior to someone else.
   A capability MUST NOT substitute for client authentication, proof of
   possession, protocol validation, or other evidence required by the behavior
   it enables.
