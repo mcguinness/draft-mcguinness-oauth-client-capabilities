@@ -745,9 +745,11 @@ it. An extension that cannot describe a fallback at least as conservative as
 the pre-extension behavior has not satisfied CAP-1, whatever the value is
 named. The registration records the fallback ({{iana-registry}}).
 
-Acting on a falsely asserted capability can consume server resources
-({{dos}}). An extension specification MUST analyze this cost and define any
-necessary rate-limiting, state-allocation, or replay protections.
+Acting on a falsely asserted capability can consume server, downstream, and
+human resources, such as pending state, approval prompts, and notifications to
+users ({{dos}}). An extension specification MUST analyze this cost and define
+any necessary rate-limiting, state-allocation, or replay protections, such as
+limits on outstanding state per client and per grant.
 
 A capability set contributes to fingerprinting ({{privacy-considerations}}).
 Specifications defining capabilities whose availability depends on the
@@ -854,8 +856,9 @@ appropriate to the endpoint or application protocol. In particular,
 at a registration endpoint {{RFC7591}}, while a protected resource can use an
 application-specific response.
 
-Acting on a falsely asserted capability can also consume server resources;
-each extension analyzes this cost ({{extension-guidance}}). A capability signal
+Acting on a falsely asserted capability can also consume server, downstream,
+and human resources; each extension analyzes this cost ({{extension-guidance}}).
+A capability signal
 does not authorize the client to consume unbounded work.
 
 ## Unregistered Values {#unregistered-values}
