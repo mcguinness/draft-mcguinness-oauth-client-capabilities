@@ -159,10 +159,10 @@ instance can process. The updated release sends its complete set, including the
 illustrative `accept-deferred-response`, to one authorization server, since a
 request-level signal replaces the metadata default rather than adding to it
 ({{precedence}}). It sends other authorization servers nothing new, and older
-releases are unaffected. Stopping is equally local while the value stays out of
-the document. Once the document declares it, an instance withdraws it only by
-sending a set without it, or `none`. Either way the client publishes one
-document for every authorization server.
+releases are unaffected. While the document does not declare the value, the
+release enables or stops it per request and per authorization server. Once the
+document declares it, an instance withdraws it only by sending a set without
+it, or `none`. In both cases one document serves every authorization server.
 
 This works only for optional behavior. A metadata field that requires a
 behavior applies at every authorization server that supports it: once
@@ -208,6 +208,12 @@ Capability:
 Signal:
 : To convey capability values to a server through one of the carriers defined
   in {{carriers}}; as a noun, the values so conveyed.
+
+Recognize:
+: A recipient recognizes a capability value when it implements what the value
+  names: the server behavior, or, for a client reading a server's list, the
+  client processing. The reserved token `none` names nothing and is never
+  recognized.
 
 Effective capability set:
 : The capability set that applies to a request after the carrier and precedence
@@ -465,12 +471,12 @@ The `OAuth-Client-Capabilities` HTTP field allows a client to signal
 capabilities on a request that has no OAuth request parameter surface, such as
 a protected resource request.
 
-The field asserts that the path which will process the response can process the
-behavior. That path may be the sender alone, or the sender together with
-another component on whose behalf it acts: an agent making a resource request
-may relay a challenge to a component that completes it. The sender is
-accountable for the assertion. Because the field does not necessarily identify
-the OAuth client, client metadata supplies no default for it ({{precedence}}).
+The field asserts that whatever processes the response can process the
+behavior: the sender alone, or the sender together with another component on
+whose behalf it acts, as when an agent making a resource request relays a
+challenge to a component that completes it. Because the field does not
+necessarily identify the OAuth client, client metadata supplies no default for
+it ({{precedence}}).
 
 A client MUST NOT use the field on a request to an endpoint where the
 `client_capabilities` request parameter is defined: the authorization, pushed
@@ -721,7 +727,7 @@ misclassified it.
 
 Additional points of discipline:
 
-- Register a behavior, not a specification. See {{values}}.
+- Register a behavior, not a specification. See {{naming}}.
 - Prefer server-side discovery where it works. If the client-side behavior can
   be specified as a requirement conditioned on something the server advertises
   in its own metadata ({{RFC8414}} or {{RFC9728}}), specify it that way and
