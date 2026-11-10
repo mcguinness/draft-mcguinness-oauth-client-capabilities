@@ -302,9 +302,12 @@ an extension SHOULD register a value only once the processing it names is
 stable. Unregistered values are not a general substitute in the interim,
 because two implementations can give one value different meanings
 ({{unregistered-values}}). Unregistered values therefore SHOULD be confined
-to deployments whose parties
-have agreed on their meaning out of band, and early allocation SHOULD be sought
-once deployment becomes interoperable, as {{RFC7120}} describes.
+to deployments whose parties have agreed on their meaning out of band, and
+registration SHOULD be sought once deployment becomes interoperable. The
+registry's Specification Required policy ({{iana-registry}}) allows a value to
+be registered once a stable specification documents it; for an IETF-stream
+specification that will be published as an RFC, early allocation {{RFC7120}}
+is also available.
 
 A revision number is a document reference, so a value SHOULD NOT carry one: it
 means nothing once the draft is published, and a run of revisions with
@@ -859,7 +862,7 @@ or spend resources on a behavior the client will not complete. Provided each
 implementation meets CAP-1 through CAP-3 on its own, the result is a failed
 exchange or wasted work, not weakened security. {{naming}} recommends confining
 unregistered values to deployments whose parties have agreed on their meaning,
-and seeking early allocation.
+and seeking registration once deployment becomes interoperable.
 
 # Privacy Considerations {#privacy-considerations}
 
