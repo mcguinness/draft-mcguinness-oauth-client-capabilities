@@ -566,10 +566,10 @@ denote the empty set. If the value is not an array, or any element is not a
 string, does not conform to the `capability` production, or is `none`, the
 field is invalid. A recipient MUST ignore an invalid field, deriving no
 capabilities from it, and MUST NOT reject an otherwise-valid metadata document
-or registration request solely because this field is invalid. This rule
-concerns only the `client_capabilities` field; it does not change how the
-containing protocol handles invalid JSON, a failed signature, or its other
-required validation.
+or registration request solely because this field is invalid, except as
+permitted by {{dos}}. This rule concerns only the `client_capabilities` field;
+it does not change how the containing protocol handles invalid JSON, a failed
+signature, or its other required validation.
 
 A party publishing or registering this metadata MUST NOT declare a capability
 unless every client instance covered by that metadata can process the enabled
@@ -838,11 +838,13 @@ This does not extend to a larger input that reduces to `none` only after
 duplicates or parameters are removed.
 
 A signal that exceeds a limit MUST be treated as invalid: a request parameter
-then signals the empty set ({{values}}), and a field is treated as absent
-({{field}}); a server MAY instead reject the request using an error response
+then signals the empty set ({{values}}), a field is treated as absent
+({{field}}), and a client metadata field is ignored ({{metadata}}). A server
+MAY instead reject the request or metadata document using an error response
 appropriate to the endpoint or application protocol. In particular,
-`invalid_request` is available at OAuth endpoints, while a protected resource
-can use an application-specific response.
+`invalid_request` is available at OAuth endpoints and `invalid_client_metadata`
+at a registration endpoint {{RFC7591}}, while a protected resource can use an
+application-specific response.
 
 Acting on a falsely asserted capability can also consume server resources. An
 extension specification MUST analyze this cost and define any necessary
