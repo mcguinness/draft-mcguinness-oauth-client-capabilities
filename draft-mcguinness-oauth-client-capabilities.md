@@ -597,9 +597,7 @@ A capability in a pushed authorization request applies to the authorization
 request represented by the resulting `request_uri`, and nothing else. A
 capability governing token endpoint behavior MUST be in the effective set for
 the token request; the authorization server MUST NOT infer it from an earlier
-request in the grant. Because metadata can be cached or obtained from multiple
-sources, a client SHOULD signal such a capability explicitly on the token
-request rather than rely on a metadata default.
+request in the grant.
 
 # Server Behavior {#server-behavior}
 
