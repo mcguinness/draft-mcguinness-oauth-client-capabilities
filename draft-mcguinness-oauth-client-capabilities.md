@@ -235,12 +235,12 @@ registry ({{iana-registry}}) shared by every extension.
 
 Three carriers convey a set, chosen by what the request can hold:
 
-- The `client_capabilities` request parameter, on requests a client makes to an
-  authorization server ({{param}}).
-- The `OAuth-Client-Capabilities` HTTP field, on requests that carry no OAuth
-  parameters, such as protected resource requests ({{field}}).
-- A `client_capabilities` member in client metadata, supplying a default when a
-  request to an authorization server carries no signal ({{metadata}}).
+- The `client_capabilities` request parameter, on OAuth requests such as
+  authorization and token requests ({{param}}).
+- The `OAuth-Client-Capabilities` HTTP field, on protected resource requests
+  ({{field}}).
+- A `client_capabilities` member in client metadata, supplying a default when an
+  OAuth request carries no signal ({{metadata}}).
 
 Whichever carrier applies, the result is the request's effective capability
 set: the values a server may act upon for that request. A request-level signal
@@ -474,17 +474,10 @@ defines the parameter. It uses the request parameter there ({{param}}), and an
 authorization server MUST ignore the field on any request to such an endpoint.
 Using only the parameter at these endpoints gives each request one unambiguous
 effective set, and allows Request Object or pushed-request protections where
-those apply. The field plays no part at other authorization server endpoints
-either. At the introspection {{RFC7662}}, revocation {{RFC7009}}, and device
-authorization {{RFC8628}} endpoints, an extension that needs a capability
-defines the request parameter there ({{param}}). At the client registration
-{{RFC7591}} and client configuration {{RFC7592}} endpoints, a client declares
-capabilities in client metadata ({{metadata}}). This holds even when a request
-to one of these endpoints is authorized with an access token, as introspection,
-registration, and client configuration requests can be. Any other resource that
-an authorization server hosts and that a client accesses with an access token,
-such as the OpenID Connect UserInfo endpoint {{OIDC}}, is a protected resource
-for this purpose.
+those apply. The field plays no part in any other request to an authorization
+server either, even one authorized with an access token, unless it is a
+protected resource request as {{precedence}} defines it, such as a request to
+the OpenID Connect UserInfo endpoint {{OIDC}}.
 
 The field's value is a Structured Fields List ({{Section 3.1 of RFC9651}}). Each
 member MUST be an Item whose bare item is a Token containing a capability value
@@ -563,23 +556,49 @@ in {{param}} as the primary carrier.
 
 ## Precedence {#precedence}
 
-An OAuth request is a request to an authorization server endpoint that
-{{field}} lists, even when it is authorized with an access token. A protected
-resource request is any other request to a protected resource, including one
-that an authorization server hosts, such as UserInfo. The effective capability
-set of a request is determined as follows:
+The effective capability set depends on the kind of request:
 
-1. If the request carries a request-level signal, its value is the effective
-   set. On an OAuth request, that signal is the `client_capabilities` request
-   parameter; a value that is invalid ({{param}}) or exceeds a limit ({{dos}})
-   is still present, and its effective set is empty. On a protected resource
-   request, it is a valid `OAuth-Client-Capabilities` field with at least one
-   member, even if the server recognizes no value in it; an absent field, an
-   empty List, and an invalid field are treated alike, as no signal.
-2. Otherwise, the default is the effective set: on an OAuth request, the
+OAuth request:
+: A request to the authorization, pushed authorization request, or token
+  endpoint, or to another endpoint where an extension defines the request
+  parameter. Its request-level signal is the `client_capabilities` parameter
+  ({{param}}), and its default is client metadata ({{metadata}}).
+
+Protected resource request:
+: A request with which a client accesses data that a protected resource serves,
+  including a resource that an authorization server hosts, such as UserInfo.
+  Its request-level signal is the `OAuth-Client-Capabilities` field
+  ({{field}}), and its default is any out-of-band knowledge an extension
+  defines.
+
+Other authorization server requests:
+: Requests to any other authorization server endpoint, at which a client or
+  another party performs an OAuth operation, such as obtaining, inspecting, or
+  revoking a grant or token, or managing a registration. Examples are the
+  introspection {{RFC7662}}, revocation {{RFC7009}}, device authorization
+  {{RFC8628}}, client registration {{RFC7591}}, and client configuration
+  {{RFC7592}} endpoints. A request to such an endpoint is of this kind even when
+  it is authorized with an access token, and even if the endpoint's own
+  specification calls it a protected resource. These requests have no effective
+  set. At the client registration and client configuration
+  endpoints, a client declares capabilities in client metadata instead
+  ({{metadata}}). An extension that needs a capability at another such endpoint
+  defines the request parameter there, which makes requests to it OAuth
+  requests.
+
+For an OAuth request or a protected resource request, the effective capability
+set is determined as follows:
+
+1. If the request carries its request-level signal, the signal's value is the
+   effective set. A request parameter that is invalid ({{param}}) or exceeds a
+   limit ({{dos}}) is still present, and the effective set is then empty. A
+   field counts only if it is valid and has at least one member, even if the
+   server recognizes no value in it; an absent field, an empty List, and an
+   invalid field are treated alike, as no signal.
+2. Otherwise, the default is the effective set. For an OAuth request, it is the
    `client_capabilities` value from the client metadata that the authorization
-   server considers authoritative for that client, and on a protected resource
-   request, any out-of-band knowledge an extension defines.
+   server considers authoritative for the client making the request. Client
+   metadata is never the default for a protected resource request.
 3. If neither is present, the effective set is empty.
 
 A request-level signal replaces the default rather than augmenting it, so that
