@@ -524,7 +524,7 @@ wording, and the latter is an observation about another document.
 ---
 
 [ABCA]: https://datatracker.ietf.org/doc/draft-ietf-oauth-attestation-based-client-auth
-[DTR]: https://datatracker.ietf.org/doc/draft-gerber-oauth-deferred-token-response
+[DTR]: https://datatracker.ietf.org/doc/draft-ietf-oauth-deferred-token-response
 [TXN-CHALLENGE]: https://datatracker.ietf.org/doc/draft-rosomakho-oauth-txn-challenge
 [FIRST-PARTY-APPS]: https://datatracker.ietf.org/doc/draft-ietf-oauth-first-party-apps
 [RESOURCE-TOKEN-RESP]: https://datatracker.ietf.org/doc/draft-mcguinness-oauth-resource-token-resp
