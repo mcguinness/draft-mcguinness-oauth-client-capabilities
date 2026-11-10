@@ -294,8 +294,8 @@ implement part of it.
 
 A new revision of an extension whose client-side processing differs registers a
 new value rather than reusing the old one. Registering the new value does not
-retire the old one: its change controller MAY mark the old value obsolete, and
-a server MAY continue to recognize it. A server that recognizes several
+retire the old one; its change controller can mark it obsolete in the registry
+({{iana-registry}}). A server that recognizes several
 revisions of a behavior serves clients built against each of them from a single
 deployment.
 
