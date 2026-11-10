@@ -43,6 +43,7 @@ informative:
   RFC7120:
   RFC9207:
   RFC7009:
+  RFC7592:
   RFC7662:
   RFC8628:
   RFC8942:
@@ -474,12 +475,14 @@ authorization server MUST ignore the field on any request to such an endpoint.
 Using only the parameter at these endpoints gives each request one unambiguous
 effective set, and allows Request Object or pushed-request protections where
 those apply. The field plays no part at other authorization server endpoints
-either, such as the introspection {{RFC7662}}, revocation {{RFC7009}}, and
-device authorization {{RFC8628}} endpoints ({{precedence}}); an extension that
-needs a capability at one of them defines the request parameter there
-({{param}}). At the client registration endpoint, a client declares
-capabilities in client metadata ({{metadata}}). A resource that an
-authorization server hosts and that a client accesses with an access token,
+either. At the introspection {{RFC7662}}, revocation {{RFC7009}}, and device
+authorization {{RFC8628}} endpoints, an extension that needs a capability
+defines the request parameter there ({{param}}). At the client registration
+{{RFC7591}} and client configuration {{RFC7592}} endpoints, a client declares
+capabilities in client metadata ({{metadata}}). This holds even when a request
+to one of these endpoints is authorized with an access token, as introspection,
+registration, and client configuration requests can be. Any other resource that
+an authorization server hosts and that a client accesses with an access token,
 such as the OpenID Connect UserInfo endpoint {{OIDC}}, is a protected resource
 for this purpose.
 
@@ -560,10 +563,11 @@ in {{param}} as the primary carrier.
 
 ## Precedence {#precedence}
 
-The effective capability set of a request is determined as follows, where a
-protected resource request includes one to a resource that an authorization
-server hosts ({{field}}), and any other request to an authorization server is
-an OAuth request:
+An OAuth request is a request to an authorization server endpoint that
+{{field}} lists, even when it is authorized with an access token. A protected
+resource request is any other request to a protected resource, including one
+that an authorization server hosts, such as UserInfo. The effective capability
+set of a request is determined as follows:
 
 1. If the request carries a request-level signal, its value is the effective
    set. On an OAuth request, that signal is the `client_capabilities` request

@@ -92,6 +92,25 @@ When the server knows out of band that the client supports `a`:
 | A list over the server's limit | a, or the request is rejected | Treated as invalid ("Denial of Service") |
 *HTTP field test vectors with out-of-band knowledge*
 
+## Request Classification
+
+Each request carries `OAuth-Client-Capabilities: b` and no
+`client_capabilities` parameter, and the client's metadata declares the
+default `["a"]`. Whether the request is an OAuth request or a protected
+resource request decides which carrier counts ("Precedence", and the endpoint
+list in "The `OAuth-Client-Capabilities` HTTP Field"). Authorization with an
+access token does not change the kind.
+
+| Request | Kind | Effective set |
+|---|---|---|
+| UserInfo request with an access token | Protected resource request | b |
+| Request to a resource server with an access token | Protected resource request | b |
+| Token request (the client must not send the field) | OAuth request; the field is ignored | a |
+| Introspection request authorized with a bearer token | OAuth request; the field plays no part | The caller's metadata default, never b |
+| Registration request with an initial access token | OAuth request; the field plays no part | Not applicable: the request's own metadata declares the default |
+| Client configuration request with a registration access token | OAuth request; the field plays no part | Not applicable: the client's metadata declares the default |
+*Request classification test vectors*
+
 ## Client Metadata
 
 An invalid field is ignored and yields no capabilities. An otherwise-valid
