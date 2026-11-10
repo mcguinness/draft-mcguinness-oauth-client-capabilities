@@ -53,9 +53,6 @@ informative:
   RESOURCE-TOKEN-RESP:
     target: https://datatracker.ietf.org/doc/draft-mcguinness-oauth-resource-token-resp
     title: "Resource Token Response Parameter"
-  OAUTH21-VERSIONS-LIST:
-    target: https://mailarchive.ietf.org/arch/msg/oauth/hwo5a8eicmWM9q2fUtcVFlYw-HI/
-    title: "OAuth 2.0 and 2.1 version support discovery (oauth@ietf.org)"
   OAUTH21-VERSIONS:
     target: https://github.com/oauth-wg/oauth-v2-1/issues/120
     title: "How can an AS support both 2.0 and 2.1 clients concurrently"
@@ -1289,46 +1286,24 @@ weakening security.
 
 ## Capabilities and Profile Selection {#profiles}
 
-A related problem is selecting a protocol version or profile rather than a
-behavior. Discussion of how an authorization server can serve OAuth 2.0 and 2.1
-clients concurrently {{OAUTH21-VERSIONS}} led to a proposal on the working
-group list: a per-issuer `oauth_versions_supported` metadata array and a
-per-client `oauth_version` registration field. That proposal notes that neither
-provides a runtime signal {{OAUTH21-VERSIONS-LIST}}.
-
-A protocol version is not a capability ({{values}}). None of the differences
-OAuth 2.1 lists from OAuth 2.0 ({{Section 10 of OAUTH21}}) introduces a
-response that a client conforming to {{RFC6749}} cannot process. Most are
-stricter, and a signal that enables a check is what CAP-1 excludes. One is more
-lenient: OAuth 2.1 drops the token request's `redirect_uri` check because PKCE
-prevents the same attack ({{Section 10.2 of OAUTH21}}), and a server that skips
-a check because a signal is present relies on that signal, which CAP-3
-excludes. OAuth 2.1 states that the authorization server's configuration for a
-client determines which rules apply, and defines no version selector
+Selecting a protocol version or profile, such as OAuth 2.0 or OAuth 2.1 rules
+for a client {{OAUTH21-VERSIONS}}, is outside this mechanism. A version changes
+the authorization server's request-processing policy, not what a client must
+process in a response, and a signal that enables a check is what CAP-1
+excludes. OAuth 2.1 leaves the choice to the authorization server's
+configuration for each client and defines no version signal
 ({{Section 1.8 of OAUTH21}}).
 
-A draft revision that changes what a client must parse is, by contrast, a
-change in client-side behavior, which {{values}} covers. What remains out of
-scope is selecting a framework version or a profile, where the label does not
-correspond to a single client-side behavior.
+A revision that changes what a client must process in a response is different:
+it is a client-side behavior, and {{naming}} gives it a new capability value.
 
-Per-client configuration cannot stage a rollout of protocol-version enforcement
-across native application releases, whose upgrades reach users gradually: every
-deployed instance sharing a `client_id` is subject to the same rules. Nor can
-the override in {{precedence}}, which lets a less-capable instance retract a
-default: in a native rollout the less-capable instances are the releases that
-were never updated, which cannot send anything, and {{metadata}} forbids a
-default that such instances would not override. What can work is the reverse:
-the client's configured rules stay at the earlier version, and updated releases
-send a version selector on each request. Such a selector would not be a
-capability (CAP-1), and it cannot establish a security minimum for the client
-while requests without it are still accepted, because an attacker starting a
-request under the same `client_id` omits it. A server can still attach
-protection to credentials issued under the selector, such as rotation of a
-refresh token family ({{Section 4.3.1 of OAUTH21}}), and a later omission does
-not remove it. The client-wide minimum arrives only when the configured rules
-are raised. Whether OAuth 2.1 should define such a selector belongs to that
-work rather than this one.
+A removable version selector, sent on each request so that updated releases can
+opt in, cannot establish a security minimum for the client while requests
+without it are still accepted, because an attacker sending a request under the
+same `client_id` omits it. Protections a server attaches to credentials issued
+under such a selector, such as rotation of a refresh token family
+({{Section 4.3.1 of OAUTH21}}), can persist after a later omission. Whether to
+define such a selector belongs to the OAuth 2.1 work.
 
 ## Trade-offs {#tradeoffs}
 
