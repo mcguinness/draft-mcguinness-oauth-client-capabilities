@@ -506,10 +506,9 @@ knowledge an extension defines.
 A recipient MUST ignore parameters.
 
 
-A server whose response can vary with the field MUST include
-`OAuth-Client-Capabilities` in the `Vary` field of every such response,
-including responses to requests that omit the field, or use `Vary: *`
-({{Section 12.5.5 of RFC9110}}).
+A server MUST include `OAuth-Client-Capabilities` in the `Vary` field of every
+response whose content could have varied with the field, including responses to
+requests that omit it, or use `Vary: *` ({{Section 12.5.5 of RFC9110}}).
 
 An empty List is treated as an absent field ({{precedence}}). Structured Fields
 serializes an empty List by omitting the field ({{Section 3.1 of RFC9651}}),
