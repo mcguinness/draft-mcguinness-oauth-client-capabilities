@@ -383,16 +383,6 @@ CAP-3:
   possession, protocol validation, or other evidence required by the behavior
   it enables.
 
-Two consequences follow. A client that claims a capability it lacks can receive
-a response it cannot process, but CAP-2 and CAP-3 keep the false claim from
-being accepted as authorization, authentication, or proof of a
-security-relevant property. Any party able to send the request can assert a
-value and elicit the enabled behavior, which CAP-3 requires to be safe in that
-party's hands ({{unverified-signals}}). An adversary who removes values from a
-signal denies optional behavior, which under CAP-1 is the safe direction.
-Removing a signal that narrows a set instead restores a metadata default or
-out-of-band knowledge ({{downgrade}}).
-
 These invariants also serve as the admission criterion for the registry; see
 {{extension-guidance}}.
 
@@ -680,11 +670,8 @@ A server MUST determine the assurance a request requires without reference to
 the capability set. It MAY use the set to choose among paths that meet that
 requirement. If no such path is available, it MUST refuse the request. Without
 this rule, removing a value could steer the server to a weaker path,
-reintroducing the downgrade CAP-1 prevents.
-
-A path safe to issue unconditionally needs no gating signal, but may warrant
-one to prevent the server from selecting a path the client cannot complete. See
-{{extension-guidance}}.
+reintroducing the downgrade CAP-1 prevents. {{extension-guidance}} states when
+such a choice justifies a capability value.
 
 # Discovery {#discovery}
 
@@ -835,9 +822,8 @@ unprotected request unless the authorization server enforces its use:
 Objects, and `require_pushed_authorization_requests` ({{Section 5 of RFC9126}})
 or equivalent policy for pushed requests.
 
-For the same reason, CAP-1 bars an extension from using a capability to enable
-a security check that the server otherwise skips. Such a check belongs in
-policy or an authenticated negotiation mechanism.
+A security check that CAP-1 bars a capability from enabling belongs in policy or
+an authenticated negotiation mechanism.
 
 ## Denial of Service {#dos}
 
@@ -1461,9 +1447,7 @@ and is easier to establish before more incompatible carriers ship.
   former is preferred because the field declares client behavior rather than
   negotiating content, but the choice is not settled.
 - Whether the HTTP carrier should be a single registered `Prefer` preference
-  rather than a dedicated field ({{why-not-prefer}}). The dedicated field keeps
-  `Vary` precise and uses Structured Fields parsing; a preference reuses an
-  existing field.
+  rather than a dedicated field ({{why-not-prefer}}).
 - Whether the `.` and `:` characters the syntax allows should carry any
   structure. No structure is needed today: a revision with different
   client-side processing registers a new value ({{values}}).
