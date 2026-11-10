@@ -1796,19 +1796,19 @@ another component on whose behalf it acts: an agent making a resource request
 may relay a challenge to a component that completes it. The sender is
 accountable for the assertion. Because the field does not necessarily identify
 the OAuth client, client metadata supplies no default for it (<a href="#precedence" class="auto internal xref">Section 7.4</a>).<a href="#section-7.2-2" class="pilcrow">¶</a></p>
-<p id="section-7.2-3">A client <span class="bcp14">MUST NOT</span> use the field on a request to an authorization server
-endpoint that accepts OAuth request parameters, such as the authorization,
-token, pushed authorization request, introspection <span>[<a href="#RFC7662" class="cite xref">RFC7662</a>]</span>, revocation
-<span>[<a href="#RFC7009" class="cite xref">RFC7009</a>]</span>, and device authorization <span>[<a href="#RFC8628" class="cite xref">RFC8628</a>]</span> endpoints, or to the client
-registration endpoint. Where the request parameter is defined at such an
-endpoint, the client uses it there (<a href="#param" class="auto internal xref">Section 7.1</a>); at the registration endpoint it
-uses client metadata (<a href="#metadata" class="auto internal xref">Section 7.3</a>). An authorization server <span class="bcp14">MUST</span> ignore the
-field on any request to such an endpoint. This specification does not define
-the request parameter at the introspection, revocation, or device authorization
-endpoints; an extension that needs a capability there defines it (<a href="#param" class="auto internal xref">Section 7.1</a>).
-Using only the parameter at authorization server endpoints gives each request
-one unambiguous effective set, and allows Request Object or pushed-request
-protections where those apply.<a href="#section-7.2-3" class="pilcrow">¶</a></p>
+<p id="section-7.2-3">A client <span class="bcp14">MUST NOT</span> use the field on a request to an endpoint where the
+<code>client_capabilities</code> request parameter is defined: the authorization, pushed
+authorization request, and token endpoints, and any endpoint where an extension
+defines the parameter. It uses the request parameter there (<a href="#param" class="auto internal xref">Section 7.1</a>), and an
+authorization server <span class="bcp14">MUST</span> ignore the field on any request to such an endpoint.
+Using only the parameter at these endpoints gives each request one unambiguous
+effective set, and allows Request Object or pushed-request protections where
+those apply. At other authorization server endpoints, such as the introspection
+<span>[<a href="#RFC7662" class="cite xref">RFC7662</a>]</span>, revocation <span>[<a href="#RFC7009" class="cite xref">RFC7009</a>]</span>, and device authorization <span>[<a href="#RFC8628" class="cite xref">RFC8628</a>]</span>
+endpoints, this specification defines no carrier; a capability value's
+registration states which carrier, if any, applies there (<a href="#iana-registry" class="auto internal xref">Section 13.1</a>).
+At the client registration endpoint, a client declares capabilities in client
+metadata (<a href="#metadata" class="auto internal xref">Section 7.3</a>).<a href="#section-7.2-3" class="pilcrow">¶</a></p>
 <p id="section-7.2-4">The field's value is a Structured Fields List (<span><a href="https://rfc-editor.org/rfc/rfc9651#section-3.1" class="relref">Section 3.1</a> of [<a href="#RFC9651" class="cite xref">RFC9651</a>]</span>). Each
 member <span class="bcp14">MUST</span> be an Item whose bare item is a Token containing a capability value
 as defined in <a href="#values" class="auto internal xref">Section 4</a>:<a href="#section-7.2-4" class="pilcrow">¶</a></p>
@@ -1904,9 +1904,8 @@ effective set.<a href="#section-7.4-2.2.1" class="pilcrow">¶</a></p>
 </li>
         </ol>
 <p id="section-7.4-3">The <code>OAuth-Client-Capabilities</code> field plays no part in this determination. As
-specified in <a href="#field" class="auto internal xref">Section 7.2</a>, an authorization server ignores the field on any
-request to its endpoints that accept OAuth request parameters or to its client
-registration endpoint.<a href="#section-7.4-3" class="pilcrow">¶</a></p>
+specified in <a href="#field" class="auto internal xref">Section 7.2</a>, an authorization server ignores the field at any
+endpoint where the request parameter is defined.<a href="#section-7.4-3" class="pilcrow">¶</a></p>
 <p id="section-7.4-4">Request values replace rather than augment metadata so that a less-capable
 instance can retract a default. To retract everything, it sends
 <code>client_capabilities=none</code>.<a href="#section-7.4-4" class="pilcrow">¶</a></p>

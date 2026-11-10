@@ -524,21 +524,21 @@ Table of Contents
    Because the field does not necessarily identify the OAuth client,
    client metadata supplies no default for it (Section 7.4).
 
-   A client MUST NOT use the field on a request to an authorization
-   server endpoint that accepts OAuth request parameters, such as the
-   authorization, token, pushed authorization request, introspection
-   [RFC7662], revocation [RFC7009], and device authorization [RFC8628]
-   endpoints, or to the client registration endpoint.  Where the request
-   parameter is defined at such an endpoint, the client uses it there
-   (Section 7.1); at the registration endpoint it uses client metadata
-   (Section 7.3).  An authorization server MUST ignore the field on any
-   request to such an endpoint.  This specification does not define the
-   request parameter at the introspection, revocation, or device
-   authorization endpoints; an extension that needs a capability there
-   defines it (Section 7.1).  Using only the parameter at authorization
-   server endpoints gives each request one unambiguous effective set,
-   and allows Request Object or pushed-request protections where those
-   apply.
+   A client MUST NOT use the field on a request to an endpoint where the
+   client_capabilities request parameter is defined: the authorization,
+   pushed authorization request, and token endpoints, and any endpoint
+   where an extension defines the parameter.  It uses the request
+   parameter there (Section 7.1), and an authorization server MUST
+   ignore the field on any request to such an endpoint.  Using only the
+   parameter at these endpoints gives each request one unambiguous
+   effective set, and allows Request Object or pushed-request
+   protections where those apply.  At other authorization server
+   endpoints, such as the introspection [RFC7662], revocation [RFC7009],
+   and device authorization [RFC8628] endpoints, this specification
+   defines no carrier; a capability value's registration states which
+   carrier, if any, applies there (Section 13.1).  At the client
+   registration endpoint, a client declares capabilities in client
+   metadata (Section 7.3).
 
    The field's value is a Structured Fields List (Section 3.1 of
    [RFC9651]).  Each member MUST be an Item whose bare item is a Token
@@ -627,8 +627,8 @@ Table of Contents
 
    The OAuth-Client-Capabilities field plays no part in this
    determination.  As specified in Section 7.2, an authorization server
-   ignores the field on any request to its endpoints that accept OAuth
-   request parameters or to its client registration endpoint.
+   ignores the field at any endpoint where the request parameter is
+   defined.
 
    Request values replace rather than augment metadata so that a less-
    capable instance can retract a default.  To retract everything, it
