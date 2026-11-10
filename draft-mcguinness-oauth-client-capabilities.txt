@@ -4,8 +4,8 @@
 
 Web Authorization Protocol                                 K. McGuinness
 Internet-Draft                                               Independent
-Intended status: Standards Track                         9 November 2026
-Expires: 13 May 2027
+Intended status: Standards Track                        10 November 2026
+Expires: 14 May 2027
 
 
                      OAuth 2.0 Client Capabilities
@@ -46,7 +46,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 13 May 2027.
+   This Internet-Draft will expire on 14 May 2027.
 
 Copyright Notice
 
@@ -90,6 +90,7 @@ Table of Contents
      11.1.  Unverified Signals
      11.2.  Downgrade
      11.3.  Denial of Service
+     11.4.  Unregistered Values
    12. Privacy Considerations
    13. IANA Considerations
      13.1.  OAuth Client Capabilities Registry
@@ -375,17 +376,20 @@ Table of Contents
 4.3.  The none Sentinel
 
    The token none is reserved for use as the complete value of the
-   client_capabilities request parameter.  It denotes the empty set: the
+   client_capabilities request parameter or as the only member of the
+   OAuth-Client-Capabilities field.  It denotes the empty set: the
    client signals no capabilities.  A client uses it to retract a
-   statically declared set (Section 7.4).  It is registered only to
-   reserve the token (Section 13.1); it is not a capability and has no
-   meaning in the HTTP field or client metadata carriers.
+   statically declared set or, at a protected resource, any out-of-band
+   knowledge (Section 7.4).  It is registered only to reserve the token
+   (Section 13.1); it is not a capability and has no meaning in client
+   metadata.
 
    none MUST NOT appear together with any capability value.  A server
-   that receives none alongside other values MUST treat the value as
-   signaling the empty set.  Resolving the conflict to the empty set,
-   rather than rejecting the request, keeps the signal non-fatal
-   (Section 8).
+   that receives none alongside other values, in the request parameter
+   or in a valid field, MUST treat the signal as the empty set.
+   Resolving the conflict to the empty set, rather than rejecting the
+   request, keeps the signal non-fatal (Section 8).  An invalid field is
+   treated as absent even if it contains none (Section 7.2).
 
 5.  Capability Invariants
 
@@ -420,9 +424,9 @@ Table of Contents
    can receive a response it cannot process, but CAP-2 and CAP-3 keep
    the false claim from being accepted as authorization, authentication,
    or proof of a security-relevant property.  An adversary who removes
-   values degrades the client to the behavior it would receive with no
-   capabilities, which under CAP-1 is the safe direction; see
-   Section 11.
+   values from a signal denies optional behavior, which under CAP-1 is
+   the safe direction.  Removing a signal that narrows a set instead
+   restores a metadata default or out-of-band knowledge (Section 11.2).
 
    These invariants also serve as the admission criterion for the
    registry; see Section 10.
@@ -499,8 +503,10 @@ Table of Contents
    its list as one space-delimited value, not as repeated parameters.
 
    Where the parameter would otherwise be carried in the query component
-   of an authorization request URI, clients SHOULD instead use a pushed
-   authorization request [RFC9126] to bound URI growth and keep the list
+   of an authorization request URI, and the client holds authorization
+   server metadata that includes pushed_authorization_request_endpoint
+   (Section 5 of [RFC9126]), the client SHOULD use a pushed
+   authorization request instead, to bound URI growth and keep the list
    off the user agent.  Passing a Request Object [RFC9101] by value does
    not reduce URI size.
 
@@ -518,13 +524,21 @@ Table of Contents
    Because the field does not necessarily identify the OAuth client,
    client metadata supplies no default for it (Section 7.4).
 
-   A client MUST NOT use the field on a request at an endpoint where the
-   client_capabilities parameter is defined; it uses the request
-   parameter (Section 7.1) there instead.  An authorization server MUST
+   A client MUST NOT use the field on a request to an endpoint where the
+   client_capabilities request parameter is defined: the authorization,
+   pushed authorization request, and token endpoints, and any endpoint
+   where an extension defines the parameter.  It uses the request
+   parameter there (Section 7.1), and an authorization server MUST
    ignore the field on any request to such an endpoint.  Using only the
-   parameter at authorization server endpoints gives each request one
-   unambiguous effective set, and allows Request Object or pushed-
-   request protections where those apply.
+   parameter at these endpoints gives each request one unambiguous
+   effective set, and allows Request Object or pushed-request
+   protections where those apply.  The field plays no part at other
+   authorization server endpoints either, such as the introspection
+   [RFC7662], revocation [RFC7009], and device authorization [RFC8628]
+   endpoints (Section 7.4); an extension that needs a capability at one
+   of them defines the request parameter there (Section 7.1).  At the
+   client registration endpoint, a client declares capabilities in
+   client metadata (Section 7.3).
 
    The field's value is a Structured Fields List (Section 3.1 of
    [RFC9651]).  Each member MUST be an Item whose bare item is a Token
@@ -550,15 +564,19 @@ Table of Contents
 
    A recipient MUST ignore parameters.
 
-   The none sentinel (Section 4.3) MUST NOT be sent in this field, and a
-   recipient MUST ignore a member whose value is none.
+   A field whose only member is none (Section 4.3) is valid and signals
+   the empty set.  A client sends it to override any out-of-band
+   knowledge an extension defines (Section 7.4).
 
-   A server whose response varies with the field MUST include OAuth-
-   Client-Capabilities in the Vary field of the response, or use Vary: *
+   A server whose response can vary with the field MUST include OAuth-
+   Client-Capabilities in the Vary field of every such response,
+   including responses to requests that omit the field, or use Vary: *
    (Section 12.5.5 of [RFC9110]).
 
-   An empty List and an absent field are equivalent: both signal the
-   empty set.
+   An empty List is treated as an absent field (Section 7.4).
+   Structured Fields serializes an empty List by omitting the field
+   (Section 3.1 of [RFC9651]), and parses an empty field value as an
+   empty List.
 
 7.3.  Client Metadata Declaration
 
@@ -616,9 +634,13 @@ Table of Contents
    capable instance can retract a default.  To retract everything, it
    sends client_capabilities=none.
 
-   For a protected resource request, a valid field is the effective set.
-   Without one, the set is empty, subject to any out-of-band knowledge
-   an extension defines.
+   For a protected resource request, a valid field with at least one
+   member is the effective set and replaces any out-of-band knowledge an
+   extension defines, even if the server recognizes no value in it.
+   Without such a field, the set is empty, subject to that out-of-band
+   knowledge; an absent field, an empty List, and an invalid field are
+   treated alike.  A client that needs the empty set to replace out-of-
+   band knowledge sends none (Section 4.3).
 
    When an authorization request uses a Request Object, the
    authorization server uses only the parameters inside it (Section 6.3
@@ -702,13 +724,12 @@ Table of Contents
    does not conform to the capability production, or is none, the value
    of this member is invalid and MUST be ignored in its entirety.
 
-   Clients SHOULD signal only capability values that appear in
-   client_capabilities_supported, where the server publishes it.  A
-   client MAY signal values absent from the list, and MAY signal values
-   to a server that publishes no list at all; a server that does not
-   recognize a value ignores it.  Advertising recognized values lets
-   clients bound request size and fingerprinting exposure, following the
-   pattern of Client Hints [RFC8942].
+   A client that holds a server's client_capabilities_supported SHOULD
+   signal only values that appear in it.  A client that does not hold
+   the list MAY signal values without retrieving it first; a server that
+   does not recognize a value ignores it.  Advertising recognized values
+   lets clients bound request size and fingerprinting exposure,
+   following the pattern of Client Hints [RFC8942].
 
    Absence of client_capabilities_supported does not indicate that the
    server fails to support this specification.
@@ -782,7 +803,9 @@ Table of Contents
 
 11.  Security Considerations
 
-   The security properties of this mechanism rest on Section 5.
+   For general OAuth security considerations, see Section 10 of
+   [RFC6749] and [RFC9700].  The security properties of capability
+   signaling rest on Section 5.
 
 11.1.  Unverified Signals
 
@@ -810,7 +833,15 @@ Table of Contents
    extension MUST define a safe absent-signal fallback.  If the enabled
    behavior is how a server obtains something it requires, the fallback
    is refusal, not proceeding without it.  Removal costs client
-   functionality, never a server security property.
+   functionality, never a server security property.  Removing a signal
+   that narrows a set widens it instead: stripping a request parameter
+   that overrides a metadata default restores the default, and stripping
+   a field that replaces out-of-band knowledge restores that knowledge.
+   Either can lead a server to exercise a behavior the instance cannot
+   process, which is a failed exchange, not a weakened one.  Injecting
+   none removes out-of-band knowledge, which is the safe direction.  On
+   the front channel, a Request Object or a pushed authorization request
+   protects an override.
 
    For the same reason, CAP-1 bars an extension from using a capability
    to enable a security check that the server otherwise skips.  Such a
@@ -821,17 +852,31 @@ Table of Contents
    A capability list is attacker-controllable in size.  Servers MUST
    apply finite limits to the encoded length, number of members, and
    resources consumed while parsing a signal.  A signal that exceeds a
-   limit MUST be treated as signaling the empty set; a server MAY
-   instead reject the request using an error response appropriate to the
-   endpoint or application protocol.  In particular, invalid_request is
-   available at OAuth endpoints, while a protected resource can use an
-   application-specific response.
+   limit MUST be treated as invalid: a request parameter then signals
+   the empty set (Section 4), and a field is treated as absent
+   (Section 7.2); a server MAY instead reject the request using an error
+   response appropriate to the endpoint or application protocol.  In
+   particular, invalid_request is available at OAuth endpoints, while a
+   protected resource can use an application-specific response.
 
    Acting on a falsely asserted capability can also consume server
    resources.  An extension specification MUST analyze this cost and
    define any necessary rate-limiting, state-allocation, or replay
    protections.  A capability signal does not authorize the client to
    consume unbounded work.
+
+11.4.  Unregistered Values
+
+   Two implementations can recognize the same unregistered value with
+   different meanings.  Ignoring unrecognized values does not help,
+   because each recognizes the value, and authenticating the signal does
+   not resolve a disagreement about its meaning.  A server can then
+   exercise a behavior the client cannot process, or spend resources on
+   a behavior the client will not complete.  CAP-1 through CAP-3 still
+   constrain the enabled behavior, so the result is a failed exchange or
+   wasted work, not weakened security.  Section 4.2 recommends confining
+   unregistered values to deployments whose parties have agreed on their
+   meaning, and seeking early allocation.
 
 12.  Privacy Considerations
 
@@ -845,10 +890,10 @@ Table of Contents
 
    Clients that consider their capability set sensitive SHOULD use
    [RFC9126] or an encrypted Request Object as defined in [RFC9101],
-   SHOULD restrict signaled values to those advertised in
-   client_capabilities_supported, and SHOULD NOT publish the set in
-   public client metadata.  A signed but unencrypted Request Object
-   provides integrity, not confidentiality.
+   SHOULD, when they hold the server's client_capabilities_supported,
+   restrict signaled values to those it lists, and SHOULD NOT publish
+   the set in public client metadata.  A signed but unencrypted Request
+   Object provides integrity, not confidentiality.
 
    Capability values MUST NOT encode information about an end user or a
    specific device.  Specifications defining capabilities whose
@@ -904,6 +949,10 @@ Table of Contents
    *  confirm that the specification defines the optional behavior
       enabled and identifies every applicable carrier and endpoint;
 
+   *  confirm that the specification meets the requirements this
+      document places on extensions, including those in Section 7.1,
+      Section 10, Section 11.2, Section 11.3, and Section 12;
+
    *  consider the security, privacy, interoperability, and operational
       effects of false assertion and signal removal; and
 
@@ -927,10 +976,10 @@ Table of Contents
    Absent-Signal Behavior:  Not applicable. none is a sentinel rather
       than a capability.
 
-   Carriers:  request parameter
+   Carriers:  request parameter, HTTP field
 
    Endpoints:  Any authorization server endpoint at which the request
-      parameter is defined
+      parameter is defined, and any protected resource
 
    Change Controller:  IETF
 
@@ -1119,6 +1168,10 @@ Table of Contents
               DOI 10.17487/RFC3261, July 2002,
               <https://www.rfc-editor.org/rfc/rfc3261>.
 
+   [RFC7009]  Lodderstedt, T., Ed., Dronia, S., and M. Scurtescu, "OAuth
+              2.0 Token Revocation", RFC 7009, DOI 10.17487/RFC7009,
+              August 2013, <https://www.rfc-editor.org/rfc/rfc7009>.
+
    [RFC7120]  Cotton, M., "Early IANA Allocation of Standards Track Code
               Points", BCP 100, RFC 7120, DOI 10.17487/RFC7120, January
               2014, <https://www.rfc-editor.org/rfc/rfc7120>.
@@ -1126,6 +1179,15 @@ Table of Contents
    [RFC7240]  Snell, J., "Prefer Header for HTTP", RFC 7240,
               DOI 10.17487/RFC7240, June 2014,
               <https://www.rfc-editor.org/rfc/rfc7240>.
+
+   [RFC7662]  Richer, J., Ed., "OAuth 2.0 Token Introspection",
+              RFC 7662, DOI 10.17487/RFC7662, October 2015,
+              <https://www.rfc-editor.org/rfc/rfc7662>.
+
+   [RFC8628]  Denniss, W., Bradley, J., Jones, M., and H. Tschofenig,
+              "OAuth 2.0 Device Authorization Grant", RFC 8628,
+              DOI 10.17487/RFC8628, August 2019,
+              <https://www.rfc-editor.org/rfc/rfc8628>.
 
    [RFC8942]  Grigorik, I. and Y. Weiss, "HTTP Client Hints", RFC 8942,
               DOI 10.17487/RFC8942, February 2021,
@@ -1150,6 +1212,11 @@ Table of Contents
               Authorization Protocol (GNAP)", RFC 9635,
               DOI 10.17487/RFC9635, October 2024,
               <https://www.rfc-editor.org/rfc/rfc9635>.
+
+   [RFC9700]  Lodderstedt, T., Bradley, J., Labunets, A., and D. Fett,
+              "Best Current Practice for OAuth 2.0 Security", BCP 240,
+              RFC 9700, DOI 10.17487/RFC9700, January 2025,
+              <https://www.rfc-editor.org/rfc/rfc9700>.
 
    [TXN-CHALLENGE]
               "Transaction Authorization Challenge", n.d.,
@@ -1304,9 +1371,10 @@ Appendix B.  Applying This Specification to Existing Drafts
       chooses to send (Section 9).
 
    Transaction Authorization Challenge:  Accept-Txn-Challenge: ?1
-      becomes OAuth-Client-Capabilities: txn-challenge.  The normative
-      rule and the out-of-band knowledge provision are unchanged.  The
-      Boolean becomes list membership; absence expresses false.
+      becomes OAuth-Client-Capabilities: txn-challenge.  The Boolean
+      becomes membership of txn-challenge in the request's effective set
+      (Section 7.4).  Out-of-band knowledge of support still applies,
+      but only when the request carries no valid field.
 
 Appendix C.  Design Rationale
 
