@@ -769,14 +769,20 @@ third-party modification but does not prove implementation. See {{precedence}}.
 Because capability signals may be removed by an adversary, an extension MUST
 define a safe absent-signal fallback. If the enabled behavior is how a server
 obtains something it requires, the fallback is refusal, not proceeding without
-it. Removal costs client functionality, never a server security property.
-Removing a signal that narrows a set widens it instead: stripping a request
-parameter that overrides a metadata default restores the default, and stripping
-a field that replaces out-of-band knowledge restores that knowledge. Either can
-lead a server to exercise a behavior the instance cannot process, which is a
-failed exchange, not a weakened one. Injecting `none` removes out-of-band
-knowledge, which is the safe direction. On the front channel, a Request Object
-or a pushed authorization request protects an override.
+it. With such a fallback, removal costs client functionality, never a server
+security property. Removing a signal that narrows a set widens it instead:
+stripping a request parameter that overrides a metadata default restores the
+default, and stripping a field that replaces out-of-band knowledge restores
+that knowledge. Either can lead a server to exercise a behavior the instance
+cannot process, which is a failed exchange, not a weakened one. Corrupting a
+field so that it is invalid has the same effect as stripping it. Injecting
+`none` removes out-of-band knowledge, which is the safe direction. On the front
+channel, a signed Request Object or a pushed authorization request protects the
+integrity of the override it carries, but an attacker can still substitute an
+unprotected request unless the authorization server enforces its use:
+`require_signed_request_object` ({{Section 10.5 of RFC9101}}) for Request
+Objects, and `require_pushed_authorization_requests` ({{Section 5 of RFC9126}})
+or equivalent policy for pushed requests.
 
 For the same reason, CAP-1 bars an extension from using a capability to enable
 a security check that the server otherwise skips. Such a check belongs in
