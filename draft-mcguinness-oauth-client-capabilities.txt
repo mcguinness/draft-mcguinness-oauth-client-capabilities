@@ -508,9 +508,13 @@ Table of Contents
    default applies and sends none when it needs to override such a
    default.
 
-   Like any OAuth request parameter, client_capabilities is not included
-   more than once (Sections 3.1 and 3.2 of [RFC6749]).  A client sends
-   its list as one space-delimited value, not as repeated parameters.
+   The parameter is not repeatable: a client sends its list as one
+   space-delimited value.  A request that includes client_capabilities
+   more than once is malformed, as Sections 3.1 and 3.2 of [RFC6749]
+   provide for that specification's own parameters, and an authorization
+   server MUST reject it with the invalid_request error code (Sections
+   4.1.2.1 and 5.2 of [RFC6749]).  This differs from an invalid value,
+   which is not rejected (Section 4).
 
    Where the parameter would otherwise be carried in the query component
    of an authorization request URI, and the client holds authorization
@@ -548,7 +552,10 @@ Table of Contents
    endpoints (Section 7.4); an extension that needs a capability at one
    of them defines the request parameter there (Section 7.1).  At the
    client registration endpoint, a client declares capabilities in
-   client metadata (Section 7.3).
+   client metadata (Section 7.3).  A resource that an authorization
+   server hosts and that a client accesses with an access token, such as
+   the OpenID Connect UserInfo endpoint [OIDC], is a protected resource
+   for this purpose.
 
    The field's value is a Structured Fields List (Section 3.1 of
    [RFC9651]).  Each member MUST be an Item whose bare item is a Token
@@ -588,6 +595,15 @@ Table of Contents
    (Section 3.1 of [RFC9651]), and parses an empty field value as an
    empty List.
 
+   A browser-based client that sends the field on a cross-origin request
+   causes a CORS preflight, because OAuth-Client-Capabilities is not a
+   CORS-safelisted request header [FETCH].  A protected resource that
+   serves such clients has to allow the field in its preflight response,
+   most simply by listing the field name in Access-Control-Allow-
+   Headers; a * value there covers the field only when the request's
+   credentials mode is not include.  Otherwise the browser does not send
+   the request, and ignoring unrecognized values cannot help.
+
 7.3.  Client Metadata Declaration
 
    client_capabilities:  OPTIONAL.  A JSON array of strings, each a
@@ -601,11 +617,15 @@ Table of Contents
    Section 7.4.
 
    The array MUST NOT contain none.  An absent field and an empty array
-   both denote the empty set.  If any element is not a string, does not
-   conform to the capability production, or is none, the field is
-   invalid.  A recipient MUST NOT derive any capabilities from an
-   invalid field; the containing metadata protocol determines whether
-   the document or request is rejected or the field is ignored.
+   both denote the empty set.  If the value is not an array, or any
+   element is not a string, does not conform to the capability
+   production, or is none, the field is invalid.  A recipient MUST
+   ignore an invalid field, deriving no capabilities from it, and MUST
+   NOT reject an otherwise-valid metadata document or registration
+   request solely because this field is invalid, except as permitted by
+   Section 11.3.  This rule concerns only the client_capabilities field;
+   it does not change how the containing protocol handles invalid JSON,
+   a failed signature, or its other required validation.
 
    A party publishing or registering this metadata MUST NOT declare a
    capability unless every client instance covered by that metadata can
@@ -685,8 +705,12 @@ Table of Contents
 
 8.  Server Behavior
 
-   Presence of an unrecognized capability value MUST NOT cause a request
-   to fail.
+   A server MUST NOT reject a request solely because a capability value
+   is unrecognized.  This does not prevent an extension from refusing a
+   request when the effective capability set provides no usable
+   processing path (Section 8.1), or a server from rejecting an
+   oversized signal (Section 11.3) or a repeated request parameter
+   (Section 7.1).
 
    Signaling a capability does not entitle a client to the corresponding
    behavior.  A server retains discretion over whether to exercise
@@ -730,16 +754,20 @@ Table of Contents
    This metadata member is defined for authorization server metadata
    [RFC8414] and for protected resource metadata [RFC9728].
 
-   The array MUST NOT contain none.  If any element is not a string,
-   does not conform to the capability production, or is none, the value
-   of this member is invalid and MUST be ignored in its entirety.
+   The array MUST NOT contain none.  If the value is not an array, or
+   any element is not a string, does not conform to the capability
+   production, or is none, the value of this member is invalid and MUST
+   be ignored in its entirety.
 
    A client that holds a server's client_capabilities_supported SHOULD
-   signal only values that appear in it.  A client that does not hold
-   the list MAY signal values without retrieving it first; a server that
-   does not recognize a value ignores it.  Advertising recognized values
-   lets clients bound request size and fingerprinting exposure,
-   following the pattern of Client Hints [RFC8942].
+   signal only values that appear in it.  This does not apply to none
+   (Section 4.3), which the list never contains: if filtering leaves no
+   value and the client needs to override a metadata default or out-of-
+   band knowledge, it sends none.  A client that does not hold the list
+   MAY signal values without retrieving it first; a server that does not
+   recognize a value ignores it.  Advertising recognized values lets a
+   client that holds the list bound request size and fingerprinting
+   exposure, following the pattern of Client Hints [RFC8942].
 
    Absence of client_capabilities_supported does not indicate that the
    server fails to support this specification.
@@ -878,13 +906,48 @@ Table of Contents
 
    A capability list is attacker-controllable in size.  Servers MUST
    apply finite limits to the encoded length, number of members, and
-   resources consumed while parsing a signal.  A signal that exceeds a
-   limit MUST be treated as invalid: a request parameter then signals
-   the empty set (Section 4), and a field is treated as absent
-   (Section 7.2); a server MAY instead reject the request using an error
-   response appropriate to the endpoint or application protocol.  In
-   particular, invalid_request is available at OAuth endpoints, while a
-   protected resource can use an application-specific response.
+   resources consumed while parsing a signal.  Those limits MUST admit
+   any otherwise-valid signal of at most 4096 octets and at most 64
+   members, counting members before duplicates or unrecognized values
+   are removed; a recipient MAY accept larger signals.  The octets
+   counted are those of the carrier's value, excluding its name and the
+   surrounding message:
+
+        +=====================+==================================+
+        | Carrier             | Octets counted                   |
+        +=====================+==================================+
+        | Request parameter   | The form-encoded value, before   |
+        |                     | percent-decoding                 |
+        +---------------------+----------------------------------+
+        | Request parameter   | The JSON string as serialized in |
+        | in a Request Object | the decoded JWT Claims Set,      |
+        |                     | including its quotes and escapes |
+        +---------------------+----------------------------------+
+        | HTTP field          | The combined field value,        |
+        |                     | including separators and         |
+        |                     | parameters                       |
+        +---------------------+----------------------------------+
+        | Client metadata or  | The serialized JSON array,       |
+        | discovery           | including brackets, quotes,      |
+        |                     | whitespace, and escapes          |
+        +---------------------+----------------------------------+
+
+                  Table 1: Octets counted toward a limit
+
+   A limit specific to a capability or a deployment MUST also admit the
+   canonical retraction signal: a request parameter or a field whose
+   entire value is none.  This does not extend to a larger input that
+   reduces to none only after duplicates or parameters are removed.
+
+   A signal that exceeds a limit MUST be treated as invalid: a request
+   parameter then signals the empty set (Section 4), a field is treated
+   as absent (Section 7.2), and a client metadata field is ignored
+   (Section 7.3).  A server MAY instead reject the request or metadata
+   document using an error response appropriate to the endpoint or
+   application protocol.  In particular, invalid_request is available at
+   OAuth endpoints and invalid_client_metadata at a registration
+   endpoint [RFC7591], while a protected resource can use an
+   application-specific response.
 
    Acting on a falsely asserted capability can also consume server
    resources.  An extension specification MUST analyze this cost and
@@ -1159,6 +1222,9 @@ Table of Contents
               <https://datatracker.ietf.org/doc/draft-gerber-oauth-
               deferred-token-response>.
 
+   [FETCH]    "Fetch Living Standard", n.d.,
+              <https://fetch.spec.whatwg.org/>.
+
    [FIRST-PARTY-APPS]
               "OAuth 2.0 for First-Party Applications", n.d.,
               <https://datatracker.ietf.org/doc/draft-ietf-oauth-first-
@@ -1178,6 +1244,9 @@ Table of Contents
               "How can an AS support both 2.0 and 2.1 clients
               concurrently", n.d.,
               <https://github.com/oauth-wg/oauth-v2-1/issues/120>.
+
+   [OIDC]     "OpenID Connect Core 1.0", n.d.,
+              <https://openid.net/specs/openid-connect-core-1_0.html>.
 
    [RESOURCE-TOKEN-RESP]
               "Resource Token Response Parameter", n.d.,
@@ -1396,8 +1465,8 @@ Appendix B.  Applying This Specification to Existing Drafts
    Transaction Authorization Challenge:  Accept-Txn-Challenge: ?1
       becomes OAuth-Client-Capabilities: txn-challenge.  The Boolean
       becomes membership of txn-challenge in the request's effective set
-      (Section 7.4).  Out-of-band knowledge of support still applies,
-      but only when the request carries no valid field.
+      (Section 7.4).  Out-of-band knowledge of support applies only when
+      the request carries no valid field with at least one member.
 
 Appendix C.  Design Rationale
 

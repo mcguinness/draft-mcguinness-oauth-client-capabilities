@@ -1779,9 +1779,12 @@ handshake is defined.<a href="#section-7.1-5" class="pilcrow">¶</a></p>
 <p id="section-7.1-6">The parameter <span class="bcp14">MUST NOT</span> be sent with an empty value. A client that wants an
 empty effective set omits the parameter when no metadata default applies and
 sends <code>none</code> when it needs to override such a default.<a href="#section-7.1-6" class="pilcrow">¶</a></p>
-<p id="section-7.1-7">Like any OAuth request parameter, <code>client_capabilities</code> is not included more
-than once (Sections 3.1 and 3.2 of <span>[<a href="#RFC6749" class="cite xref">RFC6749</a>]</span>). A client sends its list as one
-space-delimited value, not as repeated parameters.<a href="#section-7.1-7" class="pilcrow">¶</a></p>
+<p id="section-7.1-7">The parameter is not repeatable: a client sends its list as one space-delimited
+value. A request that includes <code>client_capabilities</code> more than once is
+malformed, as Sections 3.1 and 3.2 of <span>[<a href="#RFC6749" class="cite xref">RFC6749</a>]</span> provide for that
+specification's own parameters, and an authorization server <span class="bcp14">MUST</span> reject it with
+the <code>invalid_request</code> error code (Sections 4.1.2.1 and 5.2 of <span>[<a href="#RFC6749" class="cite xref">RFC6749</a>]</span>).
+This differs from an invalid value, which is not rejected (<a href="#values" class="auto internal xref">Section 4</a>).<a href="#section-7.1-7" class="pilcrow">¶</a></p>
 <p id="section-7.1-8">Where the parameter would otherwise be carried in the query component of an
 authorization request URI, and the client holds authorization server metadata
 that includes <code>pushed_authorization_request_endpoint</code>
@@ -1816,7 +1819,10 @@ either, such as the introspection <span>[<a href="#RFC7662" class="cite xref">RF
 device authorization <span>[<a href="#RFC8628" class="cite xref">RFC8628</a>]</span> endpoints (<a href="#precedence" class="auto internal xref">Section 7.4</a>); an extension that
 needs a capability at one of them defines the request parameter there
 (<a href="#param" class="auto internal xref">Section 7.1</a>). At the client registration endpoint, a client declares
-capabilities in client metadata (<a href="#metadata" class="auto internal xref">Section 7.3</a>).<a href="#section-7.2-3" class="pilcrow">¶</a></p>
+capabilities in client metadata (<a href="#metadata" class="auto internal xref">Section 7.3</a>). A resource that an
+authorization server hosts and that a client accesses with an access token,
+such as the OpenID Connect UserInfo endpoint <span>[<a href="#OIDC" class="cite xref">OIDC</a>]</span>, is a protected resource
+for this purpose.<a href="#section-7.2-3" class="pilcrow">¶</a></p>
 <p id="section-7.2-4">The field's value is a Structured Fields List (<span><a href="https://rfc-editor.org/rfc/rfc9651#section-3.1" class="relref">Section 3.1</a> of [<a href="#RFC9651" class="cite xref">RFC9651</a>]</span>). Each
 member <span class="bcp14">MUST</span> be an Item whose bare item is a Token containing a capability value
 as defined in <a href="#values" class="auto internal xref">Section 4</a>:<a href="#section-7.2-4" class="pilcrow">¶</a></p>
@@ -1852,6 +1858,13 @@ including responses to requests that omit the field, or use <code>Vary: *</code>
 <p id="section-7.2-10">An empty List is treated as an absent field (<a href="#precedence" class="auto internal xref">Section 7.4</a>). Structured Fields
 serializes an empty List by omitting the field (<span><a href="https://rfc-editor.org/rfc/rfc9651#section-3.1" class="relref">Section 3.1</a> of [<a href="#RFC9651" class="cite xref">RFC9651</a>]</span>),
 and parses an empty field value as an empty List.<a href="#section-7.2-10" class="pilcrow">¶</a></p>
+<p id="section-7.2-11">A browser-based client that sends the field on a cross-origin request causes a
+CORS preflight, because <code>OAuth-Client-Capabilities</code> is not a CORS-safelisted
+request header <span>[<a href="#FETCH" class="cite xref">FETCH</a>]</span>. A protected resource that serves such clients has to
+allow the field in its preflight response, most simply by listing the field
+name in <code>Access-Control-Allow-Headers</code>; a <code>*</code> value there covers the field only
+when the request's credentials mode is not <code>include</code>. Otherwise the browser
+does not send the request, and ignoring unrecognized values cannot help.<a href="#section-7.2-11" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="metadata">
@@ -1873,11 +1886,14 @@ authorization server, published at a Client Identifier URL <span>[<a href="#CIMD
 in a software statement. Depending on the mechanism, it can describe client
 software, a deployed instance, or both; see <a href="#precedence" class="auto internal xref">Section 7.4</a>.<a href="#section-7.3-2" class="pilcrow">¶</a></p>
 <p id="section-7.3-3">The array <span class="bcp14">MUST NOT</span> contain <code>none</code>. An absent field and an empty array both
-denote the empty set. If any element is not a string, does not conform to the
-<code>capability</code> production, or is <code>none</code>, the field is invalid. A recipient
-<span class="bcp14">MUST NOT</span> derive any capabilities from an invalid field; the containing metadata
-protocol determines whether the document or request is rejected or the field is
-ignored.<a href="#section-7.3-3" class="pilcrow">¶</a></p>
+denote the empty set. If the value is not an array, or any element is not a
+string, does not conform to the <code>capability</code> production, or is <code>none</code>, the
+field is invalid. A recipient <span class="bcp14">MUST</span> ignore an invalid field, deriving no
+capabilities from it, and <span class="bcp14">MUST NOT</span> reject an otherwise-valid metadata document
+or registration request solely because this field is invalid, except as
+permitted by <a href="#dos" class="auto internal xref">Section 11.3</a>. This rule concerns only the <code>client_capabilities</code> field;
+it does not change how the containing protocol handles invalid JSON, a failed
+signature, or its other required validation.<a href="#section-7.3-3" class="pilcrow">¶</a></p>
 <p id="section-7.3-4">A party publishing or registering this metadata <span class="bcp14">MUST NOT</span> declare a capability
 unless every client instance covered by that metadata can process the enabled
 behavior, or every less-capable instance will override the default on its
@@ -1961,7 +1977,11 @@ request rather than rely on a metadata default.<a href="#section-7.5-2" class="p
       <h2 id="name-server-behavior">
 <a href="#section-8" class="section-number selfRef">8. </a><a href="#name-server-behavior" class="section-name selfRef">Server Behavior</a>
       </h2>
-<p id="section-8-1">Presence of an unrecognized capability value <span class="bcp14">MUST NOT</span> cause a request to fail.<a href="#section-8-1" class="pilcrow">¶</a></p>
+<p id="section-8-1">A server <span class="bcp14">MUST NOT</span> reject a request solely because a capability value is
+unrecognized. This does not prevent an extension from refusing a request when
+the effective capability set provides no usable processing path
+(<a href="#selection" class="auto internal xref">Section 8.1</a>), or a server from rejecting an oversized signal (<a href="#dos" class="auto internal xref">Section 11.3</a>) or a
+repeated request parameter (<a href="#param" class="auto internal xref">Section 7.1</a>).<a href="#section-8-1" class="pilcrow">¶</a></p>
 <p id="section-8-2">Signaling a capability does not entitle a client to the corresponding behavior.
 A server retains discretion over whether to exercise optional behavior.<a href="#section-8-2" class="pilcrow">¶</a></p>
 <p id="section-8-3">This specification does not define an error for an absent capability and does
@@ -2007,13 +2027,16 @@ server recognizes and may act upon.<a href="#section-9-1.2.1" class="pilcrow">¶
 </dl>
 <p id="section-9-2">This metadata member is defined for authorization server metadata <span>[<a href="#RFC8414" class="cite xref">RFC8414</a>]</span>
 and for protected resource metadata <span>[<a href="#RFC9728" class="cite xref">RFC9728</a>]</span>.<a href="#section-9-2" class="pilcrow">¶</a></p>
-<p id="section-9-3">The array <span class="bcp14">MUST NOT</span> contain <code>none</code>. If any element is not a string, does not
-conform to the <code>capability</code> production, or is <code>none</code>, the value of this member
-is invalid and <span class="bcp14">MUST</span> be ignored in its entirety.<a href="#section-9-3" class="pilcrow">¶</a></p>
+<p id="section-9-3">The array <span class="bcp14">MUST NOT</span> contain <code>none</code>. If the value is not an array, or any element
+is not a string, does not conform to the <code>capability</code> production, or is <code>none</code>,
+the value of this member is invalid and <span class="bcp14">MUST</span> be ignored in its entirety.<a href="#section-9-3" class="pilcrow">¶</a></p>
 <p id="section-9-4">A client that holds a server's <code>client_capabilities_supported</code> <span class="bcp14">SHOULD</span> signal
-only values that appear in it. A client that does not hold the list <span class="bcp14">MAY</span> signal
-values without retrieving it first; a server that does not recognize a value
-ignores it. Advertising recognized values lets clients bound request size and
+only values that appear in it. This does not apply to <code>none</code> (<a href="#none-value" class="auto internal xref">Section 4.3</a>),
+which the list never contains: if filtering leaves no value and the client
+needs to override a metadata default or out-of-band knowledge, it sends <code>none</code>.
+A client that does not hold the list <span class="bcp14">MAY</span> signal values without retrieving it
+first; a server that does not recognize a value ignores it. Advertising
+recognized values lets a client that holds the list bound request size and
 fingerprinting exposure, following the pattern of Client Hints <span>[<a href="#RFC8942" class="cite xref">RFC8942</a>]</span>.<a href="#section-9-4" class="pilcrow">¶</a></p>
 <p id="section-9-5">Absence of <code>client_capabilities_supported</code> does not indicate that the server
 fails to support this specification.<a href="#section-9-5" class="pilcrow">¶</a></p>
@@ -2156,16 +2179,57 @@ policy or an authenticated negotiation mechanism.<a href="#section-11.2-2" class
         </h3>
 <p id="section-11.3-1">A capability list is attacker-controllable in size. Servers <span class="bcp14">MUST</span> apply finite
 limits to the encoded length, number of members, and resources consumed while
-parsing a signal. A signal that exceeds a limit <span class="bcp14">MUST</span> be treated as invalid: a
-request parameter then signals the empty set (<a href="#values" class="auto internal xref">Section 4</a>), and a field is
-treated as absent (<a href="#field" class="auto internal xref">Section 7.2</a>); a server <span class="bcp14">MAY</span> instead reject the request using an
-error response appropriate to the endpoint or application protocol. In
-particular, <code>invalid_request</code> is available at OAuth endpoints, while a
-protected resource can use an application-specific response.<a href="#section-11.3-1" class="pilcrow">¶</a></p>
-<p id="section-11.3-2">Acting on a falsely asserted capability can also consume server resources. An
+parsing a signal. Those limits <span class="bcp14">MUST</span> admit any otherwise-valid signal of at most
+4096 octets and at most 64 members, counting members before duplicates or
+unrecognized values are removed; a recipient <span class="bcp14">MAY</span> accept larger signals. The
+octets counted are those of the carrier's value, excluding its name and the
+surrounding message:<a href="#section-11.3-1" class="pilcrow">¶</a></p>
+<span id="name-octets-counted-toward-a-lim"></span><table class="center" id="table-1">
+          <caption>
+<a href="#table-1" class="selfRef">Table 1</a>:
+<a href="#name-octets-counted-toward-a-lim" class="selfRef">Octets counted toward a limit</a>
+          </caption>
+<thead>
+            <tr>
+              <th class="text-left" rowspan="1" colspan="1">Carrier</th>
+              <th class="text-left" rowspan="1" colspan="1">Octets counted</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">Request parameter</td>
+              <td class="text-left" rowspan="1" colspan="1">The form-encoded value, before percent-decoding</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">Request parameter in a Request Object</td>
+              <td class="text-left" rowspan="1" colspan="1">The JSON string as serialized in the decoded JWT Claims Set, including its quotes and escapes</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">HTTP field</td>
+              <td class="text-left" rowspan="1" colspan="1">The combined field value, including separators and parameters</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">Client metadata or discovery</td>
+              <td class="text-left" rowspan="1" colspan="1">The serialized JSON array, including brackets, quotes, whitespace, and escapes</td>
+            </tr>
+          </tbody>
+        </table>
+<p id="section-11.3-3">A limit specific to a capability or a deployment <span class="bcp14">MUST</span> also admit the canonical
+retraction signal: a request parameter or a field whose entire value is <code>none</code>.
+This does not extend to a larger input that reduces to <code>none</code> only after
+duplicates or parameters are removed.<a href="#section-11.3-3" class="pilcrow">¶</a></p>
+<p id="section-11.3-4">A signal that exceeds a limit <span class="bcp14">MUST</span> be treated as invalid: a request parameter
+then signals the empty set (<a href="#values" class="auto internal xref">Section 4</a>), a field is treated as absent
+(<a href="#field" class="auto internal xref">Section 7.2</a>), and a client metadata field is ignored (<a href="#metadata" class="auto internal xref">Section 7.3</a>). A server
+<span class="bcp14">MAY</span> instead reject the request or metadata document using an error response
+appropriate to the endpoint or application protocol. In particular,
+<code>invalid_request</code> is available at OAuth endpoints and <code>invalid_client_metadata</code>
+at a registration endpoint <span>[<a href="#RFC7591" class="cite xref">RFC7591</a>]</span>, while a protected resource can use an
+application-specific response.<a href="#section-11.3-4" class="pilcrow">¶</a></p>
+<p id="section-11.3-5">Acting on a falsely asserted capability can also consume server resources. An
 extension specification <span class="bcp14">MUST</span> analyze this cost and define any necessary
 rate-limiting, state-allocation, or replay protections. A capability signal
-does not authorize the client to consume unbounded work.<a href="#section-11.3-2" class="pilcrow">¶</a></p>
+does not authorize the client to consume unbounded work.<a href="#section-11.3-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="unregistered-values">
@@ -2590,6 +2654,10 @@ upon<a href="#section-13.5-2.4.1" class="pilcrow">¶</a></p>
         <dd>
 <span class="refTitle">"Deferred Token Response"</span>, <span>n.d.</span>, <span>&lt;<a href="https://datatracker.ietf.org/doc/draft-gerber-oauth-deferred-token-response">https://datatracker.ietf.org/doc/draft-gerber-oauth-deferred-token-response</a>&gt;</span>. </dd>
 <dd class="break"></dd>
+<dt id="FETCH">[FETCH]</dt>
+        <dd>
+<span class="refTitle">"Fetch Living Standard"</span>, <span>n.d.</span>, <span>&lt;<a href="https://fetch.spec.whatwg.org/">https://fetch.spec.whatwg.org/</a>&gt;</span>. </dd>
+<dd class="break"></dd>
 <dt id="FIRST-PARTY-APPS">[FIRST-PARTY-APPS]</dt>
         <dd>
 <span class="refTitle">"OAuth 2.0 for First-Party Applications"</span>, <span>n.d.</span>, <span>&lt;<a href="https://datatracker.ietf.org/doc/draft-ietf-oauth-first-party-apps">https://datatracker.ietf.org/doc/draft-ietf-oauth-first-party-apps</a>&gt;</span>. </dd>
@@ -2605,6 +2673,10 @@ upon<a href="#section-13.5-2.4.1" class="pilcrow">¶</a></p>
 <dt id="OAUTH21-VERSIONS">[OAUTH21-VERSIONS]</dt>
         <dd>
 <span class="refTitle">"How can an AS support both 2.0 and 2.1 clients concurrently"</span>, <span>n.d.</span>, <span>&lt;<a href="https://github.com/oauth-wg/oauth-v2-1/issues/120">https://github.com/oauth-wg/oauth-v2-1/issues/120</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="OIDC">[OIDC]</dt>
+        <dd>
+<span class="refTitle">"OpenID Connect Core 1.0"</span>, <span>n.d.</span>, <span>&lt;<a href="https://openid.net/specs/openid-connect-core-1_0.html">https://openid.net/specs/openid-connect-core-1_0.html</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RESOURCE-TOKEN-RESP">[RESOURCE-TOKEN-RESP]</dt>
         <dd>
@@ -2881,8 +2953,8 @@ them affects only which values a client chooses to send (<a href="#discovery" cl
           <p id="appendix-B-2.4.1"><code>Accept-Txn-Challenge: ?1</code> becomes
 <code>OAuth-Client-Capabilities: txn-challenge</code>. The Boolean becomes membership
 of <code>txn-challenge</code> in the request's effective set (<a href="#precedence" class="auto internal xref">Section 7.4</a>).
-Out-of-band knowledge of support still applies, but only when the request
-carries no valid field.<a href="#appendix-B-2.4.1" class="pilcrow">¶</a></p>
+Out-of-band knowledge of support applies only when the request carries no
+valid field with at least one member.<a href="#appendix-B-2.4.1" class="pilcrow">¶</a></p>
 </dd>
       <dd class="break"></dd>
 </dl>
