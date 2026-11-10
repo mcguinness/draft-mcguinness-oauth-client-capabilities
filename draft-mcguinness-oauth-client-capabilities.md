@@ -655,11 +655,10 @@ The array MUST NOT contain `none`. If any element is not a string, does not
 conform to the `capability` production, or is `none`, the value of this member
 is invalid and MUST be ignored in its entirety.
 
-Clients SHOULD signal only capability values that appear in
-`client_capabilities_supported`, where the server publishes it. A client MAY
-signal values absent from the list, and MAY signal values to a server that
-publishes no list at all; a server that does not recognize a value ignores it.
-Advertising recognized values lets clients bound request size and
+A client that holds a server's `client_capabilities_supported` SHOULD signal
+only values that appear in it. A client that does not hold the list MAY signal
+values without retrieving it first; a server that does not recognize a value
+ignores it. Advertising recognized values lets clients bound request size and
 fingerprinting exposure, following the pattern of Client Hints {{RFC8942}}.
 
 Absence of `client_capabilities_supported` does not indicate that the server
@@ -789,10 +788,10 @@ receives a `client_id` that often identifies the software, but a capability set
 can still add information.
 
 Clients that consider their capability set sensitive SHOULD use {{RFC9126}} or
-an encrypted Request Object as defined in {{RFC9101}}, SHOULD restrict signaled
-values to those advertised in `client_capabilities_supported`, and SHOULD NOT
-publish the set in public client metadata. A signed but unencrypted Request
-Object provides integrity, not confidentiality.
+an encrypted Request Object as defined in {{RFC9101}}, SHOULD, when they hold
+the server's `client_capabilities_supported`, restrict signaled values to those
+it lists, and SHOULD NOT publish the set in public client metadata. A signed
+but unencrypted Request Object provides integrity, not confidentiality.
 
 Capability values MUST NOT encode information about an end user or a specific
 device. Specifications defining capabilities whose availability depends on the
