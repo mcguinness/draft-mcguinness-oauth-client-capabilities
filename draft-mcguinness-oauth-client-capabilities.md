@@ -750,6 +750,15 @@ removal can deny optional functionality. Under CAP-1 through CAP-3, neither may
 weaken security, grant authorization, or skip evidence required by the enabled
 behavior.
 
+A signal is not an access control. Any party that can send a request, including
+one holding a stolen authorization code, refresh token, or access token, can
+assert a value, elicit the enabled behavior, and choose among the paths
+{{selection}} permits. Each enabled behavior and each selectable path therefore
+has to be safe when such a party chooses it while holding only the credentials
+the request carries, including a challenge that party could relay to another
+user. CAP-3 requires this, and an extension's security analysis states how its
+behavior meets it.
+
 Servers MUST NOT treat a capability signal as evidence of client identity,
 client software version, or client trustworthiness. Where a Request Object
 {{RFC9101}} or software statement carries a set, the signature prevents
