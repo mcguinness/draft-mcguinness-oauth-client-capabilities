@@ -768,7 +768,8 @@ behavior meets it.
 Servers MUST NOT treat a capability signal as evidence of client identity,
 client software version, or client trustworthiness. Where a Request Object
 {{RFC9101}} or software statement carries a set, the signature prevents
-third-party modification but does not prove implementation. See {{precedence}}.
+third-party modification but does not prove implementation. See {{param}} and
+{{precedence}}.
 
 ## Downgrade {#downgrade}
 
@@ -1428,7 +1429,7 @@ and is easier to establish before more incompatible carriers ship.
   rather than a dedicated field ({{why-not-prefer}}).
 - Whether the `.` and `:` characters the syntax allows should carry any
   structure. No structure is needed today: a revision with different
-  client-side processing registers a new value ({{values}}).
+  client-side processing registers a new value ({{naming}}).
 - Whether client software capabilities and running instance capabilities are
   adequately separated by the replacement rule in {{precedence}}, or whether
   instance-level identity mechanisms should carry a capability set of their
