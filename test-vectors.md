@@ -47,9 +47,9 @@ With a Request Object, and the same metadata default:
 | `"client_capabilities": "b c"` | (absent) | b, c |
 | `"client_capabilities": ["b", "c"]` | (absent) | (empty): invalid, not a string |
 | `"client_capabilities": null` | (absent) | (empty): invalid, not a string |
-| `"client_capabilities": "b c"` | (absent) | b, c: escapes are decoded before the value is parsed |
+| `"client_capabilities": "\u0062 \u0063"` | (absent) | b, c: escapes are decoded before the value is parsed |
 | One value of 1,000 `a` characters, unescaped: 1,002 octets | (absent) | That value, not recognized |
-| The same value as 1,000 `a` escapes: 6,002 octets | (absent) | (empty), or the request is rejected, where the server's limit is 4096 octets: the serialized escapes are counted ("Denial of Service") |
+| The same value as 1,000 `\u0061` escapes: 6,002 octets | (absent) | (empty), or the request is rejected, where the server's limit is 4096 octets: the serialized escapes are counted ("Denial of Service") |
 | (absent) | `client_capabilities=b` | a: the outside value is not used |
 *Request Object test vectors*
 
@@ -113,8 +113,8 @@ of Service").
 ## Discovery
 
 An invalid `client_capabilities_supported` member is ignored in its entirety
-("Discovery"). A client that holds a valid list signals only values in it, and
-sends `none` where it needs to override a default.
+("Discovery"). A client that holds a valid list should signal only values in
+it, sending `none` where it needs to override a default.
 
 | `client_capabilities_supported` | Values a client signals |
 |---|---|
