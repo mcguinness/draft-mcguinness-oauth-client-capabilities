@@ -1247,8 +1247,9 @@ Cache-Control: no-store
 The client then polls as {{DTR}} describes. A request whose effective set does
 not contain the value is never deferred: the authorization server completes it
 synchronously, or returns an error under the grant's rules (Section 4.3 of
-{{DTR}}). For the same token request without the value, the result is an
-ordinary token response:
+{{DTR}}). Omitting the value rules out deferral, not failure. The following
+response to the same token request without the value assumes that the
+authorization server can complete every check it requires without deferral:
 
 ~~~ http-message
 HTTP/1.1 200 OK
@@ -1268,8 +1269,8 @@ registration request above. Its token requests then carry no
 `client_capabilities` parameter and receive the default ({{precedence}}), so
 the authorization server may defer them. An instance that cannot process a
 deferred response overrides the default with `none`, as in the retraction
-example above, and receives the synchronous behavior shown in the previous
-figure.
+example above. Its token requests are then never deferred: each receives a
+token response, as in the previous figure, or an error.
 
 # Applying This Specification to Existing Drafts {#existing-drafts}
 
