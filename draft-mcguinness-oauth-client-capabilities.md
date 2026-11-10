@@ -51,28 +51,16 @@ informative:
   RFC9449:
   RFC9635:
   RFC9700:
-  RESOURCE-TOKEN-RESP:
-    target: https://datatracker.ietf.org/doc/draft-mcguinness-oauth-resource-token-resp
-    title: "Resource Token Response Parameter"
+  RESOURCE-TOKEN-RESP: I-D.mcguinness-oauth-resource-token-resp
   OAUTH21-VERSIONS:
     target: https://github.com/oauth-wg/oauth-v2-1/issues/120
     title: "How can an AS support both 2.0 and 2.1 clients concurrently"
   OAUTH21: I-D.ietf-oauth-v2-1
-  DTR:
-    target: https://datatracker.ietf.org/doc/draft-gerber-oauth-deferred-token-response
-    title: "Deferred Token Response"
-  TXN-CHALLENGE:
-    target: https://datatracker.ietf.org/doc/draft-rosomakho-oauth-txn-challenge
-    title: "Transaction Authorization Challenge"
-  CIMD:
-    target: https://datatracker.ietf.org/doc/draft-ietf-oauth-client-id-metadata-document
-    title: "OAuth Client ID Metadata Document"
-  FIRST-PARTY-APPS:
-    target: https://datatracker.ietf.org/doc/draft-ietf-oauth-first-party-apps
-    title: "OAuth 2.0 for First-Party Applications"
-  ABCA:
-    target: https://datatracker.ietf.org/doc/draft-ietf-oauth-attestation-based-client-auth
-    title: "OAuth 2.0 Attestation-Based Client Authentication"
+  DTR: I-D.gerber-oauth-deferred-token-response
+  TXN-CHALLENGE: I-D.rosomakho-oauth-txn-challenge
+  CIMD: I-D.ietf-oauth-client-id-metadata-document
+  FIRST-PARTY-APPS: I-D.ietf-oauth-first-party-apps
+  ABCA: I-D.ietf-oauth-attestation-based-client-auth
   IANA-OAUTH:
     target: https://www.iana.org/assignments/oauth-parameters/
     title: "OAuth Parameters"
