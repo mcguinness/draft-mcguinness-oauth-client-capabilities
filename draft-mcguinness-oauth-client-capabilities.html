@@ -17,10 +17,10 @@ a protected resource request has no OAuth request parameter surface.
 carriers for them: a  client_capabilities  request parameter, an
  OAuth-Client-Capabilities  HTTP field, and a  client_capabilities  client
 metadata field. Capability values are advisory and are constrained to enable
-only optional server behavior, so that their absence is always safe. Because
-each request can carry its own set, a client can roll out a capability one
-instance, release, or authorization server at a time, without changing metadata
-that every instance shares. 
+only optional server behavior, so that adding or removing a value does not
+weaken security. Because each request can carry its own set, a client can roll
+out a capability one instance, release, or authorization server at a time,
+without changing metadata that every instance shares. 
     " name="description">
 <meta content="xml2rfc 3.35.0" name="generator">
 <meta content="OAuth" name="keyword">
@@ -1103,10 +1103,10 @@ a protected resource request has no OAuth request parameter surface.<a href="#se
 carriers for them: a <code>client_capabilities</code> request parameter, an
 <code>OAuth-Client-Capabilities</code> HTTP field, and a <code>client_capabilities</code> client
 metadata field. Capability values are advisory and are constrained to enable
-only optional server behavior, so that their absence is always safe. Because
-each request can carry its own set, a client can roll out a capability one
-instance, release, or authorization server at a time, without changing metadata
-that every instance shares.<a href="#section-abstract-2" class="pilcrow">¶</a></p>
+only optional server behavior, so that adding or removing a value does not
+weaken security. Because each request can carry its own set, a client can roll
+out a capability one instance, release, or authorization server at a time,
+without changing metadata that every instance shares.<a href="#section-abstract-2" class="pilcrow">¶</a></p>
 </section>
 <div id="status-of-memo">
 <section id="section-boilerplate.1">
@@ -1491,8 +1491,8 @@ set: the values a server may act upon for that request. A request-level signal
 replaces any metadata default rather than adding to it (<a href="#precedence" class="auto internal xref">Section 7.4</a>).<a href="#section-3-4" class="pilcrow">¶</a></p>
 <p id="section-3-5">A server advertises the values it recognizes in its own metadata
 (<a href="#discovery" class="auto internal xref">Section 9</a>). Signaling never obliges a server to act. Under the invariants
-in <a href="#invariants" class="auto internal xref">Section 5</a>, a signal that is absent, removed, or untrue leaves the
-protocol no less secure.<a href="#section-3-5" class="pilcrow">¶</a></p>
+in <a href="#invariants" class="auto internal xref">Section 5</a>, which every registered value has to meet, a signal that is
+absent, removed, added, or untrue leaves the protocol no less secure.<a href="#section-3-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="values">
@@ -1644,10 +1644,14 @@ capability value and to every use of the carriers in <a href="#carriers" class="
 value from the effective capability set <span class="bcp14">MUST NOT</span> cause a server to apply
 weaker client authentication, weaker sender constraining, weaker user
 authentication, or a more permissive policy than it would have applied had
-the value never been defined. A capability <span class="bcp14">MUST NOT</span> enable a security check
-that the server would otherwise skip, including stricter validation of the
-client's own requests, because removing the value would remove the check.
-Absence <span class="bcp14">MUST</span> be safe.<a href="#section-5-2.2.1" class="pilcrow">¶</a></p>
+the value never been defined. Adding a capability value <span class="bcp14">MUST NOT</span> lower the
+assurance a server requires, or lead it to accept weaker client
+authentication, sender constraining, or user authentication than that
+assurance demands. Among paths that meet that assurance, a value can affect
+which one the server takes (<a href="#selection" class="auto internal xref">Section 8.1</a>). A capability <span class="bcp14">MUST NOT</span> enable a
+security check that the server would otherwise skip, including stricter
+validation of the client's own requests, because removing the value would
+remove the check. Absence <span class="bcp14">MUST</span> be safe.<a href="#section-5-2.2.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
 <dt id="section-5-2.3">CAP-2:</dt>
@@ -1663,19 +1667,22 @@ capability.<a href="#section-5-2.4.1" class="pilcrow">¶</a></p>
         <dd style="margin-left: 1.5em" id="section-5-2.6">
           <p id="section-5-2.6.1">A server <span class="bcp14">MUST NOT</span> rely on a capability signal being truthful. The security
 properties of the enabled behavior <span class="bcp14">MUST</span> hold even when the client does not
-implement the capability. A capability <span class="bcp14">MUST NOT</span> substitute for client
-authentication, proof of possession, protocol validation, or other evidence
-required by the behavior it enables.<a href="#section-5-2.6.1" class="pilcrow">¶</a></p>
+implement the capability, and when a party other than the client asserts it.
+A capability <span class="bcp14">MUST NOT</span> substitute for client authentication, proof of
+possession, protocol validation, or other evidence required by the behavior
+it enables.<a href="#section-5-2.6.1" class="pilcrow">¶</a></p>
 </dd>
       <dd class="break"></dd>
 </dl>
 <p id="section-5-3">Two consequences follow. A client that claims a capability it lacks can receive
 a response it cannot process, but CAP-2 and CAP-3 keep the false claim from
 being accepted as authorization, authentication, or proof of a
-security-relevant property. An adversary who removes values from a signal
-denies optional behavior, which under CAP-1 is the safe direction. Removing a
-signal that narrows a set instead restores a metadata default or out-of-band
-knowledge (<a href="#downgrade" class="auto internal xref">Section 11.2</a>).<a href="#section-5-3" class="pilcrow">¶</a></p>
+security-relevant property. Any party able to send the request can assert a
+value and elicit the enabled behavior, which CAP-3 requires to be safe in that
+party's hands (<a href="#unverified-signals" class="auto internal xref">Section 11.1</a>). An adversary who removes values from a
+signal denies optional behavior, which under CAP-1 is the safe direction.
+Removing a signal that narrows a set instead restores a metadata default or
+out-of-band knowledge (<a href="#downgrade" class="auto internal xref">Section 11.2</a>).<a href="#section-5-3" class="pilcrow">¶</a></p>
 <p id="section-5-4">These invariants also serve as the admission criterion for the registry; see
 <a href="#extension-guidance" class="auto internal xref">Section 10</a>.<a href="#section-5-4" class="pilcrow">¶</a></p>
 </section>
@@ -1962,7 +1969,7 @@ not give any capability mandatory-to-understand semantics; see <a href="#no-requ
 An extension <span class="bcp14">MAY</span> define an error for a case in which the server cannot proceed
 without a particular client-side behavior. Such an error reports the
 extension's condition; it does not turn the signal into an authorization input.<a href="#section-8-3" class="pilcrow">¶</a></p>
-<p id="section-8-4">A server <span class="bcp14">SHOULD NOT</span> promote a request-level capability set to durable client
+<p id="section-8-4">A server <span class="bcp14">MUST NOT</span> promote a request-level capability set to durable client
 metadata.<a href="#section-8-4" class="pilcrow">¶</a></p>
 <div id="selection">
 <section id="section-8.1">
@@ -2101,10 +2108,18 @@ request parameter. Injection can produce a response the client cannot process;
 removal can deny optional functionality. Under CAP-1 through CAP-3, neither may
 weaken security, grant authorization, or skip evidence required by the enabled
 behavior.<a href="#section-11.1-2" class="pilcrow">¶</a></p>
-<p id="section-11.1-3">Servers <span class="bcp14">MUST NOT</span> treat a capability signal as evidence of client identity,
+<p id="section-11.1-3">A signal is not an access control. Any party that can send a request, including
+one holding a stolen authorization code, refresh token, or access token, can
+assert a value, elicit the enabled behavior, and choose among the paths
+<a href="#selection" class="auto internal xref">Section 8.1</a> permits. Each enabled behavior and each selectable path therefore
+has to be safe when such a party chooses it while holding only the credentials
+the request carries, including a challenge that party could relay to another
+user. CAP-3 requires this, and an extension's security analysis states how its
+behavior meets it.<a href="#section-11.1-3" class="pilcrow">¶</a></p>
+<p id="section-11.1-4">Servers <span class="bcp14">MUST NOT</span> treat a capability signal as evidence of client identity,
 client software version, or client trustworthiness. Where a Request Object
 <span>[<a href="#RFC9101" class="cite xref">RFC9101</a>]</span> or software statement carries a set, the signature prevents
-third-party modification but does not prove implementation. See <a href="#precedence" class="auto internal xref">Section 7.4</a>.<a href="#section-11.1-3" class="pilcrow">¶</a></p>
+third-party modification but does not prove implementation. See <a href="#precedence" class="auto internal xref">Section 7.4</a>.<a href="#section-11.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="downgrade">
@@ -2115,14 +2130,20 @@ third-party modification but does not prove implementation. See <a href="#preced
 <p id="section-11.2-1">Because capability signals may be removed by an adversary, an extension <span class="bcp14">MUST</span>
 define a safe absent-signal fallback. If the enabled behavior is how a server
 obtains something it requires, the fallback is refusal, not proceeding without
-it. Removal costs client functionality, never a server security property.
-Removing a signal that narrows a set widens it instead: stripping a request
-parameter that overrides a metadata default restores the default, and stripping
-a field that replaces out-of-band knowledge restores that knowledge. Either can
-lead a server to exercise a behavior the instance cannot process, which is a
-failed exchange, not a weakened one. Injecting <code>none</code> removes out-of-band
-knowledge, which is the safe direction. On the front channel, a Request Object
-or a pushed authorization request protects an override.<a href="#section-11.2-1" class="pilcrow">¶</a></p>
+it. With such a fallback, removal costs client functionality, never a server
+security property. Removing a signal that narrows a set widens it instead:
+stripping a request parameter that overrides a metadata default restores the
+default, and stripping a field that replaces out-of-band knowledge restores
+that knowledge. Either can lead a server to exercise a behavior the instance
+cannot process, which is a failed exchange, not a weakened one. Corrupting a
+field so that it is invalid has the same effect as stripping it. Injecting
+<code>none</code> removes out-of-band knowledge, which is the safe direction. On the front
+channel, a signed Request Object or a pushed authorization request protects the
+integrity of the override it carries, but an attacker can still substitute an
+unprotected request unless the authorization server enforces its use:
+<code>require_signed_request_object</code> (<span><a href="https://rfc-editor.org/rfc/rfc9101#section-10.5" class="relref">Section 10.5</a> of [<a href="#RFC9101" class="cite xref">RFC9101</a>]</span>) for Request
+Objects, and <code>require_pushed_authorization_requests</code> (<span><a href="https://rfc-editor.org/rfc/rfc9126#section-5" class="relref">Section 5</a> of [<a href="#RFC9126" class="cite xref">RFC9126</a>]</span>)
+or equivalent policy for pushed requests.<a href="#section-11.2-1" class="pilcrow">¶</a></p>
 <p id="section-11.2-2">For the same reason, CAP-1 bars an extension from using a capability to enable
 a security check that the server otherwise skips. Such a check belongs in
 policy or an authenticated negotiation mechanism.<a href="#section-11.2-2" class="pilcrow">¶</a></p>
@@ -2156,9 +2177,9 @@ does not authorize the client to consume unbounded work.<a href="#section-11.3-2
 meanings. Ignoring unrecognized values does not help, because each recognizes
 the value, and authenticating the signal does not resolve a disagreement about
 its meaning. A server can then exercise a behavior the client cannot process,
-or spend resources on a behavior the client will not complete. CAP-1 through
-CAP-3 still constrain the enabled behavior, so the result is a failed exchange
-or wasted work, not weakened security. <a href="#naming" class="auto internal xref">Section 4.2</a> recommends confining
+or spend resources on a behavior the client will not complete. Provided each
+implementation meets CAP-1 through CAP-3 on its own, the result is a failed
+exchange or wasted work, not weakened security. <a href="#naming" class="auto internal xref">Section 4.2</a> recommends confining
 unregistered values to deployments whose parties have agreed on their meaning,
 and seeking early allocation.<a href="#section-11.4-1" class="pilcrow">¶</a></p>
 </section>
@@ -2265,8 +2286,9 @@ identifies every applicable carrier and endpoint;<a href="#section-13.1-5.2.1" c
 </li>
           <li class="normal" id="section-13.1-5.3">
             <p id="section-13.1-5.3.1">confirm that the specification meets the requirements this document places
-on extensions, including those in <a href="#param" class="auto internal xref">Section 7.1</a>, <a href="#extension-guidance" class="auto internal xref">Section 10</a>,
-<a href="#downgrade" class="auto internal xref">Section 11.2</a>, <a href="#dos" class="auto internal xref">Section 11.3</a>, and <a href="#privacy-considerations" class="auto internal xref">Section 12</a>;<a href="#section-13.1-5.3.1" class="pilcrow">¶</a></p>
+on extensions, including those in <a href="#param" class="auto internal xref">Section 7.1</a>, <a href="#selection" class="auto internal xref">Section 8.1</a>,
+<a href="#extension-guidance" class="auto internal xref">Section 10</a>, <a href="#downgrade" class="auto internal xref">Section 11.2</a>, <a href="#dos" class="auto internal xref">Section 11.3</a>, and
+<a href="#privacy-considerations" class="auto internal xref">Section 12</a>;<a href="#section-13.1-5.3.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-13.1-5.4">
             <p id="section-13.1-5.4.1">consider the security, privacy, interoperability, and operational effects of
@@ -2584,10 +2606,6 @@ upon<a href="#section-13.5-2.4.1" class="pilcrow">¶</a></p>
         <dd>
 <span class="refTitle">"How can an AS support both 2.0 and 2.1 clients concurrently"</span>, <span>n.d.</span>, <span>&lt;<a href="https://github.com/oauth-wg/oauth-v2-1/issues/120">https://github.com/oauth-wg/oauth-v2-1/issues/120</a>&gt;</span>. </dd>
 <dd class="break"></dd>
-<dt id="OAUTH21-VERSIONS-LIST">[OAUTH21-VERSIONS-LIST]</dt>
-        <dd>
-<span class="refTitle">"OAuth 2.0 and 2.1 version support discovery (oauth@ietf.org)"</span>, <span>n.d.</span>, <span>&lt;<a href="https://mailarchive.ietf.org/arch/msg/oauth/hwo5a8eicmWM9q2fUtcVFlYw-HI/">https://mailarchive.ietf.org/arch/msg/oauth/hwo5a8eicmWM9q2fUtcVFlYw-HI/</a>&gt;</span>. </dd>
-<dd class="break"></dd>
 <dt id="RESOURCE-TOKEN-RESP">[RESOURCE-TOKEN-RESP]</dt>
         <dd>
 <span class="refTitle">"Resource Token Response Parameter"</span>, <span>n.d.</span>, <span>&lt;<a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-resource-token-resp">https://datatracker.ietf.org/doc/draft-mcguinness-oauth-resource-token-resp</a>&gt;</span>. </dd>
@@ -2808,8 +2826,9 @@ registration request.<a href="#appendix-A-15" class="pilcrow">¶</a></p>
         <dd class="break"></dd>
 <dt id="appendix-A-16.7">Absent-Signal Behavior:</dt>
         <dd style="margin-left: 1.5em" id="appendix-A-16.8">
-          <p id="appendix-A-16.8.1">The authorization server responds synchronously or with an error; it does
-not defer.<a href="#appendix-A-16.8.1" class="pilcrow">¶</a></p>
+          <p id="appendix-A-16.8.1">The authorization server does not defer. It responds synchronously only if
+it can complete every check it requires without deferral, and otherwise
+returns an error.<a href="#appendix-A-16.8.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
 <dt id="appendix-A-16.9">Carriers:</dt>
@@ -2935,10 +2954,15 @@ preference should replace the dedicated field is an open issue
 safe fallback: a synchronous response or error for deferred response, and
 refusal without the optional transaction challenge. Signal removal suppresses
 optional behavior without weakening a security check.<a href="#appendix-C.3-1" class="pilcrow">¶</a></p>
-<p id="appendix-C.3-2">Similar-looking behaviors do not necessarily qualify. DPoP nonce enforcement
-<span>[<a href="#RFC9449" class="cite xref">RFC9449</a>]</span> does not. A removable signal cannot govern a required nonce without
-weakening replay protection, and CAP-2 prevents using it to justify
-longer-lived tokens.<a href="#appendix-C.3-2" class="pilcrow">¶</a></p>
+<p id="appendix-C.3-2">Similar-looking behaviors do not necessarily qualify. A signal cannot gate DPoP
+nonce enforcement <span>[<a href="#RFC9449" class="cite xref">RFC9449</a>]</span>, because removing it would weaken replay
+protection, and CAP-2 prevents using it to justify longer-lived tokens.
+Offering the <code>use_dpop_nonce</code> challenge is a different question: where server
+policy already requires a nonce and the absent-signal behavior is refusal, the
+choice between challenging and refusing is a selection (<a href="#selection" class="auto internal xref">Section 8.1</a>) and
+could qualify. Whether it warrants a value is a separate matter, since
+<span><a href="https://rfc-editor.org/rfc/rfc9449#section-8.2" class="relref">Section 8.2</a> of [<a href="#RFC9449" class="cite xref">RFC9449</a>]</span> already requires a client to use a nonce supplied in
+a successful token response.<a href="#appendix-C.3-2" class="pilcrow">¶</a></p>
 <p id="appendix-C.3-3">The <code>redirect_to_web</code> fallback in <span>[<a href="#FIRST-PARTY-APPS" class="cite xref">FIRST-PARTY-APPS</a>]</span> qualifies only if
 defined as optional server behavior with a safe absent-signal outcome. If
 server metadata can instead make the client behavior conditional, discovery is
@@ -2979,43 +3003,22 @@ weakening security.<a href="#appendix-C.4-1" class="pilcrow">¶</a></p>
         <h3 id="name-capabilities-and-profile-se">
 <a href="#appendix-C.5" class="section-number selfRef">C.5. </a><a href="#name-capabilities-and-profile-se" class="section-name selfRef">Capabilities and Profile Selection</a>
         </h3>
-<p id="appendix-C.5-1">A related problem is selecting a protocol version or profile rather than a
-behavior. Discussion of how an authorization server can serve OAuth 2.0 and 2.1
-clients concurrently <span>[<a href="#OAUTH21-VERSIONS" class="cite xref">OAUTH21-VERSIONS</a>]</span> led to a proposal on the working
-group list: a per-issuer <code>oauth_versions_supported</code> metadata array and a
-per-client <code>oauth_version</code> registration field. That proposal notes that neither
-provides a runtime signal <span>[<a href="#OAUTH21-VERSIONS-LIST" class="cite xref">OAUTH21-VERSIONS-LIST</a>]</span>.<a href="#appendix-C.5-1" class="pilcrow">¶</a></p>
-<p id="appendix-C.5-2">A protocol version is not a capability (<a href="#values" class="auto internal xref">Section 4</a>). None of the differences
-OAuth 2.1 lists from OAuth 2.0 (<span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-17#section-10" class="relref">Section 10</a> of [<a href="#OAUTH21" class="cite xref">OAUTH21</a>]</span>) introduces a
-response that a client conforming to <span>[<a href="#RFC6749" class="cite xref">RFC6749</a>]</span> cannot process. Most are
-stricter, and a signal that enables a check is what CAP-1 excludes. One is more
-lenient: OAuth 2.1 drops the token request's <code>redirect_uri</code> check because PKCE
-prevents the same attack (<span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-17#section-10.2" class="relref">Section 10.2</a> of [<a href="#OAUTH21" class="cite xref">OAUTH21</a>]</span>), and a server that skips
-a check because a signal is present relies on that signal, which CAP-3
-excludes. OAuth 2.1 states that the authorization server's configuration for a
-client determines which rules apply, and defines no version selector
-(<span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-17#section-1.8" class="relref">Section 1.8</a> of [<a href="#OAUTH21" class="cite xref">OAUTH21</a>]</span>).<a href="#appendix-C.5-2" class="pilcrow">¶</a></p>
-<p id="appendix-C.5-3">A draft revision that changes what a client must parse is, by contrast, a
-change in client-side behavior, which <a href="#values" class="auto internal xref">Section 4</a> covers. What remains out of
-scope is selecting a framework version or a profile, where the label does not
-correspond to a single client-side behavior.<a href="#appendix-C.5-3" class="pilcrow">¶</a></p>
-<p id="appendix-C.5-4">Per-client configuration cannot stage a rollout of protocol-version enforcement
-across native application releases, whose upgrades reach users gradually: every
-deployed instance sharing a <code>client_id</code> is subject to the same rules. Nor can
-the override in <a href="#precedence" class="auto internal xref">Section 7.4</a>, which lets a less-capable instance retract a
-default: in a native rollout the less-capable instances are the releases that
-were never updated, which cannot send anything, and <a href="#metadata" class="auto internal xref">Section 7.3</a> forbids a
-default that such instances would not override. What can work is the reverse:
-the client's configured rules stay at the earlier version, and updated releases
-send a version selector on each request. Such a selector would not be a
-capability (CAP-1), and it cannot establish a security minimum for the client
-while requests without it are still accepted, because an attacker starting a
-request under the same <code>client_id</code> omits it. A server can still attach
-protection to credentials issued under the selector, such as rotation of a
-refresh token family (<span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-17#section-4.3.1" class="relref">Section 4.3.1</a> of [<a href="#OAUTH21" class="cite xref">OAUTH21</a>]</span>), and a later omission does
-not remove it. The client-wide minimum arrives only when the configured rules
-are raised. Whether OAuth 2.1 should define such a selector belongs to that
-work rather than this one.<a href="#appendix-C.5-4" class="pilcrow">¶</a></p>
+<p id="appendix-C.5-1">Selecting a protocol version or profile, such as OAuth 2.0 or OAuth 2.1 rules
+for a client <span>[<a href="#OAUTH21-VERSIONS" class="cite xref">OAUTH21-VERSIONS</a>]</span>, is outside this mechanism. A version changes
+the authorization server's request-processing policy, not what a client must
+process in a response, and a signal that enables a check is what CAP-1
+excludes. OAuth 2.1 leaves the choice to the authorization server's
+configuration for each client and defines no version signal
+(<span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-17#section-1.8" class="relref">Section 1.8</a> of [<a href="#OAUTH21" class="cite xref">OAUTH21</a>]</span>).<a href="#appendix-C.5-1" class="pilcrow">¶</a></p>
+<p id="appendix-C.5-2">A revision that changes what a client must process in a response is different:
+it is a client-side behavior, and <a href="#naming" class="auto internal xref">Section 4.2</a> gives it a new capability value.<a href="#appendix-C.5-2" class="pilcrow">¶</a></p>
+<p id="appendix-C.5-3">A removable version selector, sent on each request so that updated releases can
+opt in, cannot establish a security minimum for the client while requests
+without it are still accepted, because an attacker sending a request under the
+same <code>client_id</code> omits it. Protections a server attaches to credentials issued
+under such a selector, such as rotation of a refresh token family
+(<span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-17#section-4.3.1" class="relref">Section 4.3.1</a> of [<a href="#OAUTH21" class="cite xref">OAUTH21</a>]</span>), can persist after a later omission. Whether to
+define such a selector belongs to the OAuth 2.1 work.<a href="#appendix-C.5-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="tradeoffs">
