@@ -455,6 +455,17 @@ spaces, is invalid. A recipient MUST treat an invalid value as signaling the
 empty set and MUST NOT reject the request solely because the value is invalid,
 except as permitted by {{dos}}.
 
+When an authorization request uses a Request Object, the authorization server
+uses only the parameters inside it ({{Section 6.3 of RFC9101}}). A
+`client_capabilities` value outside the Request Object is not used, and if the
+Request Object contains no such value, the parameter is absent for the purposes
+of {{precedence}}. Inside a Request Object, the value is a JSON string
+containing a `capability-list`; a value of any other JSON type is invalid. An
+authorization request that uses a `request_uri` from a pushed authorization
+request is built as defined in {{RFC9101}} ({{Section 4 of RFC9126}}), so the
+same holds for the parameters that were pushed: a `client_capabilities` value
+sent alongside the `request_uri` is not used.
+
 The parameter is not defined for the client registration endpoint. A client
 declares capabilities there using the `client_capabilities` metadata field in
 {{metadata}}.
@@ -621,18 +632,9 @@ empty, subject to that out-of-band knowledge; an absent field, an empty List,
 and an invalid field are treated alike. A client that needs the empty set to
 replace out-of-band knowledge sends `none` ({{none-value}}).
 
-When an authorization request uses a Request Object, the authorization server
-uses only the parameters inside it ({{Section 6.3 of RFC9101}}). A
-`client_capabilities` value outside the Request Object is not used, and if the
-Request Object contains no such value, step 2 applies. Inside a Request Object,
-the value is a JSON string containing a `capability-list`; a value of any other
-JSON type is invalid ({{values}}). An authorization request that uses a
-`request_uri` from a pushed authorization request is built as defined in
-{{RFC9101}} ({{Section 4 of RFC9126}}), so the same holds for the parameters
-that were pushed: a `client_capabilities` value sent alongside the
-`request_uri` is not used. A capability set in a software statement is client
-metadata and remains subject to the request-level override above; signing the
-statement does not turn a default into a per-request declaration.
+A capability set in a software statement is client metadata and remains subject
+to the request-level override above; signing the statement does not turn a
+default into a per-request declaration.
 
 ## Scope of a Signal {#signal-scope}
 
@@ -1101,7 +1103,7 @@ response_type=code&client_id=https%3A%2F%2Fapp.example%2Fclient
 {: title="Capability carried in a pushed authorization request"}
 
 The following example shows the claims of a Request Object carrying the
-parameter. The value is a JSON string, not an array ({{precedence}}):
+parameter. The value is a JSON string, not an array ({{param}}):
 
 ~~~ json
 {
