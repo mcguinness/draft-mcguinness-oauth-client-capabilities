@@ -1206,8 +1206,8 @@ Transaction Authorization Challenge:
 : `Accept-Txn-Challenge: ?1` becomes
   `OAuth-Client-Capabilities: txn-challenge`. The Boolean becomes membership
   of `txn-challenge` in the request's effective set ({{precedence}}).
-  Out-of-band knowledge of support still applies, but only when the request
-  carries no valid field.
+  Out-of-band knowledge of support applies only when the request carries no
+  valid field with at least one member.
 
 # Design Rationale {#rationale}
 
