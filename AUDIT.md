@@ -322,7 +322,7 @@ in a proof) and it needs no capability value. ABCA drafted it differently.
 |---|---|---|
 | Server advertises that it uses the mechanism | No; the server challenges reactively | Yes; `challenge_endpoint` in RFC 8414 metadata, which the AS "MUST signal" |
 | Client-side requirement | Split. After a `use_dpop_nonce` error, non-normative: "will typically retry", "is expected to retry". On a successful response, normative: "The client MUST use the new nonce value supplied for the next token request" (Section 8.2) | Normative but conditional: "If the Authorization Server offers a challenge endpoint, the Client MUST retrieve a challenge and MUST use this challenge" |
-| Can the server know in advance whether the client will cope? | No | Yes; it published the endpoint, and client conformance follows from that |
+| Can the server know in advance whether the client will cope? | For a nonce delivered in a successful response, yes: Section 8.2 obliges the client to use it. For the `use_dpop_nonce` challenge, no | Yes; it published the endpoint, and client conformance follows from that |
 | Capability value needed? | Not to gate nonce enforcement (fails CAP-1) or to buy token lifetime (fails CAP-2). Offering the recovery challenge passes as a selection; whether it is worth a value is a separate question, see above | No; discovery plus a conditional MUST |
 
 Version -10 extends the pattern in two directions that matter here. The
