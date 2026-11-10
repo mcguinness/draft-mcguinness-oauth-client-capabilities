@@ -561,31 +561,27 @@ in {{param}} as the primary carrier.
 
 ## Precedence {#precedence}
 
-For requests directed to an authorization server, the effective capability set
-is determined as follows:
+The effective capability set of a request is determined as follows, where a
+protected resource request includes one to a resource that an authorization
+server hosts ({{field}}), and any other request to an authorization server is
+an OAuth request:
 
-1. If the request's OAuth parameters contain `client_capabilities`, its value
-   is the effective set. A value that is invalid ({{param}}) or exceeds a limit
-   ({{dos}}) is still present, and its effective set is empty.
-2. Otherwise, the `client_capabilities` value from the client metadata that the
-   authorization server considers authoritative for that client is the
-   effective set.
+1. If the request carries a request-level signal, its value is the effective
+   set. On an OAuth request, that signal is the `client_capabilities` request
+   parameter; a value that is invalid ({{param}}) or exceeds a limit ({{dos}})
+   is still present, and its effective set is empty. On a protected resource
+   request, it is a valid `OAuth-Client-Capabilities` field with at least one
+   member, even if the server recognizes no value in it; an absent field, an
+   empty List, and an invalid field are treated alike, as no signal.
+2. Otherwise, the default is the effective set: on an OAuth request, the
+   `client_capabilities` value from the client metadata that the authorization
+   server considers authoritative for that client, and on a protected resource
+   request, any out-of-band knowledge an extension defines.
 3. If neither is present, the effective set is empty.
 
-The `OAuth-Client-Capabilities` field plays no part in this determination. As
-specified in {{field}}, an authorization server ignores the field at any
-endpoint where the request parameter is defined.
-
-Request values replace rather than augment metadata so that a less-capable
-instance can retract a default. To retract everything, it sends
-`client_capabilities=none`.
-
-For a protected resource request, a valid field with at least one member is the
-effective set and replaces any out-of-band knowledge an extension defines, even
-if the server recognizes no value in it. Without such a field, the set is
-empty, subject to that out-of-band knowledge; an absent field, an empty List,
-and an invalid field are treated alike. A client that needs the empty set to
-replace out-of-band knowledge sends `none` ({{none-value}}).
+A request-level signal replaces the default rather than augmenting it, so that
+a less-capable instance can retract a default. To retract everything, a client
+sends `none` ({{none-value}}).
 
 A capability set in a software statement is client metadata and remains subject
 to the request-level override above; signing the statement does not turn a
