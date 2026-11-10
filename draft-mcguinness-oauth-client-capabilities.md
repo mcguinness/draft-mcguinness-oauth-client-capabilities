@@ -1248,7 +1248,7 @@ Cache-Control: no-store
 
 {
   "error": "authorization_pending",
-  "deferral_code": "8d67dc78-7faa-4d41-aabd-67707b374255",
+  "deferral_code": "TfZUlGEqTJeW7oNlcxnXs2kECOk",
   "expires_in": 10800,
   "interval": 60
 }
