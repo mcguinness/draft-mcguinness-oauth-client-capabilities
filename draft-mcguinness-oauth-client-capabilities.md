@@ -1229,8 +1229,8 @@ motivated this work would use the mechanism.
 
 Deferred Token Response:
 : `completion_mode=deferred` becomes `client_capabilities` containing
-  `accept-deferred-response`. The authorization server still MUST NOT defer
-  unless the value is in the request's effective set. {{signal-scope}}
+  `accept-deferred-response`. The authorization server still defers only when
+  the value is in the request's effective set. {{signal-scope}}
   requires the value in the token request's effective set; a signal at an
   earlier endpoint has no effect on the token response. The proposed
   single-purpose registry is subsumed by {{iana-registry}}, and the
