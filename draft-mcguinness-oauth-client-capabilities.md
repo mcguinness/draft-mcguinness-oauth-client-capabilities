@@ -448,11 +448,10 @@ the `invalid_request` error code (Sections 4.1.2.1 and 5.2 of {{RFC6749}}).
 This differs from an invalid value, which is not rejected.
 
 Where the parameter would otherwise be carried in the query component of an
-authorization request URI, and the client holds authorization server metadata
-that includes `pushed_authorization_request_endpoint`
-({{Section 5 of RFC9126}}), the client SHOULD use a pushed authorization
-request instead, to bound URI growth and keep the list off the user agent.
-Passing a Request Object {{RFC9101}} by value does not reduce URI size.
+authorization request URI, a pushed authorization request {{RFC9126}} bounds
+URI growth and keeps the list off the user agent; passing a Request Object
+{{RFC9101}} by value does not reduce URI size. {{privacy-considerations}}
+covers a client that considers its capability set sensitive.
 
 ## The `OAuth-Client-Capabilities` HTTP Field {#field}
 
