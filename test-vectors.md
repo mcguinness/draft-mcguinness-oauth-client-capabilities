@@ -42,9 +42,9 @@ The same metadata default, with the form-encoded request shown before decoding:
 | `client_capabilities=b&client_capabilities=c` | Request rejected with `invalid_request` | A repeated parameter is malformed |
 *Form-encoded request test vectors*
 
-With a Request Object or a pushed request, and the same metadata default:
+With a Request Object, and the same metadata default:
 
-| In the Request Object or pushed request | Outside it | Effective set |
+| In the Request Object | Outside it | Effective set |
 |---|---|---|
 | `"client_capabilities": "b c"` | (absent) | b, c |
 | `"client_capabilities": ["b", "c"]` | (absent) | (empty): invalid, not a string |
@@ -55,8 +55,22 @@ With a Request Object or a pushed request, and the same metadata default:
 | One value of 1,000 `a` characters, unescaped: 1,002 octets | (absent) | That value, not recognized |
 | The same value as 1,000 `\u0061` escapes: 6,002 octets | (absent) | (empty), or the request is rejected, where the server's limit is 4096 octets: the serialized escapes are counted ("Denial of Service") |
 | (absent) | `client_capabilities=b` | a: the outside value is not used |
-| Pushed `client_capabilities=b`, used through `request_uri` | `client_capabilities=c` alongside the `request_uri` | b: the value sent alongside is not used |
 *Request Object test vectors*
+
+A pushed authorization request is form-encoded (RFC 9126, Section 2), so the
+request parameter and form-encoded vectors above apply to the value it carries.
+The Request Object vectors apply only when it carries a Request Object (RFC
+9126, Section 3). Such a request has to carry every authorization parameter
+inside the Request Object, so a value outside it, as in the last Request Object
+row, is not allowed there; it is still not used. With the same metadata
+default:
+
+| Pushed request | Authorization request | Effective set |
+|---|---|---|
+| `client_capabilities=b` | `request_uri` and `client_capabilities=c` | b: a value sent alongside the `request_uri` is not used |
+| No `client_capabilities` | `request_uri` and `client_capabilities=c` | a: the pushed request has no value, so the default applies |
+| `request` holding a Request Object with `"client_capabilities": "b"` | `request_uri` | b |
+*Pushed authorization request test vectors*
 
 ## HTTP Field
 

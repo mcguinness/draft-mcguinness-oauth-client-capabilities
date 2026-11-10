@@ -427,14 +427,14 @@ When an authorization request uses a Request Object, the authorization server
 uses only the parameters inside it ({{Section 6.3 of RFC9101}}). A
 `client_capabilities` value outside the Request Object is not used, and if the
 Request Object contains no such value, the parameter is absent for the purposes
-of {{precedence}}. Inside a Request Object, the value is a JSON string
-containing a `capability-list`. An empty string is treated as omitted, as for
-the form-encoded parameter, and a value of any other JSON type, including
-`null`, is invalid. An
-authorization request that uses a `request_uri` from a pushed authorization
-request is built as defined in {{RFC9101}} ({{Section 4 of RFC9126}}), so the
-same holds for the parameters that were pushed: a `client_capabilities` value
-sent alongside the `request_uri` is not used.
+of {{precedence}}. An authorization request that uses a `request_uri` from a
+pushed authorization request is built as defined in {{RFC9101}}
+({{Section 4 of RFC9126}}), so the same holds for the parameters that were
+pushed: a `client_capabilities` value sent alongside the `request_uri` is not
+used. Inside a Request Object, the value is a JSON string containing a
+`capability-list`. An empty string is treated as omitted, as for the
+form-encoded parameter, and a value of any other JSON type, including `null`,
+is invalid.
 
 The parameter is not defined for the client registration endpoint. A client
 declares capabilities there using the `client_capabilities` metadata field in
