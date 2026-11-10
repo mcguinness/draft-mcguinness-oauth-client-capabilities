@@ -1244,10 +1244,15 @@ safe fallback: a synchronous response or error for deferred response, and
 refusal without the optional transaction challenge. Signal removal suppresses
 optional behavior without weakening a security check.
 
-Similar-looking behaviors do not necessarily qualify. DPoP nonce enforcement
-{{RFC9449}} does not. A removable signal cannot govern a required nonce without
-weakening replay protection, and CAP-2 prevents using it to justify
-longer-lived tokens.
+Similar-looking behaviors do not necessarily qualify. A signal cannot gate DPoP
+nonce enforcement {{RFC9449}}, because removing it would weaken replay
+protection, and CAP-2 prevents using it to justify longer-lived tokens.
+Offering the `use_dpop_nonce` challenge is a different question: where server
+policy already requires a nonce and the absent-signal behavior is refusal, the
+choice between challenging and refusing is a selection ({{selection}}) and
+could qualify. Whether it warrants a value is a separate matter, since
+{{Section 8.2 of RFC9449}} already requires a client to use a nonce supplied in
+a successful token response.
 
 The `redirect_to_web` fallback in {{FIRST-PARTY-APPS}} qualifies only if
 defined as optional server behavior with a safe absent-signal outcome. If

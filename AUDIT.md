@@ -22,22 +22,26 @@ Two questions have to be asked in order, and the invariants are not redundant:
 >    scope, relaxed consent, or a longer token lifetime? (CAP-2)
 
 A candidate can pass the first and still fail the second. DPoP nonces are the
-worked example, because they fail at each step under a different framing and are
-therefore inadmissible under every framing. That makes them more instructive as
-a rejection than they were as a candidate.
+worked example. The two framings that gate the nonce fail at different steps,
+and a third framing, which selects whether to offer the nonce challenge, passes
+both. Admissibility turns on separating enforcement policy, challenge
+processing, and token-lifetime concessions.
 
 ### Worked example: the DPoP nonce
 
 RFC 9449 Section 8: an authorization server "MAY supply a nonce value," and
 responds to a request without one with HTTP 400 and `use_dpop_nonce`, supplying
-a `DPoP-Nonce` header. On the client side the RFC says only that the client
-"will typically retry the request with the new nonce value" and "is expected to
-retry." **There is no normative client requirement to implement nonce
-handling.**
+a `DPoP-Nonce` header. The client's retry after that error carries no keyword:
+the client "will typically retry the request with the new nonce value" and "is
+expected to retry." Section 8.2 does make one part normative. When a successful
+token response carries a `DPoP-Nonce` header, "The client MUST use the new
+nonce value supplied for the next token request and for all subsequent token
+requests until the authorization server supplies a new nonce." A conforming
+client therefore already processes a nonce it receives on success.
 
-That makes it capability-shaped on both counts: a conforming DPoP client may
-legitimately not implement it, and the authorization server has no way to know
-before it challenges. There is no signal for it today.
+Only the error-and-retry path is capability-shaped: a conforming DPoP client may
+not implement it, and the authorization server cannot know before it
+challenges. There is no signal for it today.
 
 Now the two framings.
 
@@ -68,10 +72,27 @@ precisely an extended token lifetime bought with a signal. A conservative
 fallback does not rescue it, because CAP-2 constrains what the signal may
 purchase rather than what happens in its absence.
 
-So both framings fail, for different reasons, and DPoP nonce enforcement is
-outside the capability model. The lesson is not that framing decides the verdict;
-it is that framing decides the CAP-1 question and CAP-2 then does independent
-work. An author who satisfies only the first has not finished.
+So both gating framings fail, for different reasons: nonce enforcement and
+token-lifetime concessions are outside the capability model.
+
+**Framing C: select the challenge.** *"The authorization server requires a
+nonce by its own policy, whatever the client signals. The signal decides only
+whether the server offers the `use_dpop_nonce` recovery challenge or refuses
+the request."*
+
+Absent the signal, the server refuses rather than accepting a nonce-less proof,
+so replay protection is unchanged. **Satisfies CAP-1.** The signal buys no
+token lifetime. **Satisfies CAP-2.** This is the selection shape of the
+transaction challenge: the assurance is fixed first, and the signal chooses a
+path the client can complete. It does not follow that a nonce value should be
+registered. Section 8.2 already obliges clients to use a nonce delivered on
+success, so whether the remaining retry path is worth a signal is a question of
+usefulness, not admissibility.
+
+The lesson is not that framing decides the verdict; it is that framing decides
+the CAP-1 question and CAP-2 then does independent work. An author who
+satisfies only the first has not finished, and an author who rejects every
+framing on the strength of two has not looked for the third.
 
 Worth noting that RFC 9449 Section 11.3, "DPoP Nonce Downgrade," already
 carries the same instinct at the protocol level: "A server MUST NOT accept any
@@ -168,11 +189,11 @@ leaves the selection question open. Step-up is where that matters; see
   server that responds within what was requested cannot surprise it.
 - **Presence is the signal.** The DPoP proof itself (RFC 9449), client
   attestation headers. The artifact's presence proves the capability, which is
-  why DPoP needs a capability value for its *nonce* handling and not for DPoP.
+  why any DPoP capability would concern the nonce challenge, not DPoP itself.
 - **Mandatory-to-implement conformance.** Anything a specification requires
-  clients to support is not a capability; signaling it is redundant. This is
-  the test the DPoP nonce passes only because RFC 9449 declined to make client
-  nonce handling a MUST. Had it been normative, there would be nothing to
+  clients to support is not a capability; signaling it is redundant. RFC 9449
+  makes using a nonce delivered on success a MUST (Section 8.2) but leaves the
+  error-and-retry path without a keyword, so only that path could need a
   signal.
 
 ## Selection candidates {#selection-candidates}
