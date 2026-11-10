@@ -451,9 +451,12 @@ The parameter MUST NOT be sent with an empty value. A client that wants an
 empty effective set omits the parameter when no metadata default applies and
 sends `none` when it needs to override such a default.
 
-Like any OAuth request parameter, `client_capabilities` is not included more
-than once (Sections 3.1 and 3.2 of {{RFC6749}}). A client sends its list as one
-space-delimited value, not as repeated parameters.
+The parameter is not repeatable: a client sends its list as one space-delimited
+value. A request that includes `client_capabilities` more than once is
+malformed, as Sections 3.1 and 3.2 of {{RFC6749}} provide for that
+specification's own parameters, and an authorization server MUST reject it with
+the `invalid_request` error code (Sections 4.1.2.1 and 5.2 of {{RFC6749}}).
+This differs from an invalid value, which is not rejected ({{values}}).
 
 Where the parameter would otherwise be carried in the query component of an
 authorization request URI, and the client holds authorization server metadata
