@@ -730,6 +730,8 @@ Additional points of discipline:
 - State, in the registration, the carriers and endpoints at which the value is
   meaningful, and which follow-on requests, such as polls or retries, carry it
   ({{signal-scope}}).
+- If the extension defines out-of-band knowledge, state how a client learns
+  that it applies, so that the client knows when to send `none`.
 
 Because capability signals may be removed by an adversary, an extension MUST
 define a safe absent-signal fallback. If the enabled behavior is how a server
