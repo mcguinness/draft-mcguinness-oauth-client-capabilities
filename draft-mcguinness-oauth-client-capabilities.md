@@ -92,10 +92,10 @@ This document defines a single registry of client capability values and three
 carriers for them: a `client_capabilities` request parameter, an
 `OAuth-Client-Capabilities` HTTP field, and a `client_capabilities` client
 metadata field. Capability values are advisory and are constrained to enable
-only optional server behavior, so that their absence is always safe. Because
-each request can carry its own set, a client can roll out a capability one
-instance, release, or authorization server at a time, without changing metadata
-that every instance shares.
+only optional server behavior, so that adding or removing a value does not
+weaken security. Because each request can carry its own set, a client can roll
+out a capability one instance, release, or authorization server at a time,
+without changing metadata that every instance shares.
 
 --- middle
 
@@ -234,8 +234,8 @@ replaces any metadata default rather than adding to it ({{precedence}}).
 
 A server advertises the values it recognizes in its own metadata
 ({{discovery}}). Signaling never obliges a server to act. Under the invariants
-in {{invariants}}, a signal that is absent, removed, or untrue leaves the
-protocol no less secure.
+in {{invariants}}, which every registered value has to meet, a signal that is
+absent, removed, added, or untrue leaves the protocol no less secure.
 
 # Capability Values {#values}
 
@@ -354,10 +354,14 @@ CAP-1:
   value from the effective capability set MUST NOT cause a server to apply
   weaker client authentication, weaker sender constraining, weaker user
   authentication, or a more permissive policy than it would have applied had
-  the value never been defined. A capability MUST NOT enable a security check
-  that the server would otherwise skip, including stricter validation of the
-  client's own requests, because removing the value would remove the check.
-  Absence MUST be safe.
+  the value never been defined. Adding a capability value MUST NOT lower the
+  assurance a server requires, or lead it to accept weaker client
+  authentication, sender constraining, or user authentication than that
+  assurance demands. Among paths that meet that assurance, a value can affect
+  which one the server takes ({{selection}}). A capability MUST NOT enable a
+  security check that the server would otherwise skip, including stricter
+  validation of the client's own requests, because removing the value would
+  remove the check. Absence MUST be safe.
 
 CAP-2:
 : A capability MUST NOT establish what a client is permitted to obtain or be
@@ -369,17 +373,20 @@ CAP-2:
 CAP-3:
 : A server MUST NOT rely on a capability signal being truthful. The security
   properties of the enabled behavior MUST hold even when the client does not
-  implement the capability. A capability MUST NOT substitute for client
-  authentication, proof of possession, protocol validation, or other evidence
-  required by the behavior it enables.
+  implement the capability, and when a party other than the client asserts it.
+  A capability MUST NOT substitute for client authentication, proof of
+  possession, protocol validation, or other evidence required by the behavior
+  it enables.
 
 Two consequences follow. A client that claims a capability it lacks can receive
 a response it cannot process, but CAP-2 and CAP-3 keep the false claim from
 being accepted as authorization, authentication, or proof of a
-security-relevant property. An adversary who removes values from a signal
-denies optional behavior, which under CAP-1 is the safe direction. Removing a
-signal that narrows a set instead restores a metadata default or out-of-band
-knowledge ({{downgrade}}).
+security-relevant property. Any party able to send the request can assert a
+value and elicit the enabled behavior, which CAP-3 requires to be safe in that
+party's hands ({{unverified-signals}}). An adversary who removes values from a
+signal denies optional behavior, which under CAP-1 is the safe direction.
+Removing a signal that narrows a set instead restores a metadata default or
+out-of-band knowledge ({{downgrade}}).
 
 These invariants also serve as the admission criterion for the registry; see
 {{extension-guidance}}.
@@ -865,8 +872,9 @@ Designated experts evaluating a registration request should:
 - confirm that the specification defines the optional behavior enabled and
   identifies every applicable carrier and endpoint;
 - confirm that the specification meets the requirements this document places
-  on extensions, including those in {{param}}, {{extension-guidance}},
-  {{downgrade}}, {{dos}}, and {{privacy-considerations}};
+  on extensions, including those in {{param}}, {{selection}},
+  {{extension-guidance}}, {{downgrade}}, {{dos}}, and
+  {{privacy-considerations}};
 - consider the security, privacy, interoperability, and operational effects of
   false assertion and signal removal; and
 - reject values that duplicate the semantics of an existing registration, differ
