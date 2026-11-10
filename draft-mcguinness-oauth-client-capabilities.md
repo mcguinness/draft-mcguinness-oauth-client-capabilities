@@ -827,6 +827,7 @@ surrounding message:
 | Carrier | Octets counted |
 |---|---|
 | Request parameter | The form-encoded value, before percent-decoding |
+| Request parameter in a Request Object | The JSON string as serialized in the decoded JWT Claims Set, including its quotes and escapes |
 | HTTP field | The combined field value, including separators and parameters |
 | Client metadata or discovery | The serialized JSON array, including brackets, quotes, whitespace, and escapes |
 {: title="Octets counted toward a limit"}
