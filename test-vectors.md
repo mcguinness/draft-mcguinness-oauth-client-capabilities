@@ -49,6 +49,8 @@ With a Request Object, and the same metadata default:
 | `"client_capabilities": "b c"` | (absent) | b, c |
 | `"client_capabilities": ["b", "c"]` | (absent) | (empty): invalid, not a string |
 | `"client_capabilities": null` | (absent) | (empty): invalid, not a string |
+| `"client_capabilities": ""` | (absent) | a: an empty string is treated as omitted |
+| `"client_capabilities": "none"` | (absent) | (empty): retracts the default |
 | `"client_capabilities": "\u0062 \u0063"` | (absent) | b, c: escapes are decoded before the value is parsed |
 | One value of 1,000 `a` characters, unescaped: 1,002 octets | (absent) | That value, not recognized |
 | The same value as 1,000 `\u0061` escapes: 6,002 octets | (absent) | (empty), or the request is rejected, where the server's limit is 4096 octets: the serialized escapes are counted ("Denial of Service") |
