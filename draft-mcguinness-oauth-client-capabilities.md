@@ -342,7 +342,9 @@ resource, out-of-band knowledge.
 
 `none` MUST NOT appear together with any capability value. It is registered
 only to reserve the token ({{iana-registry}}) and enables no behavior, so a
-recipient acts on it as on a value it does not recognize ({{syntax}}).
+recipient acts on it as on a value it does not recognize ({{syntax}}). Its
+presence never makes a request parameter, field, client metadata, or discovery
+value invalid.
 
 # Capability Invariants {#invariants}
 
