@@ -328,9 +328,8 @@ client built against the earlier revision cannot parse the later one:
 - `txn-challenge-11` is not, because the suffix names a draft revision rather
   than a behavior.
 
-A protocol version is not a capability under any name, such as `oauth-2.1`,
-because it changes which requests a server accepts rather than what a client
-must process; see {{profiles}}.
+A protocol version is not a capability under any name, such as `oauth-2.1`
+({{profiles}}).
 
 ## The `none` Sentinel {#none-value}
 
@@ -760,9 +759,7 @@ extension SHOULD NOT couple the behavior to such a flag, because it then
 becomes all-or-nothing for every client of the issuer; gate it on a capability
 instead. {{RFC9207}} illustrates the trade-off: coupling the advertisement to a
 server-wide delivery commitment allows a client to enforce that `iss` is
-present, but the feature cannot be rolled out per client. Rolling out a change
-in request-processing rules, such as OAuth 2.1, is not a behavior a capability
-can gate; see {{profiles}}.
+present, but the feature cannot be rolled out per client.
 
 This specification provides no delivery guarantee, and an extension MUST NOT
 rely on a capability signal or on `client_capabilities_supported` to supply
