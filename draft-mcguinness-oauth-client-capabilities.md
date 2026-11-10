@@ -810,9 +810,9 @@ Two implementations can recognize the same unregistered value with different
 meanings. Ignoring unrecognized values does not help, because each recognizes
 the value, and authenticating the signal does not resolve a disagreement about
 its meaning. A server can then exercise a behavior the client cannot process,
-or spend resources on a behavior the client will not complete. CAP-1 through
-CAP-3 still constrain the enabled behavior, so the result is a failed exchange
-or wasted work, not weakened security. {{naming}} recommends confining
+or spend resources on a behavior the client will not complete. Provided each
+implementation meets CAP-1 through CAP-3 on its own, the result is a failed
+exchange or wasted work, not weakened security. {{naming}} recommends confining
 unregistered values to deployments whose parties have agreed on their meaning,
 and seeking early allocation.
 
@@ -1146,8 +1146,9 @@ Status:
 : current
 
 Absent-Signal Behavior:
-: The authorization server responds synchronously or with an error; it does
-  not defer.
+: The authorization server does not defer. It responds synchronously only if
+  it can complete every check it requires without deferral, and otherwise
+  returns an error.
 
 Carriers:
 : request parameter, client metadata
