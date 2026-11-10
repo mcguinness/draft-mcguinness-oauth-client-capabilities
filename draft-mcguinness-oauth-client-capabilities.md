@@ -631,7 +631,7 @@ An extension MAY define an error for a case in which the server cannot proceed
 without a particular client-side behavior. Such an error reports the
 extension's condition; it does not turn the signal into an authorization input.
 
-A server SHOULD NOT promote a request-level capability set to durable client
+A server MUST NOT promote a request-level capability set to durable client
 metadata.
 
 ## Selecting Among Alternatives {#selection}
