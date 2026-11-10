@@ -135,10 +135,14 @@ parameter alone. Two request carriers over one shared vocabulary is the minimum
 that covers OAuth's topology.
 
 The extensions in {{existing-drafts}} need only direct HTTP requests, at the
-token endpoint and at protected resources. The request parameter's coverage of
-the authorization endpoint anticipates extensions whose behavior changes the
-authorization response; the pushed authorization request and Request Object
-examples ({{examples}}) illustrate the carrier.
+token endpoint and at protected resources. Even at the token endpoint, the
+request parameter is the carrier rather than the field: OAuth endpoints are
+extended through registered request parameters, as {{DTR}} already does, and
+one carrier at each endpoint where the parameter is defined lets a request
+override a client metadata default without combining two signals. The request
+parameter's coverage of the authorization endpoint anticipates extensions whose
+behavior changes the authorization response; the pushed authorization request
+and Request Object examples ({{examples}}) illustrate the carrier.
 
 ## Open-World Deployment {#open-world}
 
