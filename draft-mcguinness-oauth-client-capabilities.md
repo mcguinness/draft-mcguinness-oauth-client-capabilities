@@ -619,8 +619,12 @@ MUST NOT promote a request-level capability set to durable client metadata.
 A capability in a pushed authorization request applies to the authorization
 request represented by the resulting `request_uri`, and nothing else. A
 capability governing token endpoint behavior MUST be in the effective set for
-the token request; the authorization server MUST NOT infer it from an earlier
-request in the grant.
+the token request that elicits the behavior; the authorization server MUST NOT
+infer it from an earlier request in the grant. Each request in a sequence that
+an extension defines, such as a poll after a deferred response or a retry after
+a challenge, has its own effective set. The extension states whether a
+follow-on request has to carry the value or continues the behavior that the
+originating request elicited ({{extension-guidance}}).
 
 # Server Behavior {#server-behavior}
 
@@ -712,7 +716,8 @@ Additional points of discipline:
   register no capability. A capability is for behavior that cannot be made
   mandatory because the server cannot learn whether the client implements it.
 - State, in the registration, the carriers and endpoints at which the value is
-  meaningful.
+  meaningful, and which follow-on requests, such as polls or retries, carry it
+  ({{signal-scope}}).
 
 Because capability signals may be removed by an adversary, an extension MUST
 define a safe absent-signal fallback. If the enabled behavior is how a server
@@ -1216,8 +1221,11 @@ Cache-Control: no-store
 ~~~
 {: title="Deferred response to a request that signals the capability"}
 
-The client then polls as {{DTR}} describes. A request whose effective set does
-not contain the value is never deferred: the authorization server completes it
+The client then polls as {{DTR}} describes. The polls continue the deferral
+that the original request elicited; a registration of the value states whether
+they also carry it ({{signal-scope}}). A token request whose effective set does
+not contain the value never elicits a deferral: the authorization server
+completes it
 synchronously, or returns an error under the grant's rules (Section 4.3 of
 {{DTR}}). Omitting the value rules out deferral, not failure. The following
 response to the same token request without the value assumes that the
