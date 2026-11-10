@@ -455,8 +455,10 @@ than once (Sections 3.1 and 3.2 of {{RFC6749}}). A client sends its list as one
 space-delimited value, not as repeated parameters.
 
 Where the parameter would otherwise be carried in the query component of an
-authorization request URI, clients SHOULD instead use a pushed authorization
-request {{RFC9126}} to bound URI growth and keep the list off the user agent.
+authorization request URI, and the client holds authorization server metadata
+that includes `pushed_authorization_request_endpoint`
+({{Section 5 of RFC9126}}), the client SHOULD use a pushed authorization
+request instead, to bound URI growth and keep the list off the user agent.
 Passing a Request Object {{RFC9101}} by value does not reduce URI size.
 
 ## The `OAuth-Client-Capabilities` HTTP Field {#field}
