@@ -657,14 +657,17 @@ client_capabilities_supported:
 This metadata member is defined for authorization server metadata {{RFC8414}}
 and for protected resource metadata {{RFC9728}}.
 
-The array MUST NOT contain `none`. If any element is not a string, does not
-conform to the `capability` production, or is `none`, the value of this member
-is invalid and MUST be ignored in its entirety.
+The array MUST NOT contain `none`. If the value is not an array, or any element
+is not a string, does not conform to the `capability` production, or is `none`,
+the value of this member is invalid and MUST be ignored in its entirety.
 
 A client that holds a server's `client_capabilities_supported` SHOULD signal
-only values that appear in it. A client that does not hold the list MAY signal
-values without retrieving it first; a server that does not recognize a value
-ignores it. Advertising recognized values lets clients bound request size and
+only values that appear in it. This does not apply to `none` ({{none-value}}),
+which the list never contains: if filtering leaves no value and the client
+needs to override a metadata default or out-of-band knowledge, it sends `none`.
+A client that does not hold the list MAY signal values without retrieving it
+first; a server that does not recognize a value ignores it. Advertising
+recognized values lets a client that holds the list bound request size and
 fingerprinting exposure, following the pattern of Client Hints {{RFC8942}}.
 
 Absence of `client_capabilities_supported` does not indicate that the server
