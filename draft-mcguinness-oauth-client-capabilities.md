@@ -78,6 +78,9 @@ informative:
   IANA-OAUTH:
     target: https://www.iana.org/assignments/oauth-parameters/
     title: "OAuth Parameters"
+  OIDC:
+    target: https://openid.net/specs/openid-connect-core-1_0.html
+    title: "OpenID Connect Core 1.0"
 
 --- abstract
 
@@ -490,7 +493,10 @@ either, such as the introspection {{RFC7662}}, revocation {{RFC7009}}, and
 device authorization {{RFC8628}} endpoints ({{precedence}}); an extension that
 needs a capability at one of them defines the request parameter there
 ({{param}}). At the client registration endpoint, a client declares
-capabilities in client metadata ({{metadata}}).
+capabilities in client metadata ({{metadata}}). A resource that an
+authorization server hosts and that a client accesses with an access token,
+such as the OpenID Connect UserInfo endpoint {{OIDC}}, is a protected resource
+for this purpose.
 
 The field's value is a Structured Fields List ({{Section 3.1 of RFC9651}}). Each
 member MUST be an Item whose bare item is a Token containing a capability value
