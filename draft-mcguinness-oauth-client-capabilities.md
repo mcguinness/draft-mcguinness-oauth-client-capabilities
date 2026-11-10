@@ -372,9 +372,10 @@ CAP-3:
 Two consequences follow. A client that claims a capability it lacks can receive
 a response it cannot process, but CAP-2 and CAP-3 keep the false claim from
 being accepted as authorization, authentication, or proof of a
-security-relevant property. An adversary who removes values degrades the client
-to the behavior it would receive with no capabilities, which under CAP-1 is the
-safe direction; see {{security-considerations}}.
+security-relevant property. An adversary who removes values from a signal
+denies optional behavior, which under CAP-1 is the safe direction. Removing a
+signal that narrows a set instead restores a metadata default or out-of-band
+knowledge ({{downgrade}}).
 
 These invariants also serve as the admission criterion for the registry; see
 {{extension-guidance}}.
@@ -738,6 +739,13 @@ Because capability signals may be removed by an adversary, an extension MUST
 define a safe absent-signal fallback. If the enabled behavior is how a server
 obtains something it requires, the fallback is refusal, not proceeding without
 it. Removal costs client functionality, never a server security property.
+Removing a signal that narrows a set widens it instead: stripping a request
+parameter that overrides a metadata default restores the default, and stripping
+a field that replaces out-of-band knowledge restores that knowledge. Either can
+lead a server to exercise a behavior the instance cannot process, which is a
+failed exchange, not a weakened one. Injecting `none` removes out-of-band
+knowledge, which is the safe direction. On the front channel, a Request Object
+or a pushed authorization request protects an override.
 
 For the same reason, CAP-1 bars an extension from using a capability to enable
 a security check that the server otherwise skips. Such a check belongs in
