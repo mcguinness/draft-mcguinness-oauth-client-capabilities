@@ -1781,12 +1781,14 @@ authorization server <span class="bcp14">MUST</span> ignore the field on any req
 Using only the parameter at these endpoints gives each request one unambiguous
 effective set, and allows Request Object or pushed-request protections where
 those apply. The field plays no part at other authorization server endpoints
-either, such as the introspection <span>[<a href="#RFC7662" class="cite xref">RFC7662</a>]</span>, revocation <span>[<a href="#RFC7009" class="cite xref">RFC7009</a>]</span>, and
-device authorization <span>[<a href="#RFC8628" class="cite xref">RFC8628</a>]</span> endpoints (<a href="#precedence" class="auto internal xref">Section 6.4</a>); an extension that
-needs a capability at one of them defines the request parameter there
-(<a href="#param" class="auto internal xref">Section 6.1</a>). At the client registration endpoint, a client declares
-capabilities in client metadata (<a href="#metadata" class="auto internal xref">Section 6.3</a>). A resource that an
-authorization server hosts and that a client accesses with an access token,
+either. At the introspection <span>[<a href="#RFC7662" class="cite xref">RFC7662</a>]</span>, revocation <span>[<a href="#RFC7009" class="cite xref">RFC7009</a>]</span>, and device
+authorization <span>[<a href="#RFC8628" class="cite xref">RFC8628</a>]</span> endpoints, an extension that needs a capability
+defines the request parameter there (<a href="#param" class="auto internal xref">Section 6.1</a>). At the client registration
+<span>[<a href="#RFC7591" class="cite xref">RFC7591</a>]</span> and client configuration <span>[<a href="#RFC7592" class="cite xref">RFC7592</a>]</span> endpoints, a client declares
+capabilities in client metadata (<a href="#metadata" class="auto internal xref">Section 6.3</a>). This holds even when a request
+to one of these endpoints is authorized with an access token, as introspection,
+registration, and client configuration requests can be. Any other resource that
+an authorization server hosts and that a client accesses with an access token,
 such as the OpenID Connect UserInfo endpoint <span>[<a href="#OIDC" class="cite xref">OIDC</a>]</span>, is a protected resource
 for this purpose.<a href="#section-6.2-3" class="pilcrow">¶</a></p>
 <p id="section-6.2-4">The field's value is a Structured Fields List (<span><a href="https://rfc-editor.org/rfc/rfc9651#section-3.1" class="relref">Section 3.1</a> of [<a href="#RFC9651" class="cite xref">RFC9651</a>]</span>). Each
@@ -1873,10 +1875,11 @@ in <a href="#param" class="auto internal xref">Section 6.1</a> as the primary ca
         <h3 id="name-precedence">
 <a href="#section-6.4" class="section-number selfRef">6.4. </a><a href="#name-precedence" class="section-name selfRef">Precedence</a>
         </h3>
-<p id="section-6.4-1">The effective capability set of a request is determined as follows, where a
-protected resource request includes one to a resource that an authorization
-server hosts (<a href="#field" class="auto internal xref">Section 6.2</a>), and any other request to an authorization server is
-an OAuth request:<a href="#section-6.4-1" class="pilcrow">¶</a></p>
+<p id="section-6.4-1">An OAuth request is a request to an authorization server endpoint that
+<a href="#field" class="auto internal xref">Section 6.2</a> lists, even when it is authorized with an access token. A protected
+resource request is any other request to a protected resource, including one
+that an authorization server hosts, such as UserInfo. The effective capability
+set of a request is determined as follows:<a href="#section-6.4-1" class="pilcrow">¶</a></p>
 <ol start="1" type="1" class="normal type-1" id="section-6.4-2">
 <li id="section-6.4-2.1">
             <p id="section-6.4-2.1.1">If the request carries a request-level signal, its value is the effective
@@ -2638,6 +2641,10 @@ upon<a href="#section-12.5-2.4.1" class="pilcrow">¶</a></p>
 <dt id="RFC7240">[RFC7240]</dt>
         <dd>
 <span class="refAuthor">Snell, J.</span>, <span class="refTitle">"Prefer Header for HTTP"</span>, <span class="seriesInfo">RFC 7240</span>, <span class="seriesInfo">DOI 10.17487/RFC7240</span>, <time datetime="2014-06" class="refDate">June 2014</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc7240">https://www.rfc-editor.org/rfc/rfc7240</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC7592">[RFC7592]</dt>
+        <dd>
+<span class="refAuthor">Richer, J., Ed.</span>, <span class="refAuthor">Jones, M.</span>, <span class="refAuthor">Bradley, J.</span>, and <span class="refAuthor">M. Machulak</span>, <span class="refTitle">"OAuth 2.0 Dynamic Client Registration Management Protocol"</span>, <span class="seriesInfo">RFC 7592</span>, <span class="seriesInfo">DOI 10.17487/RFC7592</span>, <time datetime="2015-07" class="refDate">July 2015</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc7592">https://www.rfc-editor.org/rfc/rfc7592</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC7662">[RFC7662]</dt>
         <dd>
