@@ -107,23 +107,24 @@ CAP-1 and CAP-2.
 
 | Behavior the server may exercise | Fallback when the signal is absent | Verdict |
 |---|---|---|
-| Return a deferred response in place of a token or error ([DTR]) | Ordinary error response, the pre-DTR behavior. No token issued. | Clean |
+| Return a deferred response in place of a token or error ([DTR]) | The pre-DTR synchronous response: a token if the grant completes, otherwise an ordinary error | Clean |
 | Return a transaction authorization challenge ([TXN-CHALLENGE]) | Deny the operation. | Clean in principle; see below |
 | Return `redirect_to_web` at the authorization challenge endpoint ([FIRST-PARTY-APPS]) | Refuse the authorization; see the sweep below | Clean only under the deny framing, which the draft does not state |
 
 Two observations.
 
 DTR is the cleanest case in OAuth. The fallback is not merely conservative, it
-is literally the status quo the draft sets out to improve on: an error
-response instead of a deferral. Nothing is weakened by removal.
+is literally the status quo the draft sets out to improve on: a synchronous
+token or error response instead of a deferral. Nothing is weakened by removal.
 
 The transaction authorization challenge draft **does not currently state its
 fallback.** It says a protected resource "MUST NOT return a transaction
 authorization challenge unless" the capability is signaled, but not what the
 resource does instead. Denying the operation is the obviously safe reading and
 almost certainly the intent, but the draft leaves it unwritten. Under the
-draft's Section 10.2 an extension must define a safe absent-signal fallback, so
-this is exactly the gap the requirement is meant to catch.
+draft's Guidance for Extension Specifications, an extension must define a safe
+absent-signal fallback, so this is exactly the gap the requirement is meant to
+catch.
 
 ## Tier 2: needs no gating signal, and why
 
@@ -176,8 +177,9 @@ leaves the selection question open. Step-up is where that matters; see
   Section 4.1.2, and on a delivery guarantee the mechanism does not provide,
   since a server retains discretion over whether to exercise optional behavior.
   What survives is a design lesson for extension authors, now in the draft's
-  extension guidance: coupling a client-affecting behavior to a per-issuer
-  metadata flag that clients must key on forecloses incremental rollout.
+  Guidance for Extension Specifications: coupling a client-affecting behavior
+  to a per-issuer metadata flag that clients must key on forecloses incremental
+  rollout.
 - **Endpoint selection is already the signal.** Device authorization
   (RFC 8628), pushed authorization requests (RFC 9126), the authorization
   challenge endpoint, token exchange (RFC 8693). Calling the endpoint is proof
@@ -249,11 +251,11 @@ does not, and the existing static field is the right answer.
 
 **The boundary case.** Variation matters when a single registered client has
 heterogeneous instances, which is precisely the retraction rationale in the
-draft's Section 5.5. If a deployment must retract a capability its published
-metadata declares, the request parameter exists for that. Whether any given
-tier 3 field crosses into tier 1 is a deployment question, not a specification
-question, and the draft's replacement semantics answer it without moving the
-field.
+draft's Precedence section. If a deployment must retract a capability its
+published metadata declares, the request parameter exists for that. Whether any
+given tier 3 field crosses into tier 1 is a deployment question, not a
+specification question, and the draft's replacement semantics answer it without
+moving the field.
 
 ## CIMD: no capability values, but a carrier that needs care
 
@@ -284,12 +286,13 @@ three of its properties cut against the client metadata field.
   non-public variant.
 - **Uniform across instances by construction.** CIMD does not address
   per-instance variation: each Client Identifier URL is one client identity and
-  its metadata applies uniformly to every use of that URL. The draft's
-  Section 5.3 already forbids declaring a capability unless every instance
-  covered by the metadata can process the enabled behavior, and recommends that
-  clients with heterogeneous instances omit the field. For CIMD that is not an
-  edge case; it is the default for any software deployed more than once, which
-  is the population the draft's Section 1.2 holds up as its motivation. The
+  its metadata applies uniformly to every use of that URL. The draft's Client
+  Metadata Declaration section already forbids declaring a capability unless
+  every instance covered by the metadata can process the enabled behavior or
+  overrides the default, and recommends that clients with heterogeneous
+  instances omit the field. For CIMD that is not an edge case; it is the
+  default for any software deployed more than once, which is the population
+  the draft's Open-World Deployment section holds up as its motivation. The
   metadata carrier is thus usually the wrong choice for precisely the clients
   that motivate the mechanism.
 - **Stale by construction.** An authorization server "MAY cache the client
@@ -495,13 +498,13 @@ question while there is still a designated expert reading the answer.
 
 Three findings, in descending order of consequence.
 
-1. **The Section 10.2 fallback framing is load-bearing, not editorial.** Stating
-   the invariant as "the behavior enabled MUST NOT be necessary to enforce a
-   security property" would have excluded the transaction challenge, which is a
-   sound candidate; stating it as "the absent-signal fallback must itself be
-   safe" admits it correctly and tells an extension author what to write. CAP-2
-   then removes what CAP-1 alone would let through, as the reliance framing of
-   the DPoP nonce shows.
+1. **The fallback framing in Guidance for Extension Specifications is
+   load-bearing, not editorial.** Stating the invariant as "the behavior
+   enabled MUST NOT be necessary to enforce a security property" would have
+   excluded the transaction challenge, which is a sound candidate; stating it
+   as "the absent-signal fallback must itself be safe" admits it correctly and
+   tells an extension author what to write. CAP-2 then removes what CAP-1 alone
+   would let through, as the reliance framing of the DPoP nonce shows.
 
 2. **Registry entries should record the absent-signal fallback, not only the
    enabled behavior.** CAP-1 is unverifiable at registration time without it,
