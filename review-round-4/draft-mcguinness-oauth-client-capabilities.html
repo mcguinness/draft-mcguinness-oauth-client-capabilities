@@ -1584,7 +1584,7 @@ detail alongside a capability defines a companion request parameter, or uses
         </h3>
 <p id="section-4.2-1">A capability value names a specific client behavior that a server may exercise
 after receiving the value, not a document. <code>accept-deferred-response</code> is a
-capability; <code>draft-gerber-oauth-deferred-token-response</code> is not. A
+capability; <code>draft-ietf-oauth-deferred-token-response</code> is not. A
 specification <span class="bcp14">MAY</span> register more than one value where a client can usefully
 implement part of it.<a href="#section-4.2-1" class="pilcrow">¶</a></p>
 <p id="section-4.2-2">A new revision of an extension whose client-side processing differs registers a
@@ -1752,14 +1752,14 @@ except as permitted by <a href="#dos" class="auto internal xref">Section 10.3</a
 uses only the parameters inside it (<span><a href="https://rfc-editor.org/rfc/rfc9101#section-6.3" class="relref">Section 6.3</a> of [<a href="#RFC9101" class="cite xref">RFC9101</a>]</span>). A
 <code>client_capabilities</code> value outside the Request Object is not used, and if the
 Request Object contains no such value, the parameter is absent for the purposes
-of <a href="#precedence" class="auto internal xref">Section 6.4</a>. Inside a Request Object, the value is a JSON string
-containing a <code>capability-list</code>. An empty string is treated as omitted, as for
-the form-encoded parameter, and a value of any other JSON type, including
-<code>null</code>, is invalid. An
-authorization request that uses a <code>request_uri</code> from a pushed authorization
-request is built as defined in <span>[<a href="#RFC9101" class="cite xref">RFC9101</a>]</span> (<span><a href="https://rfc-editor.org/rfc/rfc9126#section-4" class="relref">Section 4</a> of [<a href="#RFC9126" class="cite xref">RFC9126</a>]</span>), so the
-same holds for the parameters that were pushed: a <code>client_capabilities</code> value
-sent alongside the <code>request_uri</code> is not used.<a href="#section-6.1-5" class="pilcrow">¶</a></p>
+of <a href="#precedence" class="auto internal xref">Section 6.4</a>. An authorization request that uses a <code>request_uri</code> from a
+pushed authorization request is built as defined in <span>[<a href="#RFC9101" class="cite xref">RFC9101</a>]</span>
+(<span><a href="https://rfc-editor.org/rfc/rfc9126#section-4" class="relref">Section 4</a> of [<a href="#RFC9126" class="cite xref">RFC9126</a>]</span>), so the same holds for the parameters that were
+pushed: a <code>client_capabilities</code> value sent alongside the <code>request_uri</code> is not
+used. Inside a Request Object, the value is a JSON string containing a
+<code>capability-list</code>. An empty string is treated as omitted, as for the
+form-encoded parameter, and a value of any other JSON type, including <code>null</code>,
+is invalid.<a href="#section-6.1-5" class="pilcrow">¶</a></p>
 <p id="section-6.1-6">The parameter is not defined for the client registration endpoint. A client
 declares capabilities there using the <code>client_capabilities</code> metadata field in
 <a href="#metadata" class="auto internal xref">Section 6.3</a>.<a href="#section-6.1-6" class="pilcrow">¶</a></p>
@@ -1836,9 +1836,11 @@ It contributes no capabilities, and the rule in <a href="#precedence" class="aut
 resource request without a valid field then applies, including any out-of-band
 knowledge an extension defines.<a href="#section-6.2-6" class="pilcrow">¶</a></p>
 <p id="section-6.2-7">A recipient <span class="bcp14">MUST</span> ignore parameters.<a href="#section-6.2-7" class="pilcrow">¶</a></p>
-<p id="section-6.2-8">A server <span class="bcp14">MUST</span> include <code>OAuth-Client-Capabilities</code> in the <code>Vary</code> field of every
-response whose content could have varied with the field, including responses to
-requests that omit it, or use <code>Vary: *</code> (<span><a href="https://rfc-editor.org/rfc/rfc9110#section-12.5.5" class="relref">Section 12.5.5</a> of [<a href="#RFC9110" class="cite xref">RFC9110</a>]</span>).<a href="#section-6.2-8" class="pilcrow">¶</a></p>
+<p id="section-6.2-8">A server <span class="bcp14">MUST</span> list <code>OAuth-Client-Capabilities</code> in the <code>Vary</code> field, or send
+<code>Vary: *</code> (<span><a href="https://rfc-editor.org/rfc/rfc9110#section-12.5.5" class="relref">Section 12.5.5</a> of [<a href="#RFC9110" class="cite xref">RFC9110</a>]</span>), on every response whose status code,
+header fields, or content could have differed had the request carried, omitted,
+or changed the <code>OAuth-Client-Capabilities</code> field. This includes a response to a
+request that omits the field.<a href="#section-6.2-8" class="pilcrow">¶</a></p>
 <p id="section-6.2-9">An empty List is treated as an absent field (<a href="#precedence" class="auto internal xref">Section 6.4</a>). Structured Fields
 serializes an empty List by omitting the field (<span><a href="https://rfc-editor.org/rfc/rfc9651#section-3.1" class="relref">Section 3.1</a> of [<a href="#RFC9651" class="cite xref">RFC9651</a>]</span>),
 and parses an empty field value as an empty List.<a href="#section-6.2-9" class="pilcrow">¶</a></p>
@@ -2678,7 +2680,7 @@ upon<a href="#section-12.5-2.4.1" class="pilcrow">¶</a></p>
 <dd class="break"></dd>
 <dt id="DTR">[DTR]</dt>
         <dd>
-<span class="refAuthor">Jacobsen, F. K.</span>, <span class="refAuthor">de Oliveira Niero, G.</span>, and <span class="refAuthor">M. Gerber</span>, <span class="refTitle">"Deferred Token Response"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-gerber-oauth-deferred-token-response-00</span>, <time datetime="2026-06-23" class="refDate">23 June 2026</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-gerber-oauth-deferred-token-response-00">https://datatracker.ietf.org/doc/html/draft-gerber-oauth-deferred-token-response-00</a>&gt;</span>. </dd>
+<span class="refAuthor">de Oliveira Niero, G.</span> and <span class="refAuthor">D. Liu</span>, <span class="refTitle">"Deferred Token Response"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-oauth-deferred-token-response-01</span>, <time datetime="2026-10-31" class="refDate">31 October 2026</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-deferred-token-response-01">https://datatracker.ietf.org/doc/html/draft-ietf-oauth-deferred-token-response-01</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="FETCH">[FETCH]</dt>
         <dd>
@@ -2968,7 +2970,7 @@ changes only how the client signals that it can process the response.<a href="#a
 excerpt above. A client release that can process a deferred response signals
 the value explicitly on its token request, as in the token request example
 above. The authorization server elects to defer and, in place of a token
-response, returns the deferred response defined in Section 5.4 of <span>[<a href="#DTR" class="cite xref">DTR</a>]</span>:<a href="#appendix-A.1-2" class="pilcrow">¶</a></p>
+response, returns the deferred response defined in Section 6.4 of <span>[<a href="#DTR" class="cite xref">DTR</a>]</span>:<a href="#appendix-A.1-2" class="pilcrow">¶</a></p>
 <span id="name-deferred-response-to-a-requ"></span><figure id="figure-11">
           <div class="lang-http-message sourcecode" id="appendix-A.1-3.1">
 <pre>
@@ -2978,7 +2980,7 @@ Cache-Control: no-store
 
 {
   "error": "authorization_pending",
-  "deferral_code": "8d67dc78-7faa-4d41-aabd-67707b374255",
+  "deferral_code": "TfZUlGEqTJeW7oNlcxnXs2kECOk",
   "expires_in": 10800,
   "interval": 60
 }
@@ -2992,7 +2994,7 @@ that the original request elicited; a registration of the value states whether
 they also carry it (<a href="#signal-scope" class="auto internal xref">Section 6.5</a>). A token request whose effective set does
 not contain the value never elicits a deferral: the authorization server
 completes it
-synchronously, or returns an error under the grant's rules (Section 4.3 of
+synchronously, or returns an error under the grant's rules (Section 5.3 of
 <span>[<a href="#DTR" class="cite xref">DTR</a>]</span>). Omitting the value rules out deferral, not failure. The following
 response to the same token request without the value assumes that the
 authorization server can complete every check it requires without deferral:<a href="#appendix-A.1-4" class="pilcrow">¶</a></p>
@@ -3036,10 +3038,25 @@ motivated this work would use the mechanism.<a href="#appendix-B-1" class="pilcr
         <dt id="appendix-B-2.1">Deferred Token Response:</dt>
         <dd style="margin-left: 1.5em" id="appendix-B-2.2">
           <p id="appendix-B-2.2.1"><code>completion_mode=deferred</code> becomes <code>client_capabilities</code> containing
-<code>accept-deferred-response</code>. The authorization server still defers only when
-the value is in the request's effective set. <a href="#signal-scope" class="auto internal xref">Section 6.5</a>
-requires the value in the token request's effective set; a signal at an
-earlier endpoint has no effect on the token response. The proposed
+<code>accept-deferred-response</code>, and <code>deferred_interactive</code> would become a second
+value that a client sends together with it. The authorization server still
+defers only when <code>accept-deferred-response</code> is in the token request's
+effective set (<a href="#signal-scope" class="auto internal xref">Section 6.5</a>). The pre-token hint of <span>[<a href="#DTR" class="cite xref">DTR</a>]</span> becomes that
+value in the effective set of the preceding request; where that request goes
+to an endpoint other than the authorization or pushed authorization request
+endpoint, such as the device authorization endpoint, <span>[<a href="#DTR" class="cite xref">DTR</a>]</span> would define the
+request parameter there (<a href="#param" class="auto internal xref">Section 6.1</a>). The authorization server can act on the
+hint for the originating grant as Section 5.2 of <span>[<a href="#DTR" class="cite xref">DTR</a>]</span> describes, provided
+it decides the assurance the grant requires without it (<a href="#selection" class="auto internal xref">Section 7.1</a>) and
+relaxes no consent requirement (CAP-2); the hint does not by itself permit a
+deferred token response. Adoption drops the rule in Section 5.2 of <span>[<a href="#DTR" class="cite xref">DTR</a>]</span>
+that a token request omitting <code>deferred</code> after a hint is rejected with
+<code>invalid_request</code>. A request-level signal applies only to that request
+(<a href="#signal-scope" class="auto internal xref">Section 6.5</a>), and CAP-1 bars a capability from enabling stricter
+validation of the client's own requests (<a href="#invariants" class="auto internal xref">Section 5</a>). A token request
+without the value after a hint is therefore answered without deferral,
+synchronously or with an error under the grant's rules (Section 5.3 of
+<span>[<a href="#DTR" class="cite xref">DTR</a>]</span>). The proposed
 single-purpose registry is subsumed by <a href="#iana-registry" class="auto internal xref">Section 12.1</a>, and the
 <code>deferred_token_response_supported</code> authorization server metadata Boolean
 by <code>client_capabilities_supported</code> containing the value. Either suffices to

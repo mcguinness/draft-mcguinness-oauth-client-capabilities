@@ -339,9 +339,9 @@ Table of Contents
 
    A capability value names a specific client behavior that a server may
    exercise after receiving the value, not a document. accept-deferred-
-   response is a capability; draft-gerber-oauth-deferred-token-response
-   is not.  A specification MAY register more than one value where a
-   client can usefully implement part of it.
+   response is a capability; draft-ietf-oauth-deferred-token-response is
+   not.  A specification MAY register more than one value where a client
+   can usefully implement part of it.
 
    A new revision of an extension whose client-side processing differs
    registers a new value rather than reusing the old one.  Registering
@@ -481,15 +481,15 @@ Table of Contents
    authorization server uses only the parameters inside it (Section 6.3
    of [RFC9101]).  A client_capabilities value outside the Request
    Object is not used, and if the Request Object contains no such value,
-   the parameter is absent for the purposes of Section 6.4.  Inside a
-   Request Object, the value is a JSON string containing a capability-
-   list.  An empty string is treated as omitted, as for the form-encoded
-   parameter, and a value of any other JSON type, including null, is
-   invalid.  An authorization request that uses a request_uri from a
-   pushed authorization request is built as defined in [RFC9101]
-   (Section 4 of [RFC9126]), so the same holds for the parameters that
-   were pushed: a client_capabilities value sent alongside the
-   request_uri is not used.
+   the parameter is absent for the purposes of Section 6.4.  An
+   authorization request that uses a request_uri from a pushed
+   authorization request is built as defined in [RFC9101] (Section 4 of
+   [RFC9126]), so the same holds for the parameters that were pushed: a
+   client_capabilities value sent alongside the request_uri is not used.
+   Inside a Request Object, the value is a JSON string containing a
+   capability-list.  An empty string is treated as omitted, as for the
+   form-encoded parameter, and a value of any other JSON type, including
+   null, is invalid.
 
    The parameter is not defined for the client registration endpoint.  A
    client declares capabilities there using the client_capabilities
@@ -575,10 +575,11 @@ Table of Contents
 
    A recipient MUST ignore parameters.
 
-   A server MUST include OAuth-Client-Capabilities in the Vary field of
-   every response whose content could have varied with the field,
-   including responses to requests that omit it, or use Vary: *
-   (Section 12.5.5 of [RFC9110]).
+   A server MUST list OAuth-Client-Capabilities in the Vary field, or
+   send Vary: * (Section 12.5.5 of [RFC9110]), on every response whose
+   status code, header fields, or content could have differed had the
+   request carried, omitted, or changed the OAuth-Client-Capabilities
+   field.  This includes a response to a request that omits the field.
 
    An empty List is treated as an absent field (Section 6.4).
    Structured Fields serializes an empty List by omitting the field
@@ -1244,11 +1245,11 @@ Table of Contents
               <https://datatracker.ietf.org/doc/html/draft-ietf-oauth-
               client-id-metadata-document-03>.
 
-   [DTR]      Jacobsen, F. K., de Oliveira Niero, G., and M. Gerber,
-              "Deferred Token Response", Work in Progress, Internet-
-              Draft, draft-gerber-oauth-deferred-token-response-00, 23
-              June 2026, <https://datatracker.ietf.org/doc/html/draft-
-              gerber-oauth-deferred-token-response-00>.
+   [DTR]      de Oliveira Niero, G. and D. Liu, "Deferred Token
+              Response", Work in Progress, Internet-Draft, draft-ietf-
+              oauth-deferred-token-response-01, 31 October 2026,
+              <https://datatracker.ietf.org/doc/html/draft-ietf-oauth-
+              deferred-token-response-01>.
 
    [FETCH]    "Fetch Living Standard", n.d.,
               <https://fetch.spec.whatwg.org/>.
@@ -1499,7 +1500,7 @@ A.1.  Worked Adoption
    response signals the value explicitly on its token request, as in the
    token request example above.  The authorization server elects to
    defer and, in place of a token response, returns the deferred
-   response defined in Section 5.4 of [DTR]:
+   response defined in Section 6.4 of [DTR]:
 
    HTTP/1.1 400 Bad Request
    Content-Type: application/json
@@ -1507,7 +1508,7 @@ A.1.  Worked Adoption
 
    {
      "error": "authorization_pending",
-     "deferral_code": "8d67dc78-7faa-4d41-aabd-67707b374255",
+     "deferral_code": "TfZUlGEqTJeW7oNlcxnXs2kECOk",
      "expires_in": 10800,
      "interval": 60
    }
@@ -1519,7 +1520,7 @@ A.1.  Worked Adoption
    value states whether they also carry it (Section 6.5).  A token
    request whose effective set does not contain the value never elicits
    a deferral: the authorization server completes it synchronously, or
-   returns an error under the grant's rules (Section 4.3 of [DTR]).
+   returns an error under the grant's rules (Section 5.3 of [DTR]).
    Omitting the value rules out deferral, not failure.  The following
    response to the same token request without the value assumes that the
    authorization server can complete every check it requires without
@@ -1553,12 +1554,29 @@ Appendix B.  Applying This Specification to Existing Drafts
    that motivated this work would use the mechanism.
 
    Deferred Token Response:  completion_mode=deferred becomes
-      client_capabilities containing accept-deferred-response.  The
-      authorization server still defers only when the value is in the
-      request's effective set.  Section 6.5 requires the value in the
-      token request's effective set; a signal at an earlier endpoint has
-      no effect on the token response.  The proposed single-purpose
-      registry is subsumed by Section 12.1, and the
+      client_capabilities containing accept-deferred-response, and
+      deferred_interactive would become a second value that a client
+      sends together with it.  The authorization server still defers
+      only when accept-deferred-response is in the token request's
+      effective set (Section 6.5).  The pre-token hint of [DTR] becomes
+      that value in the effective set of the preceding request; where
+      that request goes to an endpoint other than the authorization or
+      pushed authorization request endpoint, such as the device
+      authorization endpoint, [DTR] would define the request parameter
+      there (Section 6.1).  The authorization server can act on the hint
+      for the originating grant as Section 5.2 of [DTR] describes,
+      provided it decides the assurance the grant requires without it
+      (Section 7.1) and relaxes no consent requirement (CAP-2); the hint
+      does not by itself permit a deferred token response.  Adoption
+      drops the rule in Section 5.2 of [DTR] that a token request
+      omitting deferred after a hint is rejected with invalid_request.
+      A request-level signal applies only to that request (Section 6.5),
+      and CAP-1 bars a capability from enabling stricter validation of
+      the client's own requests (Section 5).  A token request without
+      the value after a hint is therefore answered without deferral,
+      synchronously or with an error under the grant's rules
+      (Section 5.3 of [DTR]).  The proposed single-purpose registry is
+      subsumed by Section 12.1, and the
       deferred_token_response_supported authorization server metadata
       Boolean by client_capabilities_supported containing the value.
       Either suffices to show that a server recognizes the capability,
