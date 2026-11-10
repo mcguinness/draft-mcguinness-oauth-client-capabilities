@@ -92,19 +92,22 @@ When the server knows out of band that the client supports `a`:
 
 ## Client Metadata
 
-An invalid field is ignored and yields no capabilities; an otherwise-valid
-document or registration request is not rejected because of it ("Client
-Metadata Declaration").
+An invalid field is ignored and yields no capabilities. An otherwise-valid
+document or registration request is not rejected because of it, unless the
+field exceeds the server's size limit ("Client Metadata Declaration", "Denial
+of Service").
 
-| Metadata value | Default set |
-|---|---|
-| `["b", "c"]` | b, c |
-| `["b", "b"]` | b |
-| `[]` | (empty) |
-| `["none"]` | Invalid: contains `none` |
-| `["b c"]` | Invalid: an element contains a space |
-| `["b", 1]` | Invalid: an element is not a string |
-| `"b"` | Invalid: not an array |
+| Metadata value | Default set | Rule |
+|---|---|---|
+| `["b", "c"]` | b, c | |
+| `["b", "b"]` | b | |
+| `[]` | (empty) | |
+| `["none"]` | (empty) | Invalid: contains `none` |
+| `["b c"]` | (empty) | Invalid: an element contains a space |
+| `["b", 1]` | (empty) | Invalid: an element is not a string |
+| `"b"` | (empty) | Invalid: not an array |
+| `"a"` 64 times, without whitespace: 257 octets | a | Within the size every server admits |
+| `"a"` 65 times, without whitespace: 261 octets | a; or, where the server's limit is 64 members, (empty) or the registration request is rejected | Members are counted before duplicates are removed ("Denial of Service") |
 *Client metadata test vectors*
 
 ## Discovery
