@@ -42,9 +42,9 @@ The same metadata default, with the form-encoded request shown before decoding:
 | `client_capabilities=b&client_capabilities=c` | Request rejected with `invalid_request` | A repeated parameter is malformed |
 *Form-encoded request test vectors*
 
-With a Request Object, and the same metadata default:
+With a Request Object or a pushed request, and the same metadata default:
 
-| In the Request Object | Outside it | Effective set |
+| In the Request Object or pushed request | Outside it | Effective set |
 |---|---|---|
 | `"client_capabilities": "b c"` | (absent) | b, c |
 | `"client_capabilities": ["b", "c"]` | (absent) | (empty): invalid, not a string |
@@ -55,6 +55,7 @@ With a Request Object, and the same metadata default:
 | One value of 1,000 `a` characters, unescaped: 1,002 octets | (absent) | That value, not recognized |
 | The same value as 1,000 `\u0061` escapes: 6,002 octets | (absent) | (empty), or the request is rejected, where the server's limit is 4096 octets: the serialized escapes are counted ("Denial of Service") |
 | (absent) | `client_capabilities=b` | a: the outside value is not used |
+| Pushed `client_capabilities=b`, used through `request_uri` | `client_capabilities=c` alongside the `request_uri` | b: the value sent alongside is not used |
 *Request Object test vectors*
 
 ## HTTP Field
@@ -77,6 +78,9 @@ Without out-of-band knowledge:
 | `"b"` | (empty) | Invalid: a String member |
 | `(b c)` | (empty) | Invalid: an Inner List member |
 | `*b` | (empty) | Invalid: violates the `capability` production |
+| `?1` | (empty) | Invalid: a Boolean member, as `Accept-Txn-Challenge` sends |
+| `:YQ==:` | (empty) | Invalid: a Byte Sequence member |
+| `b` on one field line and `"c"` on another | (empty) | Invalid: the combined value has a String member |
 *HTTP field test vectors*
 
 When the server knows out of band that the client supports `a`:
@@ -147,4 +151,5 @@ it, sending `none` where it needs to override a default.
 | `[]` | Nothing, or `none` where it must override |
 | `["a", "none"]` | Only a, or `none` where it must override; the server must not list `none` |
 | `"a"` | List ignored: not an array |
+| `["a", "*b"]` | List ignored: an element violates the `capability` production |
 *Discovery test vectors*
