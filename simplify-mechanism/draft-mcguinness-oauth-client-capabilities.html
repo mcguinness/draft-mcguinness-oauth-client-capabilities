@@ -1,0 +1,3204 @@
+<!DOCTYPE html>
+<html lang="en" class="Internet-Draft">
+<head>
+<meta charset="utf-8">
+<meta content="Common,Latin" name="scripts">
+<meta content="initial-scale=1.0" name="viewport">
+<title>OAuth 2.0 Client Capabilities</title>
+<meta content="Karl McGuinness" name="author">
+<meta content="
+       OAuth 2.0 extensions increasingly require an authorization server or protected
+resource to know, before it acts, whether the client is able to process a
+particular protocol behavior. Extensions define this signal individually today,
+and the two carriers in use are not interchangeable: the OAuth front channel is
+mediated by a user agent and cannot carry a client-originated HTTP field, while
+a protected resource request has no OAuth request parameter surface. 
+       This document defines a single registry of client capability values and three
+carriers for them: a  client_capabilities  request parameter, an
+ OAuth-Client-Capabilities  HTTP field, and a  client_capabilities  client
+metadata field. Capability values are advisory and are constrained to enable
+only optional server behavior, so that adding or removing a value does not
+weaken security. Because each request can carry its own set, a client can roll
+out a capability one instance, release, or authorization server at a time,
+without changing metadata that every instance shares. 
+    " name="description">
+<meta content="xml2rfc 3.35.0" name="generator">
+<meta content="OAuth" name="keyword">
+<meta content="Client Capabilities" name="keyword">
+<meta content="Extension Negotiation" name="keyword">
+<meta content="Capability Signaling" name="keyword">
+<meta content="Open World" name="keyword">
+<meta content="draft-mcguinness-oauth-client-capabilities-latest" name="ietf.draft">
+<!-- Generator version information:
+  xml2rfc 3.35.0
+    Python 3.14.10
+    ConfigArgParse 1.9.0
+    google-i18n-address 3.1.1
+    intervaltree 3.2.1
+    Jinja2 3.1.6
+    lxml 6.1.1
+    natsort 8.4.0
+    platformdirs 4.14.3
+    pycountry 24.6.1
+    PyYAML 6.0.3
+    requests 2.33.1
+    wcwidth 0.9.4
+-->
+<link href="draft-mcguinness-oauth-client-capabilities.xml" rel="alternate" type="application/rfc+xml">
+<link href="#copyright" rel="license">
+<style type="text/css">@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-cyrillic.woff2') format('woff2');
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-cyrillic.woff2') format('woff2');
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: local('Lora SemiBold'), local('Lora-SemiBold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-semibold-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Oxygen Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Oxygen Mono'), local('OxygenMono-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/oxygenmono-regular-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Oxygen Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Oxygen Mono'), local('OxygenMono-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/oxygenmono-regular-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-cyrillic.woff2') format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-greek.woff2') format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-cyrillic.woff2') format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-greek.woff2') format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  color-scheme: light dark;
+  --background-color: #fff;
+  --text-color: #222;
+  --title-color: #191919;
+  --link-color: #2a6496;
+  --highlight-color: #f9f9f9;
+  --line-color: #eee;
+  --pilcrow-weak: #ddd;
+  --pilcrow-strong: #bbb;
+  --small-font-size: 14.5px;
+  --font-mono: 'Oxygen Mono', monospace;
+  --font-title: "Sofia Sans Semi Condensed", sans-serif;
+  scrollbar-color: #bbb #eee;
+}
+body {
+  max-width: 600px;
+  margin: 75px auto;
+  padding: 0 5px;
+  color: var(--text-color);
+  background-color: var(--background-color);
+  font: 16px/22px "Lora", serif;
+  scroll-behavior: smooth;
+}
+
+.ears {
+  display: none;
+}
+
+/* headings */
+section {
+  clear: both;
+}
+.section-number {
+  padding-right: 0.5em;
+}
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-title);
+  font-weight: 680;
+  margin: 0.8em 0 0.3em;
+  font-size-adjust: 0.5;
+  color: var(--title-color);
+}
+h1 {
+  &#title {
+    font-size: 32px;
+    line-height: 40px;
+    clear: both;
+    margin: 1.5em 0 0.2em;
+  }
+  &#rfcnum {
+    margin: 1.5em 0 0.2em;
+    & + h1#title {
+      margin: 0.2em 0;
+    }
+  }
+}
+
+h1, h2, h3 {
+  font-size: 22px;
+  line-height: 27px;
+}
+h4, h5, h6 {
+  font-size: 20px;
+  line-height: 24px;
+}
+
+/* general structure */
+.author {
+  padding-bottom: 0.3em;
+  vertical-align: top;
+}
+#abstract+p {
+  font-size: 18px;
+  line-height: 24px;
+  & code, & samp, & tt {
+    font-size: 16px;
+    line-height: 0;
+  }
+}
+
+p {
+  padding: 0;
+  margin: 0.5em 0;
+  text-align: left;
+}
+div {
+  margin: 0;
+}
+.alignRight {
+  margin: 1em 0;
+  &.art-text {
+    background-color: var(--highlight-color);
+    border: 1px solid var(--line-color);
+    border-radius: 3px;
+    padding: 0.5em 1em 0;
+    margin-bottom: 0.5em;
+    & pre {
+      padding: 0;
+      width: auto;
+    }
+  }
+  & > *:first-child {
+    border: none;
+    margin: 0;
+    float: right;
+    clear: both;
+  }
+  & > *:nth-child(2) {
+    clear: both;
+    display: block;
+    border: none;
+  }
+}
+svg {
+  display: block;
+  /* font-family isn't space-separated, but =~ will have to do */
+  &[font-family~="monospace" i], & [font-family~="monospace" i] {
+    font-family: var(--font-mono);
+  }
+}
+.alignCenter {
+  margin: 1em 0;
+  &.art-text {
+    background-color: var(--highlight-color);
+    border: 1px solid var(--line-color);
+    border-radius: 3px;
+    padding: 0.5em 1em 0;
+    margin-bottom: 0.5em;
+    & pre {
+      padding: 0;
+      width: auto;
+    }
+  }
+  & > *:first-child {
+    border: none;
+    /* this isn't optimal, but it's an existence proof.  PrinceXML doesn't
+       support flexbox yet.
+    */
+    display: table;
+    margin: 0 auto;
+  }
+}
+
+/* lists */
+ol, ul {
+  padding: 0;
+  margin: 0 0 0.5em 2em;
+  & :is(ol, ul) {
+    margin-left: 1em;
+  }
+}
+li {
+  margin: 0 0 0.25em 0;
+}
+ul.empty, .ulEmpty {
+  list-style-type: none;
+  & li {
+    margin-top: 0.5em;
+  }
+}
+:is(ul, ol).compact, .ulCompact, .olCompact {
+  margin: 0 0 0 2em;
+  & li {
+    margin: 0;
+    & :first-child { margin-top: 0; }
+    & :last-child { margin-bottom: 0; }
+  }
+}
+
+/* definition lists */
+dl {
+  clear: left;
+  --indent: 3ch;
+  /* --indent: attr(indent ch); not supported in any browser, but we can dream */
+  &.olPercent {
+    --indent: 5ch;
+    & > dt {
+      min-width: calc(var(--indent) - 2ch);
+      float: none;
+    }
+  }
+
+  dl > dd > & {
+    margin-top: 0.5em;
+    margin-bottom: 0;
+  }
+
+  &:not(.dlNewline) > dt {
+    float: left;
+    margin-right: 2ch;
+    min-width: 8ch;
+  }
+  & > dd {
+    margin-bottom: .8em;
+    margin-left: var(--indent) !important; /* stupid element overrides */
+    min-height: 2ex;
+  }
+}
+:is(dl.compact, .dlCompact) > dd {
+  margin-bottom: 0;
+  & > :is(:first-child, .break:first-child + *) {
+    margin-top: 0;
+  }
+  & > :is(:last-child) {
+    margin-bottom: 0;
+  }
+}
+:is(dd, span).break {
+  display: none;
+}
+
+/* links */
+a {
+  text-decoration: none;
+  &[href] {
+    color: var(--link-color);
+    &:hover { text-decoration: underline; }
+    &.selfRef {
+      color: var(--text-color);
+      &:hover {
+        text-decoration: none;
+        background-color: var(--highlight-color);
+      }
+    }
+  }
+}
+.iref + a[href].internal {
+  color: var(--text-color);
+}
+a.xref:is(.cite, .auto), :is(#status-of-memo, #copyright) a {
+  white-space: nowrap;
+}
+
+/* Figures */
+tt, code, pre {
+  background-color: var(--highlight-color);
+  font: 14px/22px var(--font-mono);
+}
+tt, code {
+  /* changing the font for inline elements leads to different ascender
+     and descender heights; as we want to retain baseline alignment,
+     remove leading to avoid altering the final height of lines
+     note: this fails if these blocks take an entire line,
+     a different solution would be great */
+  line-height: 0;
+}
+:is(h1, h2, h3, h4, h5, h6) :is(tt, code) {
+  font-size: 84%;
+}
+pre {
+  border: 1px solid var(--line-color);
+  font-size: 13.5px;
+  line-height: 16px;
+  letter-spacing: -0.2px;
+  margin: 5px;
+  padding: 5px;
+}
+img {
+  max-width: 100%;
+}
+figure {
+  margin: 0.5em 0;
+  padding: 0;
+  & blockquote {
+    margin: 0.8em 0.4em 0.4em;
+  }
+}
+figcaption, caption {
+  font-style: italic;
+  margin: 0.5em 1.5em;
+  text-align: left;
+  caption-side: bottom;
+}
+@media screen {
+  /* Auto-collapse boilerplate. */
+  :is(#status-of-memo, #copyright) {
+    & p {
+      margin: -2px 0;
+      max-height: 0;
+      transition: max-height 2s ease, margin 0.5s ease 0.5s;
+      overflow: hidden;
+    }
+    &:hover p,
+    & h2:target ~ p {
+      margin: 0.5em 0;
+      max-height: 500px;
+      overflow: auto;
+    }
+  }
+  pre, svg {
+    display: inline-block;
+    /* In the horizontal direction, sometimes people make over-sized figures.
+       Scrollbars for those is therefore necessary: auto adds them as necessary..
+       In the vertical direction, the line-height can combine with the font
+       asender/descender height to produce scrollbars: hidden avoids that. */
+    overflow: auto hidden;
+  }
+  pre {
+    max-width: 100%;
+    width: calc(100% - 22px - 1em);
+  }
+  svg {
+    max-width: calc(100% - 22px - 1em);
+  }
+  figure pre {
+    display: block;
+    width: calc(100% - 25px);
+  }
+  :is(pre, svg) + .pilcrow {
+    display: inline-block;
+    vertical-align: text-bottom;
+    padding-bottom: 8px;
+  }
+}
+
+/* aside, blockquote */
+aside, blockquote {
+  margin-left: 0;
+  padding: 0 2em;
+  font-style: italic;
+}
+blockquote {
+  margin: 1em 0;
+  border-left: 2px var(--pilcrow-strong) solid;
+}
+cite {
+  display: block;
+  text-align: right;
+  font-style: italic;
+}
+
+/* tables */
+table {
+  width: auto;
+  max-width: 100%;
+  margin: 0 0 1em;
+  border-collapse: collapse;
+  &.right { margin-left: auto; }
+  &.center { margin-left: auto; margin-right: auto; }
+  &.left { margin-right: auto; }
+  & .text-left { text-align: left; }
+  & .text-center { text-align: center; }
+  & .text-right { text-align: right; }
+  & caption {
+    margin: 0;
+    padding: 3px 0 3px 1em;
+  }
+  & p { margin: 0; }
+}
+
+thead, tbody {
+  border: 1px solid var(--line-color);
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: 5px 10px;
+}
+th {
+  background-color: var(--line-color);
+}
+:is(tr:nth-child(2n), thead+tbody > tr:nth-child(2n+1)) > td {
+  background-color: var(--background-color);
+}
+:is(tr:nth-child(2n+1), thead+tbody > tr:nth-child(2n)) > td {
+  background-color: var(--highlight-color);
+}
+
+/* pilcrow */
+a.pilcrow {
+  margin-left: 3px;
+  opacity: 0.2;
+  user-select: none;
+  &[href] {
+    color: var(--pilcrow-weak);
+    &:hover { text-decoration: none; }
+  }
+  @media not print {
+    :hover > &, &:focus {
+      opacity: 1;
+    }
+    &[href]:hover {
+      color: var(--pilcrow-strong);
+      background-color: transparent;
+    }
+  }
+  @media print {
+    display: none;
+  }
+}
+
+/* misc */
+hr {
+  border: 0;
+  border-top: 1px solid var(--line-color);
+}
+.bcp14 {
+  font-variant: small-caps;
+  font-weight: 600;
+  font-size: var(--small-font-size);
+}
+.role {
+  font-variant: all-small-caps;
+}
+sub, sup {
+  line-height: 1;
+  font-size: 80%;
+}
+
+/* info block */
+#identifiers {
+  margin: 0;
+  font-size: var(--small-font-size);
+  line-height: 18px;
+  --identifier-width: 15ch;
+  & dt {
+    width: var(--identifier-width);
+    min-width: var(--identifier-width);
+    clear: left;
+    float: left;
+    text-align: right;
+    margin-right: 1ch;
+  }
+  & dd {
+    margin: 0;
+    margin-left: calc(1em + var(--identifier-width)) !important;
+    min-width: 5em;
+  }
+  & .authors {
+    & .author {
+      display: inline-block;
+      margin-right: 1.5em;
+    }
+    & .org {
+      font-style: italic;
+    }
+  }
+}
+
+/* The prepared/rendered info at the very bottom of the page */
+.docInfo {
+  color: #999;
+  font-size: 0.9em;
+  font-style: italic;
+  margin-top: 2em;
+  & .prepared {
+    float: right;
+  }
+}
+
+/* table of contents */
+#toc {
+  padding: 0.75em 0 2em 0;
+  margin-bottom: 1em;
+
+  & nav {
+    & ul {
+      margin: 0 0.5em 0 0;
+      padding: 0;
+      list-style: none;
+    }
+    & li {
+      line-height: 1.3em;
+      margin: 2px 0;
+      padding-left: 1.2em;
+      text-indent: -1.2em;
+    }
+  }
+  & a.xref {
+    white-space: normal;
+  }
+}
+
+.references {
+  & > dt {
+    text-align: right;
+    font-weight: bold;
+    min-width: 10ch;
+    margin-right: 1.5ch;
+    &:target::before {
+      content: "⇒";
+      margin: 0 10px 0 -25px;
+    }
+  }
+  & > dd {
+    margin-left: 12ch !important;
+    overflow: visible;
+    & .refInstance {
+      margin-bottom: 0.8em;
+    }
+    & .ascii {
+      margin-bottom: 0.25em;
+    }
+  }
+}
+
+#rfc\.index\.index + ul {
+  margin-left: 0;
+}
+
+/* authors */
+address.vcard {
+  font-style: normal;
+  max-width: 20em;
+  margin: 1em auto 1em 0;
+
+  & .nameRole {
+    font-weight: 700;
+    margin-left: 0;
+  }
+  & .label {
+    margin: 0.5em 0;
+  }
+  & .type {
+    display: none;
+  }
+  & .alternative-contact {
+    margin: 0.5em 0 0.25em 0;
+  }
+  & .non-ascii {
+    margin: 0 0 0 2em;
+  }
+  & div.left {
+    text-align: left;
+  }
+  & div.right {
+    text-align: right;
+  }
+}
+
+hr.addr {
+  border-top: 1px dashed;
+  margin: 0;
+  color: #ddd;
+  max-width: calc(100% - 16px);
+}
+@media (min-width: 500px) {
+  #authors-addresses {
+    & > section {
+      column-count: 2;
+      column-gap: 20px;
+    }
+    & > section > h2 {
+      column-span: all;
+    }
+    /* hack for break-inside: avoid-column */
+    & address {
+      display: inline-block;
+      break-inside: avoid-column;
+    }
+  }
+}
+
+/* Comments */
+.rfcEditorRemove {
+  & p:first-of-type {
+    font-style: italic;
+  }
+}
+.cref {
+  background-color: rgba(249, 232, 105, 0.3);
+  padding: 2px 4px;
+}
+.crefSource {
+  font-style: italic;
+}
+
+@media screen {
+  #toc {
+    & nav {
+      font-family: var(--font-title);
+      font-weight: 360;
+      & > ul { margin-bottom: 2em; }
+      & ul {
+        margin: 0 0 0 4px;
+        & :is(p, li) {
+          margin: 2px 0;
+        }
+      }
+    }
+    & a.toplink {
+      float: right;
+    }
+  }
+}
+@media not screen {
+  #toc a.toplink {
+    display: none;
+  }
+}
+
+
+/* TOC layout for smaller screens */
+@media screen and (max-width: 929px) {
+  #toc {
+    position: fixed;
+    z-index: 2;
+    top: 0;
+    right: 0;
+    padding: 1px 0 0 0;
+    margin: 0;
+    border-bottom: 1px solid #ccc;
+    opacity: 0.6;
+    & h2 {
+      margin: 0;
+      padding: 2px 0 2px 6px;
+      padding-right: 1em;
+      font-size: 18px;
+      line-height: 24px;
+      min-width: 190px;
+      text-align: right;
+      background-color: #444;
+      color: white;
+      cursor: pointer;
+      &::before { /* css hamburger */
+        float: right;
+        position: relative;
+        width: 1em;
+        height: 1px;
+        left: -164px;
+        margin: 8px 0 0 0;
+        background: white none repeat scroll 0 0;
+        box-shadow: 0 4px 0 0 white, 0 8px 0 0 white;
+        content: "";
+      }
+    }
+    & nav {
+      display: none;
+      background-color: var(--background-color);
+      padding: 0.5em 1em 1em;
+      overflow: auto;
+      overscroll-behavior: contain;
+      height: calc(100vh - 48px);
+      border-left: 1px solid #ddd;
+    }
+    &.active {
+      opacity: 1;
+      & nav { display: block; }
+    }
+    /* Make the collapsed ToC header render white on gray also when it's a link */
+    & h2 a,
+    & h2 a:is(:link, :focus, :hover),
+    & a.toplink,
+    & a.toplink:hover {
+      color: white;
+      background-color: #444;
+      text-decoration: none;
+    }
+    & a.toplink {
+      margin: 2px 0.5em 0;
+    }
+  }
+}
+
+/* TOC layout for wide screens */
+@media screen and (min-width: 930px) {
+  body {
+    padding-right: 360px;
+    padding-right: calc(min(180px + 20%, 500px));
+  }
+  #toc {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    right: calc(50vw - 480px);
+    width: 312px;
+    margin: 0;
+    padding: 0;
+    z-index: 1;
+    & h2 {
+      margin: 0;
+      padding: 0.25em 1em 1em 0;
+    }
+    & nav {
+      display: block;
+      height: calc(90vh - 84px);
+      bottom: 0;
+      padding: 0.5em 0 2em;
+      overflow: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+    }
+    & a.toplink {
+      margin: 8px 0.5em 0;
+    }
+  }
+  img { /* future proofing */
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+/* pagination */
+@media print {
+  body {
+    width: 100%;
+  }
+  p {
+    orphans: 3;
+    widows: 3;
+  }
+  #n-copyright-notice {
+    border-bottom: none;
+  }
+  #toc {
+    page-break-before: always;
+    border-top: none;
+    padding-top: 0;
+  }
+  #n-introduction {
+    page-break-before: always;
+  }
+  figure, pre, .vcard {
+    page-break-inside: avoid;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+  }
+  :is(h2, h3, h4, h5, h6)+*, dd {
+    page-break-before: avoid;
+  }
+  pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: 10pt;
+  }
+  table {
+    border: 1px solid #ddd;
+  }
+  td {
+    border-top: 1px solid #ddd;
+  }
+}
+
+@page :first {
+  padding-top: 0;
+  @top-left {
+    content: normal;
+    border: none;
+  }
+  @top-center {
+    content: normal;
+    border: none;
+  }
+  @top-right {
+    content: normal;
+    border: none;
+  }
+}
+
+@page {
+  size: A4;
+  margin-bottom: 45mm;
+  padding-top: 20px;
+}
+
+/* Dark mode. */
+@media (prefers-color-scheme: dark) {
+:root {
+  --background-color: #121212;
+  --text-color: #f0f0f0;
+  --title-color: #fff;
+  --link-color: #4da4f0;
+  --highlight-color: #282828;
+  --line-color: #444;
+  --pilcrow-weak: #444;
+  --pilcrow-strong: #666;
+  scrollbar-color: #777 #333;
+}
+}
+
+/* SVG Trick: a prefix match works because only black and white are allowed */
+svg {
+  & :is([stroke="black"], [stroke^="#000"]) {
+    stroke: var(--text-color);
+  }
+  & :is([stroke="white"], [stroke^="#fff"]) {
+    stroke: var(--background-color);
+  }
+  & :is([fill="black"], [fill^="#000"], :not([fill], [fill] *)) {
+    fill: var(--text-color);
+  }
+  & :is([fill="white"], [fill^="#fff"]) {
+    fill: var(--background-color);
+  }
+}
+</style>
+
+</head>
+<body class="xml2rfc">
+<table class="ears">
+<thead><tr>
+<td class="left">Internet-Draft</td>
+<td class="center">oauth-client-capabilities</td>
+<td class="right">November 2026</td>
+</tr></thead>
+<tfoot><tr>
+<td class="left">McGuinness</td>
+<td class="center">Expires 14 May 2027</td>
+<td class="right">[Page]</td>
+</tr></tfoot>
+</table>
+<div id="external-metadata" class="document-information"></div>
+<div id="internal-metadata" class="document-information">
+<dl id="identifiers">
+<dt class="label-workgroup">Workgroup:</dt>
+<dd class="workgroup">Web Authorization Protocol</dd>
+<dt class="label-internet-draft">Internet-Draft:</dt>
+<dd class="internet-draft">draft-mcguinness-oauth-client-capabilities-latest</dd>
+<dt class="label-published">Published:</dt>
+<dd class="published">
+<time datetime="2026-11-10" class="published">10 November 2026</time>
+    </dd>
+<dt class="label-intended-status">Intended Status:</dt>
+<dd class="intended-status">Standards Track</dd>
+<dt class="label-expires">Expires:</dt>
+<dd class="expires"><time datetime="2027-05-14">14 May 2027</time></dd>
+<dt class="label-authors">Author:</dt>
+<dd class="authors">
+<div class="author">
+      <div class="author-name">K. McGuinness</div>
+<div class="org">Independent</div>
+</div>
+</dd>
+</dl>
+</div>
+<h1 id="title">OAuth 2.0 Client Capabilities</h1>
+<section id="section-abstract">
+      <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
+<p id="section-abstract-1">OAuth 2.0 extensions increasingly require an authorization server or protected
+resource to know, before it acts, whether the client is able to process a
+particular protocol behavior. Extensions define this signal individually today,
+and the two carriers in use are not interchangeable: the OAuth front channel is
+mediated by a user agent and cannot carry a client-originated HTTP field, while
+a protected resource request has no OAuth request parameter surface.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+<p id="section-abstract-2">This document defines a single registry of client capability values and three
+carriers for them: a <code>client_capabilities</code> request parameter, an
+<code>OAuth-Client-Capabilities</code> HTTP field, and a <code>client_capabilities</code> client
+metadata field. Capability values are advisory and are constrained to enable
+only optional server behavior, so that adding or removing a value does not
+weaken security. Because each request can carry its own set, a client can roll
+out a capability one instance, release, or authorization server at a time,
+without changing metadata that every instance shares.<a href="#section-abstract-2" class="pilcrow">¶</a></p>
+</section>
+<div id="status-of-memo">
+<section id="section-boilerplate.1">
+        <h2 id="name-status-of-this-memo">
+<a href="#name-status-of-this-memo" class="section-name selfRef">Status of This Memo</a>
+        </h2>
+<p id="section-boilerplate.1-1">
+        This Internet-Draft is submitted in full conformance with the
+        provisions of BCP 78 and BCP 79.<a href="#section-boilerplate.1-1" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-2">
+        Internet-Drafts are working documents of the Internet Engineering Task
+        Force (IETF). Note that other groups may also distribute working
+        documents as Internet-Drafts. The list of current Internet-Drafts is
+        at <span><a href="https://datatracker.ietf.org/drafts/current/">https://datatracker.ietf.org/drafts/current/</a></span>.<a href="#section-boilerplate.1-2" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-3">
+        Internet-Drafts are draft documents valid for a maximum of six months
+        and may be updated, replaced, or obsoleted by other documents at any
+        time. It is inappropriate to use Internet-Drafts as reference
+        material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-4">
+        This Internet-Draft will expire on 14 May 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="copyright">
+<section id="section-boilerplate.2">
+        <h2 id="name-copyright-notice">
+<a href="#name-copyright-notice" class="section-name selfRef">Copyright Notice</a>
+        </h2>
+<p id="section-boilerplate.2-1">
+            Copyright (c) 2026 IETF Trust and the persons identified as the
+            document authors. All rights reserved.<a href="#section-boilerplate.2-1" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.2-2">
+            This document is subject to BCP 78 and the IETF Trust's Legal
+            Provisions Relating to IETF Documents
+            (<span><a href="https://trustee.ietf.org/license-info">https://trustee.ietf.org/license-info</a></span>) in effect on the date of
+            publication of this document. Please review these documents
+            carefully, as they describe your rights and restrictions with
+            respect to this document. Code Components extracted from this
+            document must include Revised BSD License text as described in
+            Section 4.e of the Trust Legal Provisions and are provided without
+            warranty as described in the Revised BSD License.<a href="#section-boilerplate.2-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="toc">
+<section id="section-toc.1">
+        <a href="#" onclick="scroll(0,0)" class="toplink">▲</a><h2 id="name-table-of-contents">
+<a href="#name-table-of-contents" class="section-name selfRef">Table of Contents</a>
+        </h2>
+<nav class="toc"><ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1">
+            <p id="section-toc.1-1.1.1"><a href="#section-1" class="auto internal xref">1</a>.  <a href="#name-introduction" class="internal xref">Introduction</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1.2.1">
+                <p id="section-toc.1-1.1.2.1.1" class="keepWithNext"><a href="#section-1.1" class="auto internal xref">1.1</a>.  <a href="#name-the-carrier-asymmetry" class="internal xref">The Carrier Asymmetry</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1.2.2">
+                <p id="section-toc.1-1.1.2.2.1" class="keepWithNext"><a href="#section-1.2" class="auto internal xref">1.2</a>.  <a href="#name-open-world-deployment" class="internal xref">Open-World Deployment</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1.2.3">
+                <p id="section-toc.1-1.1.2.3.1" class="keepWithNext"><a href="#section-1.3" class="auto internal xref">1.3</a>.  <a href="#name-scope" class="internal xref">Scope</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2">
+            <p id="section-toc.1-1.2.1"><a href="#section-2" class="auto internal xref">2</a>.  <a href="#name-conventions-and-definitions" class="internal xref">Conventions and Definitions</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3">
+            <p id="section-toc.1-1.3.1"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-overview" class="internal xref">Overview</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4">
+            <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-capability-values" class="internal xref">Capability Values</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.1">
+                <p id="section-toc.1-1.4.2.1.1"><a href="#section-4.1" class="auto internal xref">4.1</a>.  <a href="#name-syntax" class="internal xref">Syntax</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.2">
+                <p id="section-toc.1-1.4.2.2.1"><a href="#section-4.2" class="auto internal xref">4.2</a>.  <a href="#name-naming-guidance" class="internal xref">Naming Guidance</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.3">
+                <p id="section-toc.1-1.4.2.3.1"><a href="#section-4.3" class="auto internal xref">4.3</a>.  <a href="#name-the-none-sentinel" class="internal xref">The <code>none</code> Sentinel</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5">
+            <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-capability-invariants" class="internal xref">Capability Invariants</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6">
+            <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-carriers" class="internal xref">Carriers</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.1">
+                <p id="section-toc.1-1.6.2.1.1"><a href="#section-6.1" class="auto internal xref">6.1</a>.  <a href="#name-the-client_capabilities-req" class="internal xref">The <code>client_capabilities</code> Request Parameter</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.2">
+                <p id="section-toc.1-1.6.2.2.1"><a href="#section-6.2" class="auto internal xref">6.2</a>.  <a href="#name-the-oauth-client-capabiliti" class="internal xref">The <code>OAuth-Client-Capabilities</code> HTTP Field</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.3">
+                <p id="section-toc.1-1.6.2.3.1"><a href="#section-6.3" class="auto internal xref">6.3</a>.  <a href="#name-client-metadata-declaration" class="internal xref">Client Metadata Declaration</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.4">
+                <p id="section-toc.1-1.6.2.4.1"><a href="#section-6.4" class="auto internal xref">6.4</a>.  <a href="#name-precedence" class="internal xref">Precedence</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.5">
+                <p id="section-toc.1-1.6.2.5.1"><a href="#section-6.5" class="auto internal xref">6.5</a>.  <a href="#name-scope-of-a-signal" class="internal xref">Scope of a Signal</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7">
+            <p id="section-toc.1-1.7.1"><a href="#section-7" class="auto internal xref">7</a>.  <a href="#name-server-behavior" class="internal xref">Server Behavior</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.1">
+                <p id="section-toc.1-1.7.2.1.1"><a href="#section-7.1" class="auto internal xref">7.1</a>.  <a href="#name-selecting-among-alternative" class="internal xref">Selecting Among Alternatives</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8">
+            <p id="section-toc.1-1.8.1"><a href="#section-8" class="auto internal xref">8</a>.  <a href="#name-discovery" class="internal xref">Discovery</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9">
+            <p id="section-toc.1-1.9.1"><a href="#section-9" class="auto internal xref">9</a>.  <a href="#name-guidance-for-extension-spec" class="internal xref">Guidance for Extension Specifications</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10">
+            <p id="section-toc.1-1.10.1"><a href="#section-10" class="auto internal xref">10</a>. <a href="#name-security-considerations" class="internal xref">Security Considerations</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10.2.1">
+                <p id="section-toc.1-1.10.2.1.1"><a href="#section-10.1" class="auto internal xref">10.1</a>.  <a href="#name-unverified-signals" class="internal xref">Unverified Signals</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10.2.2">
+                <p id="section-toc.1-1.10.2.2.1"><a href="#section-10.2" class="auto internal xref">10.2</a>.  <a href="#name-downgrade" class="internal xref">Downgrade</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10.2.3">
+                <p id="section-toc.1-1.10.2.3.1"><a href="#section-10.3" class="auto internal xref">10.3</a>.  <a href="#name-denial-of-service" class="internal xref">Denial of Service</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10.2.4">
+                <p id="section-toc.1-1.10.2.4.1"><a href="#section-10.4" class="auto internal xref">10.4</a>.  <a href="#name-unregistered-values" class="internal xref">Unregistered Values</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11">
+            <p id="section-toc.1-1.11.1"><a href="#section-11" class="auto internal xref">11</a>. <a href="#name-privacy-considerations" class="internal xref">Privacy Considerations</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12">
+            <p id="section-toc.1-1.12.1"><a href="#section-12" class="auto internal xref">12</a>. <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12.2.1">
+                <p id="section-toc.1-1.12.2.1.1"><a href="#section-12.1" class="auto internal xref">12.1</a>.  <a href="#name-oauth-client-capabilities-r" class="internal xref">OAuth Client Capabilities Registry</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12.2.2">
+                <p id="section-toc.1-1.12.2.2.1"><a href="#section-12.2" class="auto internal xref">12.2</a>.  <a href="#name-oauth-parameters-registry" class="internal xref">OAuth Parameters Registry</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12.2.3">
+                <p id="section-toc.1-1.12.2.3.1"><a href="#section-12.3" class="auto internal xref">12.3</a>.  <a href="#name-oauth-dynamic-client-regist" class="internal xref">OAuth Dynamic Client Registration Metadata Registry</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12.2.4">
+                <p id="section-toc.1-1.12.2.4.1"><a href="#section-12.4" class="auto internal xref">12.4</a>.  <a href="#name-oauth-authorization-server-" class="internal xref">OAuth Authorization Server Metadata Registry</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12.2.5">
+                <p id="section-toc.1-1.12.2.5.1"><a href="#section-12.5" class="auto internal xref">12.5</a>.  <a href="#name-oauth-protected-resource-me" class="internal xref">OAuth Protected Resource Metadata Registry</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12.2.6">
+                <p id="section-toc.1-1.12.2.6.1"><a href="#section-12.6" class="auto internal xref">12.6</a>.  <a href="#name-http-field-name-registry" class="internal xref">HTTP Field Name Registry</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.13">
+            <p id="section-toc.1-1.13.1"><a href="#section-13" class="auto internal xref">13</a>. <a href="#name-references" class="internal xref">References</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.13.2.1">
+                <p id="section-toc.1-1.13.2.1.1"><a href="#section-13.1" class="auto internal xref">13.1</a>.  <a href="#name-normative-references" class="internal xref">Normative References</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.13.2.2">
+                <p id="section-toc.1-1.13.2.2.1"><a href="#section-13.2" class="auto internal xref">13.2</a>.  <a href="#name-informative-references" class="internal xref">Informative References</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.14">
+            <p id="section-toc.1-1.14.1"><a href="#appendix-A" class="auto internal xref">Appendix A</a>.  <a href="#name-examples" class="internal xref">Examples</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.14.2.1">
+                <p id="section-toc.1-1.14.2.1.1"><a href="#appendix-A.1" class="auto internal xref">A.1</a>.  <a href="#name-worked-adoption" class="internal xref">Worked Adoption</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.15">
+            <p id="section-toc.1-1.15.1"><a href="#appendix-B" class="auto internal xref">Appendix B</a>.  <a href="#name-applying-this-specification" class="internal xref">Applying This Specification to Existing Drafts</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.16">
+            <p id="section-toc.1-1.16.1"><a href="#appendix-C" class="auto internal xref">Appendix C</a>.  <a href="#name-design-rationale" class="internal xref">Design Rationale</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.16.2.1">
+                <p id="section-toc.1-1.16.2.1.1"><a href="#appendix-C.1" class="auto internal xref">C.1</a>.  <a href="#name-survey-of-existing-mechanis" class="internal xref">Survey of Existing Mechanisms</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.16.2.2">
+                <p id="section-toc.1-1.16.2.2.1"><a href="#appendix-C.2" class="auto internal xref">C.2</a>.  <a href="#name-comparison-with-http-prefer" class="internal xref">Comparison with HTTP Prefer</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.16.2.3">
+                <p id="section-toc.1-1.16.2.3.1"><a href="#appendix-C.3" class="auto internal xref">C.3</a>.  <a href="#name-applying-the-admission-crit" class="internal xref">Applying the Admission Criterion</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.16.2.4">
+                <p id="section-toc.1-1.16.2.4.1"><a href="#appendix-C.4" class="auto internal xref">C.4</a>.  <a href="#name-absence-of-mandatory-to-und" class="internal xref">Absence of Mandatory-to-Understand Semantics</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.16.2.5">
+                <p id="section-toc.1-1.16.2.5.1"><a href="#appendix-C.5" class="auto internal xref">C.5</a>.  <a href="#name-capabilities-and-profile-se" class="internal xref">Capabilities and Profile Selection</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.16.2.6">
+                <p id="section-toc.1-1.16.2.6.1"><a href="#appendix-C.6" class="auto internal xref">C.6</a>.  <a href="#name-trade-offs" class="internal xref">Trade-offs</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.16.2.7">
+                <p id="section-toc.1-1.16.2.7.1"><a href="#appendix-C.7" class="auto internal xref">C.7</a>.  <a href="#name-open-issues" class="internal xref">Open Issues</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.17">
+            <p id="section-toc.1-1.17.1"><a href="#appendix-D" class="auto internal xref"></a><a href="#name-acknowledgments" class="internal xref">Acknowledgments</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.18">
+            <p id="section-toc.1-1.18.1"><a href="#appendix-E" class="auto internal xref"></a><a href="#name-authors-address" class="internal xref">Author's Address</a></p>
+</li>
+        </ul>
+</nav>
+</section>
+</div>
+<div id="intro">
+<section id="section-1">
+      <h2 id="name-introduction">
+<a href="#section-1" class="section-number selfRef">1. </a><a href="#name-introduction" class="section-name selfRef">Introduction</a>
+      </h2>
+<p id="section-1-1">A growing number of OAuth 2.0 <span>[<a href="#RFC6749" class="cite xref">RFC6749</a>]</span> extensions share one normative shape:<a href="#section-1-1" class="pilcrow">¶</a></p>
+<ul class="normal ulEmpty">
+<li class="normal ulEmpty" id="section-1-2.1">
+          <p id="section-1-2.1.1">The server <span class="bcp14">MUST NOT</span> do X unless the client has signaled that it can process X.<a href="#section-1-2.1.1" class="pilcrow">¶</a></p>
+</li>
+      </ul>
+<p id="section-1-3">These extensions change what a client receives in response to an otherwise
+ordinary request, and a client that cannot process the new response fails.<a href="#section-1-3" class="pilcrow">¶</a></p>
+<p id="section-1-4">Two current extensions illustrate the pattern, and disagree on how to carry it.
+<span>[<a href="#DTR" class="cite xref">DTR</a>]</span> requires an authorization server not to defer a response unless the
+<code>completion_mode</code> request parameter includes <code>deferred</code>. <span>[<a href="#TXN-CHALLENGE" class="cite xref">TXN-CHALLENGE</a>]</span>
+requires a protected resource not to return a transaction authorization
+challenge unless <code>Accept-Txn-Challenge</code> is true or support is known out of
+band.<a href="#section-1-4" class="pilcrow">¶</a></p>
+<p id="section-1-5">The requirements are structurally identical. The carriers are not.<a href="#section-1-5" class="pilcrow">¶</a></p>
+<div id="asymmetry">
+<section id="section-1.1">
+        <h3 id="name-the-carrier-asymmetry">
+<a href="#section-1.1" class="section-number selfRef">1.1. </a><a href="#name-the-carrier-asymmetry" class="section-name selfRef">The Carrier Asymmetry</a>
+        </h3>
+<p id="section-1.1-1">Neither carrier can perform the other's function. An HTTP field works for
+<span>[<a href="#TXN-CHALLENGE" class="cite xref">TXN-CHALLENGE</a>]</span> because the protected resource request is made directly over
+HTTP, but that request has no OAuth parameter surface. At the authorization
+endpoint, the client constructs a URI for a user agent, which issues the HTTP
+request with its own fields; a client-originated field cannot cross that
+redirect boundary.<a href="#section-1.1-1" class="pilcrow">¶</a></p>
+<p id="section-1.1-2">A general mechanism cannot be an HTTP field alone, and cannot be a request
+parameter alone. Two request carriers over one shared vocabulary is the minimum
+that covers OAuth's topology.<a href="#section-1.1-2" class="pilcrow">¶</a></p>
+<p id="section-1.1-3">The extensions in <a href="#existing-drafts" class="auto internal xref">Appendix B</a> need only direct HTTP requests, at the
+token endpoint and at protected resources. The request parameter's coverage of
+the authorization endpoint anticipates extensions whose behavior changes the
+authorization response; the pushed authorization request and Request Object
+examples (<a href="#examples" class="auto internal xref">Appendix A</a>) illustrate the carrier.<a href="#section-1.1-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="open-world">
+<section id="section-1.2">
+        <h3 id="name-open-world-deployment">
+<a href="#section-1.2" class="section-number selfRef">1.2. </a><a href="#name-open-world-deployment" class="section-name selfRef">Open-World Deployment</a>
+        </h3>
+<p id="section-1.2-1">Classic OAuth establishes client behavior at registration. Metadata fields such
+as <code>grant_types</code>, <code>response_types</code>, <code>token_endpoint_auth_method</code>,
+<code>dpop_bound_access_tokens</code> <span>[<a href="#RFC9449" class="cite xref">RFC9449</a>]</span>, and
+<code>require_pushed_authorization_requests</code> <span>[<a href="#RFC9126" class="cite xref">RFC9126</a>]</span> provide a static
+declaration <span>[<a href="#RFC7591" class="cite xref">RFC7591</a>]</span>.<a href="#section-1.2-1" class="pilcrow">¶</a></p>
+<p id="section-1.2-2">Deployments that identify clients by a published metadata document <span>[<a href="#CIMD" class="cite xref">CIMD</a>]</span>,
+operate autonomous software instances, or otherwise pair previously unknown
+clients and authorization servers have no registration handshake. The first
+request must carry the relevant capability or the server must discover it from
+client-published metadata.<a href="#section-1.2-2" class="pilcrow">¶</a></p>
+<p id="section-1.2-3">A published document is also shared. It applies to every instance using the
+URL, and a change to it reaches each authorization server only as that server
+refreshes its cached copy, on a schedule the publisher cannot target <span>[<a href="#CIMD" class="cite xref">CIMD</a>]</span>.
+A change therefore cannot be staged one authorization server or one release at
+a time, and rolling it back waits out the same caches.<a href="#section-1.2-3" class="pilcrow">¶</a></p>
+<p id="section-1.2-4">Capabilities let a client stage optional behavior without changing the
+document. Suppose an updated release can accept a deferred token response
+(<a href="#existing-drafts" class="auto internal xref">Appendix B</a>). The document continues to declare only what every
+instance can process. The updated release sends its complete set, including the
+illustrative <code>accept-deferred-response</code>, to one authorization server, since a
+request set replaces the metadata default rather than adding to it
+(<a href="#precedence" class="auto internal xref">Section 6.4</a>). It sends other authorization servers nothing new, and older
+releases are unaffected. Stopping is equally local while the value stays out of
+the document. Once the document declares it, an instance withdraws it only by
+sending a set without it, or <code>none</code>. Either way the client publishes one
+document for every authorization server.<a href="#section-1.2-4" class="pilcrow">¶</a></p>
+<p id="section-1.2-5">This works only for optional behavior. A metadata field that requires a
+behavior applies at every authorization server that supports it: once
+<code>dpop_bound_access_tokens</code> is true, such a server rejects token requests
+without DPoP <span>[<a href="#RFC9449" class="cite xref">RFC9449</a>]</span>. Such a field cannot be a capability (<a href="#invariants" class="auto internal xref">Section 5</a>),
+and staging a change to it remains a problem for client metadata itself.<a href="#section-1.2-5" class="pilcrow">¶</a></p>
+<p id="section-1.2-6">Per-extension signals accumulate in both directions. Each front-channel
+capability can enlarge an authorization URI visible to the user agent. Each
+resource capability adds a field to protected resource requests. A
+per-extension signal also needs its own registrations and metadata. A shared
+vocabulary incurs those costs once across both sides of the asymmetry in
+<a href="#asymmetry" class="auto internal xref">Section 1.1</a>.<a href="#section-1.2-6" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="scope">
+<section id="section-1.3">
+        <h3 id="name-scope">
+<a href="#section-1.3" class="section-number selfRef">1.3. </a><a href="#name-scope" class="section-name selfRef">Scope</a>
+        </h3>
+<p id="section-1.3-1">This specification defines carriers and a vocabulary, and reserves the <code>none</code>
+sentinel (<a href="#none-value" class="auto internal xref">Section 4.3</a>). It does not define any capability values, change any
+existing parameter, or require existing extensions to migrate. The extensions
+in <a href="#existing-drafts" class="auto internal xref">Appendix B</a> are the intended first adopters; this specification
+proposes the mechanism for their use rather than registering values on their
+behalf.<a href="#section-1.3-1" class="pilcrow">¶</a></p>
+<p id="section-1.3-2">Two uses are out of scope. Capability values do not carry deployment-local
+feature flags or rollout cohort membership, whoever assigns it, because neither
+describes what a client can process. A client may use its own cohorts to decide
+which values to signal, which is how it stages adoption (<a href="#open-world" class="auto internal xref">Section 1.2</a>); the
+cohort itself is not signaled. Nor do capability values signal conformance to a
+requirement, in either direction. A claim of conformance cannot be verified and
+can be omitted by anyone who would violate the requirement, so enforcement keys
+on the client's identity rather than the claim. A claim of non-conformance
+cannot be sent by the clients that need it, which generally cannot be updated
+to send anything.<a href="#section-1.3-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="terms">
+<section id="section-2">
+      <h2 id="name-conventions-and-definitions">
+<a href="#section-2" class="section-number selfRef">2. </a><a href="#name-conventions-and-definitions" class="section-name selfRef">Conventions and Definitions</a>
+      </h2>
+<p id="section-2-1">The key words "<span class="bcp14">MUST</span>", "<span class="bcp14">MUST NOT</span>", "<span class="bcp14">REQUIRED</span>", "<span class="bcp14">SHALL</span>", "<span class="bcp14">SHALL NOT</span>", "<span class="bcp14">SHOULD</span>", "<span class="bcp14">SHOULD NOT</span>", "<span class="bcp14">RECOMMENDED</span>", "<span class="bcp14">NOT RECOMMENDED</span>",
+"<span class="bcp14">MAY</span>", and "<span class="bcp14">OPTIONAL</span>" in this document are to be interpreted as
+described in BCP 14 <span>[<a href="#RFC2119" class="cite xref">RFC2119</a>]</span> <span>[<a href="#RFC8174" class="cite xref">RFC8174</a>]</span> when, and only when, they
+appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-2-2">
+        <dt id="section-2-2.1">Capability:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-2.2">
+          <p id="section-2-2.2.1">A named behavior that a client asserts it can process and that a server may
+choose to exercise.<a href="#section-2-2.2.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-2.3">Signal:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-2.4">
+          <p id="section-2-2.4.1">To convey capability values to a server through one of the carriers defined
+in <a href="#carriers" class="auto internal xref">Section 6</a>; as a noun, the values so conveyed.<a href="#section-2-2.4.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-2.5">Effective capability set:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-2.6">
+          <p id="section-2-2.6.1">The capability set that applies to a request after the carrier and precedence
+rules in <a href="#carriers" class="auto internal xref">Section 6</a> have been applied. Also called the effective set.<a href="#section-2-2.6.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-2.7">Out-of-band knowledge:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-2.8">
+          <p id="section-2-2.8.1">Knowledge, where an extension defines it, that a protected resource has of a
+client's capabilities other than from a signal on the request.<a href="#section-2-2.8.1" class="pilcrow">¶</a></p>
+</dd>
+      <dd class="break"></dd>
+</dl>
+<p id="section-2-3">Terms not otherwise defined are used as in <span>[<a href="#RFC6749" class="cite xref">RFC6749</a>]</span> and <span>[<a href="#RFC9110" class="cite xref">RFC9110</a>]</span>.<a href="#section-2-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="overview">
+<section id="section-3">
+      <h2 id="name-overview">
+<a href="#section-3" class="section-number selfRef">3. </a><a href="#name-overview" class="section-name selfRef">Overview</a>
+      </h2>
+<p id="section-3-1">A client tells a server what optional behavior it can process by signaling
+capability values. A capability value is a short token drawn from a single
+registry (<a href="#iana-registry" class="auto internal xref">Section 12.1</a>) shared by every extension.<a href="#section-3-1" class="pilcrow">¶</a></p>
+<p id="section-3-2">Three carriers convey a set, chosen by what the request can hold:<a href="#section-3-2" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-3-3.1">
+          <p id="section-3-3.1.1">The <code>client_capabilities</code> request parameter, on requests a client makes to an
+authorization server (<a href="#param" class="auto internal xref">Section 6.1</a>).<a href="#section-3-3.1.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-3-3.2">
+          <p id="section-3-3.2.1">The <code>OAuth-Client-Capabilities</code> HTTP field, on requests that carry no OAuth
+parameters, such as protected resource requests (<a href="#field" class="auto internal xref">Section 6.2</a>).<a href="#section-3-3.2.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-3-3.3">
+          <p id="section-3-3.3.1">A <code>client_capabilities</code> member in client metadata, supplying a default when a
+request to an authorization server carries no signal (<a href="#metadata" class="auto internal xref">Section 6.3</a>).<a href="#section-3-3.3.1" class="pilcrow">¶</a></p>
+</li>
+      </ul>
+<p id="section-3-4">Whichever carrier applies, the result is the request's effective capability
+set: the values a server may act upon for that request. A request-level signal
+replaces any metadata default rather than adding to it (<a href="#precedence" class="auto internal xref">Section 6.4</a>).<a href="#section-3-4" class="pilcrow">¶</a></p>
+<p id="section-3-5">A server advertises the values it recognizes in its own metadata
+(<a href="#discovery" class="auto internal xref">Section 8</a>). Signaling never obliges a server to act. Under the invariants
+in <a href="#invariants" class="auto internal xref">Section 5</a>, which every registered value has to meet, a signal that is
+absent, removed, added, or untrue leaves the protocol no less secure.<a href="#section-3-5" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="values">
+<section id="section-4">
+      <h2 id="name-capability-values">
+<a href="#section-4" class="section-number selfRef">4. </a><a href="#name-capability-values" class="section-name selfRef">Capability Values</a>
+      </h2>
+<div id="syntax">
+<section id="section-4.1">
+        <h3 id="name-syntax">
+<a href="#section-4.1" class="section-number selfRef">4.1. </a><a href="#name-syntax" class="section-name selfRef">Syntax</a>
+        </h3>
+<p id="section-4.1-1">A capability value is a bare token. The syntax uses ABNF <span>[<a href="#RFC5234" class="cite xref">RFC5234</a>]</span>, including
+its <code>ALPHA</code>, <code>DIGIT</code>, and <code>SP</code> core rules:<a href="#section-4.1-1" class="pilcrow">¶</a></p>
+<span id="name-capability-value-syntax"></span><figure id="figure-1">
+          <div class="lang-abnf sourcecode" id="section-4.1-2.1">
+<pre>
+capability        = ALPHA *( ALPHA / DIGIT / "-" / "_" / "." / ":" )
+capability-list   = capability *( SP capability )
+</pre>
+</div>
+<figcaption><a href="#figure-1" class="selfRef">Figure 1</a>:
+<a href="#name-capability-value-syntax" class="selfRef">Capability value syntax</a>
+          </figcaption></figure>
+<p id="section-4.1-3">This character set satisfies two constraints at once, and is narrower than
+either: the value is valid as a sequence of <code>NQCHAR</code> in a form-encoded OAuth
+parameter (<span><a href="https://rfc-editor.org/rfc/rfc6749#appendix-A" class="relref">Appendix A</a> of [<a href="#RFC6749" class="cite xref">RFC6749</a>]</span>), and valid as an <code>sf-token</code> in a
+structured field (<span><a href="https://rfc-editor.org/rfc/rfc9651#section-3.3.4" class="relref">Section 3.3.4</a> of [<a href="#RFC9651" class="cite xref">RFC9651</a>]</span>). That section also encourages
+new fields to use Strings rather than Tokens; this specification uses Tokens so
+that a value has the same form in both carriers, without quoting.<a href="#section-4.1-3" class="pilcrow">¶</a></p>
+<p id="section-4.1-4">Capability values are case-sensitive. Four rules apply wherever a capability
+value appears, in every carrier in <a href="#carriers" class="auto internal xref">Section 6</a> and in <a href="#discovery" class="auto internal xref">Section 8</a>:<a href="#section-4.1-4" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-4.1-5.1">
+            <p id="section-4.1-5.1.1">A value <span class="bcp14">MUST</span> conform to the <code>capability</code> production.<a href="#section-4.1-5.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-4.1-5.2">
+            <p id="section-4.1-5.2.1">Order is not significant.<a href="#section-4.1-5.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-4.1-5.3">
+            <p id="section-4.1-5.3.1">Duplicates <span class="bcp14">MUST</span> be ignored.<a href="#section-4.1-5.3.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-4.1-5.4">
+            <p id="section-4.1-5.4.1">A recipient <span class="bcp14">MUST</span> ignore a value it does not recognize.<a href="#section-4.1-5.4.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+<p id="section-4.1-6">What a non-conforming value causes differs by carrier, and is stated with each.<a href="#section-4.1-6" class="pilcrow">¶</a></p>
+<p id="section-4.1-7">Capability values <span class="bcp14">MUST NOT</span> carry parameters. An extension that needs structured
+detail alongside a capability defines a companion request parameter, or uses
+<code>authorization_details</code> <span>[<a href="#RFC9396" class="cite xref">RFC9396</a>]</span>. The registry is a flat vocabulary.<a href="#section-4.1-7" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="naming">
+<section id="section-4.2">
+        <h3 id="name-naming-guidance">
+<a href="#section-4.2" class="section-number selfRef">4.2. </a><a href="#name-naming-guidance" class="section-name selfRef">Naming Guidance</a>
+        </h3>
+<p id="section-4.2-1">A capability value names a specific client behavior that a server may exercise
+after receiving the value, not a document. <code>accept-deferred-response</code> is a
+capability; <code>draft-gerber-oauth-deferred-token-response</code> is not. A
+specification <span class="bcp14">MAY</span> register more than one value where a client can usefully
+implement part of it.<a href="#section-4.2-1" class="pilcrow">¶</a></p>
+<p id="section-4.2-2">A new revision of an extension whose client-side processing differs registers a
+new value rather than reusing the old one. Registering the new value does not
+retire the old one; its change controller can mark it obsolete in the registry
+(<a href="#iana-registry" class="auto internal xref">Section 12.1</a>). A server that recognizes several
+revisions of a behavior serves clients built against each of them from a single
+deployment.<a href="#section-4.2-2" class="pilcrow">¶</a></p>
+<p id="section-4.2-3">Because client-side processing may change while an extension is being revised,
+an extension <span class="bcp14">SHOULD</span> register a value only once the processing it names is
+stable. Unregistered values are not a general substitute in the interim,
+because two implementations can give one value different meanings
+(<a href="#unregistered-values" class="auto internal xref">Section 10.4</a>). Unregistered values therefore <span class="bcp14">SHOULD</span> be confined
+to deployments whose parties
+have agreed on their meaning out of band, and early allocation <span class="bcp14">SHOULD</span> be sought
+once deployment becomes interoperable, as <span>[<a href="#RFC7120" class="cite xref">RFC7120</a>]</span> describes.<a href="#section-4.2-3" class="pilcrow">¶</a></p>
+<p id="section-4.2-4">A revision number is a document reference, so a value <span class="bcp14">SHOULD NOT</span> carry one: it
+means nothing once the draft is published, and a run of revisions with
+identical client processing would imply as many variants. Where the revised
+behavior can be named, name it. Where it cannot, because a format changed in
+many small ways at once, a bare sequence suffix indexes variants without
+pointing at a document.<a href="#section-4.2-4" class="pilcrow">¶</a></p>
+<p id="section-4.2-5">The following non-normative example shows the distinction. Suppose an
+extension defines a transaction authorization challenge, and a later revision
+changes the challenge from a set of form-encoded parameters to a JWT, so that a
+client built against the earlier revision cannot parse the later one:<a href="#section-4.2-5" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-4.2-6.1">
+            <p id="section-4.2-6.1.1"><code>txn-challenge</code> names the original behavior.<a href="#section-4.2-6.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-4.2-6.2">
+            <p id="section-4.2-6.2.1"><code>txn-challenge-jwt</code> names the revised behavior by what a client must now
+parse, and is the preferred registration.<a href="#section-4.2-6.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-4.2-6.3">
+            <p id="section-4.2-6.3.1"><code>txn-challenge-2</code> is acceptable where no behavioral name is available.<a href="#section-4.2-6.3.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-4.2-6.4">
+            <p id="section-4.2-6.4.1"><code>txn-challenge-11</code> is not, because the suffix names a draft revision rather
+than a behavior.<a href="#section-4.2-6.4.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+<p id="section-4.2-7">A protocol version is not a capability under any name, such as <code>oauth-2.1</code>
+(<a href="#profiles" class="auto internal xref">Appendix C.5</a>).<a href="#section-4.2-7" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="none-value">
+<section id="section-4.3">
+        <h3 id="name-the-none-sentinel">
+<a href="#section-4.3" class="section-number selfRef">4.3. </a><a href="#name-the-none-sentinel" class="section-name selfRef">The <code>none</code> Sentinel</a>
+        </h3>
+<p id="section-4.3-1">The token <code>none</code> is reserved and is never a capability. A client sends it as
+the complete value of the <code>client_capabilities</code> request parameter, or as the
+only member of the <code>OAuth-Client-Capabilities</code> field, to send a signal that
+contains no capability. Because a request-level signal replaces any default
+(<a href="#precedence" class="auto internal xref">Section 6.4</a>), this retracts a statically declared set or, at a protected
+resource, out-of-band knowledge.<a href="#section-4.3-1" class="pilcrow">¶</a></p>
+<p id="section-4.3-2"><code>none</code> <span class="bcp14">MUST NOT</span> appear together with any capability value. It is registered
+only to reserve the token (<a href="#iana-registry" class="auto internal xref">Section 12.1</a>) and enables no behavior, so a
+recipient acts on it as on a value it does not recognize (<a href="#syntax" class="auto internal xref">Section 4.1</a>).<a href="#section-4.3-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="invariants">
+<section id="section-5">
+      <h2 id="name-capability-invariants">
+<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-capability-invariants" class="section-name selfRef">Capability Invariants</a>
+      </h2>
+<p id="section-5-1">The following three constraints are normative and apply to every registered
+capability value and to every use of the carriers in <a href="#carriers" class="auto internal xref">Section 6</a>.<a href="#section-5-1" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-5-2">
+        <dt id="section-5-2.1">CAP-1:</dt>
+        <dd style="margin-left: 1.5em" id="section-5-2.2">
+          <p id="section-5-2.2.1">A capability <span class="bcp14">MUST</span> only enable optional server behavior. Removing a capability
+value from the effective capability set <span class="bcp14">MUST NOT</span> cause a server to apply
+weaker client authentication, weaker sender constraining, weaker user
+authentication, or a more permissive policy than it would have applied had
+the value never been defined. Adding a capability value <span class="bcp14">MUST NOT</span> lower the
+assurance a server requires, or lead it to accept weaker client
+authentication, sender constraining, or user authentication than that
+assurance demands. Among paths that meet that assurance, a value can affect
+which one the server takes (<a href="#selection" class="auto internal xref">Section 7.1</a>). A capability <span class="bcp14">MUST NOT</span> enable a
+security check that the server would otherwise skip, including stricter
+validation of the client's own requests, because removing the value would
+remove the check. Absence <span class="bcp14">MUST</span> be safe.<a href="#section-5-2.2.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-5-2.3">CAP-2:</dt>
+        <dd style="margin-left: 1.5em" id="section-5-2.4">
+          <p id="section-5-2.4.1">A capability <span class="bcp14">MUST NOT</span> establish what a client is permitted to obtain or be
+accepted as evidence in an authorization decision. A capability describes
+what a client is able to process. Servers <span class="bcp14">MUST NOT</span> grant scope, relax consent
+requirements, or extend token lifetimes on the basis of a signaled
+capability.<a href="#section-5-2.4.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-5-2.5">CAP-3:</dt>
+        <dd style="margin-left: 1.5em" id="section-5-2.6">
+          <p id="section-5-2.6.1">A server <span class="bcp14">MUST NOT</span> rely on a capability signal being truthful. The security
+properties of the enabled behavior <span class="bcp14">MUST</span> hold even when the client does not
+implement the capability, and when a party other than the client asserts it.
+A capability <span class="bcp14">MUST NOT</span> substitute for client authentication, proof of
+possession, protocol validation, or other evidence required by the behavior
+it enables.<a href="#section-5-2.6.1" class="pilcrow">¶</a></p>
+</dd>
+      <dd class="break"></dd>
+</dl>
+<p id="section-5-3">These invariants also serve as the admission criterion for the registry; see
+<a href="#extension-guidance" class="auto internal xref">Section 9</a>.<a href="#section-5-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="carriers">
+<section id="section-6">
+      <h2 id="name-carriers">
+<a href="#section-6" class="section-number selfRef">6. </a><a href="#name-carriers" class="section-name selfRef">Carriers</a>
+      </h2>
+<div id="param">
+<section id="section-6.1">
+        <h3 id="name-the-client_capabilities-req">
+<a href="#section-6.1" class="section-number selfRef">6.1. </a><a href="#name-the-client_capabilities-req" class="section-name selfRef">The <code>client_capabilities</code> Request Parameter</a>
+        </h3>
+<span class="break"></span><dl class="dlParallel" id="section-6.1-1">
+          <dt id="section-6.1-1.1">client_capabilities:</dt>
+          <dd style="margin-left: 1.5em" id="section-6.1-1.2">
+            <p id="section-6.1-1.2.1"><span class="bcp14">OPTIONAL</span>. A space-delimited list of capability values, as defined in
+<a href="#values" class="auto internal xref">Section 4</a>.<a href="#section-6.1-1.2.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+<p id="section-6.1-2">The parameter is defined for use at the authorization endpoint and token
+endpoint. A pushed authorization request can carry this parameter as specified
+by <span>[<a href="#RFC9126" class="cite xref">RFC9126</a>]</span>. The parameter <span class="bcp14">MAY</span> appear inside a Request Object <span>[<a href="#RFC9101" class="cite xref">RFC9101</a>]</span>.
+An extension <span class="bcp14">MAY</span> define its use at another endpoint that accepts OAuth request
+parameters.<a href="#section-6.1-2" class="pilcrow">¶</a></p>
+<span id="name-a-capability-signaled-on-a-"></span><figure id="figure-2">
+          <div class="lang-http-message sourcecode" id="section-6.1-3.1">
+<pre>
+POST /token HTTP/1.1
+Host: as.example.com
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=refresh_token&amp;refresh_token=tGzv3JOkF0XG5Qx2TlKWIA
+&amp;client_id=https%3A%2F%2Fapp.example%2Fclient
+&amp;client_capabilities=accept-deferred-response
+</pre>
+</div>
+<figcaption><a href="#figure-2" class="selfRef">Figure 2</a>:
+<a href="#name-a-capability-signaled-on-a-" class="selfRef">A capability signaled on a token request</a>
+          </figcaption></figure>
+<p id="section-6.1-4">The <code>capability-list</code> production (<a href="#syntax" class="auto internal xref">Section 4.1</a>) is applied to the parameter's
+value after <code>application/x-www-form-urlencoded</code> decoding. An empty value is
+treated as omitted, as required by <span>[<a href="#RFC6749" class="cite xref">RFC6749</a>]</span>. A non-empty value that does not
+match this production, including a value with leading, trailing, or repeated
+spaces, is invalid. A recipient <span class="bcp14">MUST</span> treat an invalid value as signaling the
+empty set and <span class="bcp14">MUST NOT</span> reject the request solely because the value is invalid,
+except as permitted by <a href="#dos" class="auto internal xref">Section 10.3</a>.<a href="#section-6.1-4" class="pilcrow">¶</a></p>
+<p id="section-6.1-5">When an authorization request uses a Request Object, the authorization server
+uses only the parameters inside it (<span><a href="https://rfc-editor.org/rfc/rfc9101#section-6.3" class="relref">Section 6.3</a> of [<a href="#RFC9101" class="cite xref">RFC9101</a>]</span>). A
+<code>client_capabilities</code> value outside the Request Object is not used, and if the
+Request Object contains no such value, the parameter is absent for the purposes
+of <a href="#precedence" class="auto internal xref">Section 6.4</a>. Inside a Request Object, the value is a JSON string
+containing a <code>capability-list</code>; a value of any other JSON type is invalid. An
+authorization request that uses a <code>request_uri</code> from a pushed authorization
+request is built as defined in <span>[<a href="#RFC9101" class="cite xref">RFC9101</a>]</span> (<span><a href="https://rfc-editor.org/rfc/rfc9126#section-4" class="relref">Section 4</a> of [<a href="#RFC9126" class="cite xref">RFC9126</a>]</span>), so the
+same holds for the parameters that were pushed: a <code>client_capabilities</code> value
+sent alongside the <code>request_uri</code> is not used.<a href="#section-6.1-5" class="pilcrow">¶</a></p>
+<p id="section-6.1-6">The parameter is not defined for the client registration endpoint. A client
+declares capabilities there using the <code>client_capabilities</code> metadata field in
+<a href="#metadata" class="auto internal xref">Section 6.3</a>.<a href="#section-6.1-6" class="pilcrow">¶</a></p>
+<p id="section-6.1-7">A client <span class="bcp14">MAY</span> send <code>client_capabilities</code> to any authorization server without
+prior knowledge of whether the server implements this specification at the
+authorization or token endpoint. Sections 3.1 and 3.2 of <span>[<a href="#RFC6749" class="cite xref">RFC6749</a>]</span> require an
+authorization server to ignore unrecognized request parameters at those
+endpoints. Specifications that define its use at another endpoint <span class="bcp14">MUST</span> ensure
+that unrecognized request parameters are ignored there. No negotiation
+handshake is defined.<a href="#section-6.1-7" class="pilcrow">¶</a></p>
+<p id="section-6.1-8">The parameter <span class="bcp14">MUST NOT</span> be sent with an empty value. A client that wants an
+empty effective set omits the parameter when no metadata default applies and
+sends <code>none</code> when it needs to override such a default.<a href="#section-6.1-8" class="pilcrow">¶</a></p>
+<p id="section-6.1-9">The parameter is not repeatable: a client sends its list as one space-delimited
+value. A request that includes <code>client_capabilities</code> more than once is
+malformed, as Sections 3.1 and 3.2 of <span>[<a href="#RFC6749" class="cite xref">RFC6749</a>]</span> provide for that
+specification's own parameters, and an authorization server <span class="bcp14">MUST</span> reject it with
+the <code>invalid_request</code> error code (Sections 4.1.2.1 and 5.2 of <span>[<a href="#RFC6749" class="cite xref">RFC6749</a>]</span>).
+This differs from an invalid value, which is not rejected.<a href="#section-6.1-9" class="pilcrow">¶</a></p>
+<p id="section-6.1-10">Where the parameter would otherwise be carried in the query component of an
+authorization request URI, a pushed authorization request <span>[<a href="#RFC9126" class="cite xref">RFC9126</a>]</span> bounds
+URI growth and keeps the list off the user agent; passing a Request Object
+<span>[<a href="#RFC9101" class="cite xref">RFC9101</a>]</span> by value does not reduce URI size. <a href="#privacy-considerations" class="auto internal xref">Section 11</a>
+covers a client that considers its capability set sensitive.<a href="#section-6.1-10" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="field">
+<section id="section-6.2">
+        <h3 id="name-the-oauth-client-capabiliti">
+<a href="#section-6.2" class="section-number selfRef">6.2. </a><a href="#name-the-oauth-client-capabiliti" class="section-name selfRef">The <code>OAuth-Client-Capabilities</code> HTTP Field</a>
+        </h3>
+<p id="section-6.2-1">The <code>OAuth-Client-Capabilities</code> HTTP field allows a client to signal
+capabilities on a request that has no OAuth request parameter surface, such as
+a protected resource request.<a href="#section-6.2-1" class="pilcrow">¶</a></p>
+<p id="section-6.2-2">The field asserts that the path which will process the response can process the
+behavior. That path may be the sender alone, or the sender together with
+another component on whose behalf it acts: an agent making a resource request
+may relay a challenge to a component that completes it. The sender is
+accountable for the assertion. Because the field does not necessarily identify
+the OAuth client, client metadata supplies no default for it (<a href="#precedence" class="auto internal xref">Section 6.4</a>).<a href="#section-6.2-2" class="pilcrow">¶</a></p>
+<p id="section-6.2-3">A client <span class="bcp14">MUST NOT</span> use the field on a request to an endpoint where the
+<code>client_capabilities</code> request parameter is defined: the authorization, pushed
+authorization request, and token endpoints, and any endpoint where an extension
+defines the parameter. It uses the request parameter there (<a href="#param" class="auto internal xref">Section 6.1</a>), and an
+authorization server <span class="bcp14">MUST</span> ignore the field on any request to such an endpoint.
+Using only the parameter at these endpoints gives each request one unambiguous
+effective set, and allows Request Object or pushed-request protections where
+those apply. The field plays no part at other authorization server endpoints
+either, such as the introspection <span>[<a href="#RFC7662" class="cite xref">RFC7662</a>]</span>, revocation <span>[<a href="#RFC7009" class="cite xref">RFC7009</a>]</span>, and
+device authorization <span>[<a href="#RFC8628" class="cite xref">RFC8628</a>]</span> endpoints (<a href="#precedence" class="auto internal xref">Section 6.4</a>); an extension that
+needs a capability at one of them defines the request parameter there
+(<a href="#param" class="auto internal xref">Section 6.1</a>). At the client registration endpoint, a client declares
+capabilities in client metadata (<a href="#metadata" class="auto internal xref">Section 6.3</a>). A resource that an
+authorization server hosts and that a client accesses with an access token,
+such as the OpenID Connect UserInfo endpoint <span>[<a href="#OIDC" class="cite xref">OIDC</a>]</span>, is a protected resource
+for this purpose.<a href="#section-6.2-3" class="pilcrow">¶</a></p>
+<p id="section-6.2-4">The field's value is a Structured Fields List (<span><a href="https://rfc-editor.org/rfc/rfc9651#section-3.1" class="relref">Section 3.1</a> of [<a href="#RFC9651" class="cite xref">RFC9651</a>]</span>). Each
+member <span class="bcp14">MUST</span> be an Item whose bare item is a Token containing a capability value
+as defined in <a href="#values" class="auto internal xref">Section 4</a>:<a href="#section-6.2-4" class="pilcrow">¶</a></p>
+<span id="name-signaling-a-capability-on-a"></span><figure id="figure-3">
+          <div class="lang-http-message sourcecode" id="section-6.2-5.1">
+<pre>
+GET /transfers/42 HTTP/1.1
+Host: api.example.com
+Authorization: Bearer eyJhbGci...
+OAuth-Client-Capabilities: txn-challenge
+</pre>
+</div>
+<figcaption><a href="#figure-3" class="selfRef">Figure 3</a>:
+<a href="#name-signaling-a-capability-on-a" class="selfRef">Signaling a capability on a protected resource request</a>
+          </figcaption></figure>
+<p id="section-6.2-6">Senders <span class="bcp14">MUST NOT</span> generate Inner List members, members of another bare-item
+type, or parameters. A recipient <span class="bcp14">MUST</span> parse the field as a Structured Fields
+List. The field is invalid if parsing fails, if any member is not a Token Item,
+or if any member's Token does not conform to the <code>capability</code> production in
+<a href="#values" class="auto internal xref">Section 4</a>. A Structured Fields Token can be well formed and still violate that
+production, as <code>*bad</code> does. A recipient <span class="bcp14">MUST</span> treat an invalid field as absent.
+It contributes no capabilities, and the rule in <a href="#precedence" class="auto internal xref">Section 6.4</a> for a protected
+resource request without a valid field then applies, including any out-of-band
+knowledge an extension defines.<a href="#section-6.2-6" class="pilcrow">¶</a></p>
+<p id="section-6.2-7">A recipient <span class="bcp14">MUST</span> ignore parameters.<a href="#section-6.2-7" class="pilcrow">¶</a></p>
+<p id="section-6.2-8">A server whose response can vary with the field <span class="bcp14">MUST</span> include
+<code>OAuth-Client-Capabilities</code> in the <code>Vary</code> field of every such response,
+including responses to requests that omit the field, or use <code>Vary: *</code>
+(<span><a href="https://rfc-editor.org/rfc/rfc9110#section-12.5.5" class="relref">Section 12.5.5</a> of [<a href="#RFC9110" class="cite xref">RFC9110</a>]</span>).<a href="#section-6.2-8" class="pilcrow">¶</a></p>
+<p id="section-6.2-9">An empty List is treated as an absent field (<a href="#precedence" class="auto internal xref">Section 6.4</a>). Structured Fields
+serializes an empty List by omitting the field (<span><a href="https://rfc-editor.org/rfc/rfc9651#section-3.1" class="relref">Section 3.1</a> of [<a href="#RFC9651" class="cite xref">RFC9651</a>]</span>),
+and parses an empty field value as an empty List.<a href="#section-6.2-9" class="pilcrow">¶</a></p>
+<p id="section-6.2-10">A browser-based client that sends the field on a cross-origin request causes a
+CORS preflight, because <code>OAuth-Client-Capabilities</code> is not a CORS-safelisted
+request header <span>[<a href="#FETCH" class="cite xref">FETCH</a>]</span>. A protected resource that serves such clients has to
+allow the field in its preflight response, most simply by listing the field
+name in <code>Access-Control-Allow-Headers</code>; a <code>*</code> value there covers the field only
+when the request's credentials mode is not <code>include</code>. Otherwise the browser
+does not send the request, and ignoring unrecognized values cannot help.<a href="#section-6.2-10" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="metadata">
+<section id="section-6.3">
+        <h3 id="name-client-metadata-declaration">
+<a href="#section-6.3" class="section-number selfRef">6.3. </a><a href="#name-client-metadata-declaration" class="section-name selfRef">Client Metadata Declaration</a>
+        </h3>
+<span class="break"></span><dl class="dlParallel" id="section-6.3-1">
+          <dt id="section-6.3-1.1">client_capabilities:</dt>
+          <dd style="margin-left: 1.5em" id="section-6.3-1.2">
+            <p id="section-6.3-1.2.1"><span class="bcp14">OPTIONAL</span>. A JSON array of strings, each a capability value as defined in
+<a href="#values" class="auto internal xref">Section 4</a>, describing the default capabilities of the client identified by
+the metadata.<a href="#section-6.3-1.2.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+<p id="section-6.3-2">This client metadata field <span>[<a href="#RFC7591" class="cite xref">RFC7591</a>]</span> covers metadata registered with an
+authorization server, published at a Client Identifier URL <span>[<a href="#CIMD" class="cite xref">CIMD</a>]</span>, or carried
+in a software statement. Depending on the mechanism, it can describe client
+software, a deployed instance, or both; see <a href="#precedence" class="auto internal xref">Section 6.4</a>.<a href="#section-6.3-2" class="pilcrow">¶</a></p>
+<p id="section-6.3-3">The array <span class="bcp14">MUST NOT</span> contain <code>none</code>. An absent field and an empty array both
+denote the empty set. If the value is not an array, or any element is not a
+string or does not conform to the <code>capability</code> production, the field is
+invalid. A recipient <span class="bcp14">MUST</span> ignore an invalid field, deriving no
+capabilities from it, and <span class="bcp14">MUST NOT</span> reject an otherwise-valid metadata document
+or registration request solely because this field is invalid, except as
+permitted by <a href="#dos" class="auto internal xref">Section 10.3</a>. This rule concerns only the <code>client_capabilities</code> field;
+it does not change how the containing protocol handles invalid JSON, a failed
+signature, or its other required validation.<a href="#section-6.3-3" class="pilcrow">¶</a></p>
+<p id="section-6.3-4">A party publishing or registering this metadata <span class="bcp14">MUST NOT</span> declare a capability
+unless every client instance covered by that metadata can process the enabled
+behavior, or every less-capable instance will override the default on its
+requests. Clients with heterogeneous instances <span class="bcp14">SHOULD</span> omit the metadata field
+and signal capabilities on each request.<a href="#section-6.3-4" class="pilcrow">¶</a></p>
+<p id="section-6.3-5">A client metadata document published at a Client Identifier URL <span>[<a href="#CIMD" class="cite xref">CIMD</a>]</span> is
+publicly retrievable, applies uniformly to every deployment using the URL, and
+may be cached. Clients identified this way <span class="bcp14">SHOULD</span> treat the request parameter
+in <a href="#param" class="auto internal xref">Section 6.1</a> as the primary carrier.<a href="#section-6.3-5" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="precedence">
+<section id="section-6.4">
+        <h3 id="name-precedence">
+<a href="#section-6.4" class="section-number selfRef">6.4. </a><a href="#name-precedence" class="section-name selfRef">Precedence</a>
+        </h3>
+<p id="section-6.4-1">The effective capability set of a request is determined as follows, where a
+protected resource request includes one to a resource that an authorization
+server hosts (<a href="#field" class="auto internal xref">Section 6.2</a>), and any other request to an authorization server is
+an OAuth request:<a href="#section-6.4-1" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-6.4-2">
+<li id="section-6.4-2.1">
+            <p id="section-6.4-2.1.1">If the request carries a request-level signal, its value is the effective
+set. On an OAuth request, that signal is the <code>client_capabilities</code> request
+parameter; a value that is invalid (<a href="#param" class="auto internal xref">Section 6.1</a>) or exceeds a limit (<a href="#dos" class="auto internal xref">Section 10.3</a>)
+is still present, and its effective set is empty. On a protected resource
+request, it is a valid <code>OAuth-Client-Capabilities</code> field with at least one
+member, even if the server recognizes no value in it; an absent field, an
+empty List, and an invalid field are treated alike, as no signal.<a href="#section-6.4-2.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li id="section-6.4-2.2">
+            <p id="section-6.4-2.2.1">Otherwise, the default is the effective set: on an OAuth request, the
+<code>client_capabilities</code> value from the client metadata that the authorization
+server considers authoritative for that client, and on a protected resource
+request, any out-of-band knowledge an extension defines.<a href="#section-6.4-2.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li id="section-6.4-2.3">
+            <p id="section-6.4-2.3.1">If neither is present, the effective set is empty.<a href="#section-6.4-2.3.1" class="pilcrow">¶</a></p>
+</li>
+        </ol>
+<p id="section-6.4-3">A request-level signal replaces the default rather than augmenting it, so that
+a less-capable instance can retract a default. To retract everything, a client
+sends <code>none</code> (<a href="#none-value" class="auto internal xref">Section 4.3</a>).<a href="#section-6.4-3" class="pilcrow">¶</a></p>
+<p id="section-6.4-4">A capability set in a software statement is client metadata and remains subject
+to the request-level override above; signing the statement does not turn a
+default into a per-request declaration.<a href="#section-6.4-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="signal-scope">
+<section id="section-6.5">
+        <h3 id="name-scope-of-a-signal">
+<a href="#section-6.5" class="section-number selfRef">6.5. </a><a href="#name-scope-of-a-signal" class="section-name selfRef">Scope of a Signal</a>
+        </h3>
+<p id="section-6.5-1">A request signal applies only to that request, not to later requests in the
+grant. Client metadata supplies a default for each request as described in
+<a href="#precedence" class="auto internal xref">Section 6.4</a>; it does not make a prior request signal persist. A server
+<span class="bcp14">MUST NOT</span> promote a request-level capability set to durable client metadata.<a href="#section-6.5-1" class="pilcrow">¶</a></p>
+<p id="section-6.5-2">A capability in a pushed authorization request applies to the authorization
+request represented by the resulting <code>request_uri</code>, and nothing else. A
+capability governing token endpoint behavior <span class="bcp14">MUST</span> be in the effective set for
+the token request; the authorization server <span class="bcp14">MUST NOT</span> infer it from an earlier
+request in the grant.<a href="#section-6.5-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="server-behavior">
+<section id="section-7">
+      <h2 id="name-server-behavior">
+<a href="#section-7" class="section-number selfRef">7. </a><a href="#name-server-behavior" class="section-name selfRef">Server Behavior</a>
+      </h2>
+<p id="section-7-1">A server <span class="bcp14">MUST NOT</span> reject a request solely because a capability value is
+unrecognized. This does not prevent an extension from refusing a request when
+the effective capability set provides no usable processing path
+(<a href="#selection" class="auto internal xref">Section 7.1</a>), or a server from rejecting an oversized signal (<a href="#dos" class="auto internal xref">Section 10.3</a>) or a
+repeated request parameter (<a href="#param" class="auto internal xref">Section 6.1</a>).<a href="#section-7-1" class="pilcrow">¶</a></p>
+<p id="section-7-2">Neither signaling a capability nor advertising it (<a href="#discovery" class="auto internal xref">Section 8</a>) entitles a
+client to the corresponding behavior. A server retains discretion over whether
+to exercise optional behavior.<a href="#section-7-2" class="pilcrow">¶</a></p>
+<p id="section-7-3">This specification does not define an error for an absent capability and does
+not give any capability mandatory-to-understand semantics; see <a href="#no-require" class="auto internal xref">Appendix C.4</a>.
+An extension <span class="bcp14">MAY</span> define an error for a case in which the server cannot proceed
+without a particular client-side behavior. Such an error reports the
+extension's condition; it does not turn the signal into an authorization input.<a href="#section-7-3" class="pilcrow">¶</a></p>
+<div id="selection">
+<section id="section-7.1">
+        <h3 id="name-selecting-among-alternative">
+<a href="#section-7.1" class="section-number selfRef">7.1. </a><a href="#name-selecting-among-alternative" class="section-name selfRef">Selecting Among Alternatives</a>
+        </h3>
+<p id="section-7.1-1">A server may have several ways to obtain what a request lacks. For example, a
+protected resource might return a transaction authorization challenge, request
+step-up authentication, or refuse. The effective capability set can help it
+choose a path the client asserts it can complete.<a href="#section-7.1-1" class="pilcrow">¶</a></p>
+<p id="section-7.1-2">A server <span class="bcp14">MUST</span> determine the assurance a request requires without reference to
+the capability set. It <span class="bcp14">MAY</span> use the set to choose among paths that meet that
+requirement. If no such path is available, it <span class="bcp14">MUST</span> refuse the request. Without
+this rule, removing a value could steer the server to a weaker path,
+reintroducing the downgrade CAP-1 prevents. <a href="#extension-guidance" class="auto internal xref">Section 9</a> states when
+such a choice justifies a capability value.<a href="#section-7.1-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="discovery">
+<section id="section-8">
+      <h2 id="name-discovery">
+<a href="#section-8" class="section-number selfRef">8. </a><a href="#name-discovery" class="section-name selfRef">Discovery</a>
+      </h2>
+<span class="break"></span><dl class="dlParallel" id="section-8-1">
+        <dt id="section-8-1.1">client_capabilities_supported:</dt>
+        <dd style="margin-left: 1.5em" id="section-8-1.2">
+          <p id="section-8-1.2.1"><span class="bcp14">OPTIONAL</span>. A JSON array of strings containing the capability values that the
+server recognizes and may act upon.<a href="#section-8-1.2.1" class="pilcrow">¶</a></p>
+</dd>
+      <dd class="break"></dd>
+</dl>
+<p id="section-8-2">This metadata member is defined for authorization server metadata <span>[<a href="#RFC8414" class="cite xref">RFC8414</a>]</span>
+and for protected resource metadata <span>[<a href="#RFC9728" class="cite xref">RFC9728</a>]</span>.<a href="#section-8-2" class="pilcrow">¶</a></p>
+<p id="section-8-3">The array <span class="bcp14">MUST NOT</span> contain <code>none</code>. If the value is not an array, or any element
+is not a string or does not conform to the <code>capability</code> production, the value
+of this member is invalid and <span class="bcp14">MUST</span> be ignored in its entirety.<a href="#section-8-3" class="pilcrow">¶</a></p>
+<p id="section-8-4">A client that holds a server's <code>client_capabilities_supported</code> <span class="bcp14">SHOULD</span> signal
+only values that appear in it. This does not apply to <code>none</code> (<a href="#none-value" class="auto internal xref">Section 4.3</a>),
+which a server does not list: if filtering leaves no value and the client
+needs to override a metadata default or out-of-band knowledge, it sends <code>none</code>.
+A client that does not hold the list <span class="bcp14">MAY</span> signal values without retrieving it
+first; a server that does not recognize a value ignores it. Advertising
+recognized values lets a client that holds the list bound request size and
+fingerprinting exposure, following the pattern of Client Hints <span>[<a href="#RFC8942" class="cite xref">RFC8942</a>]</span>.<a href="#section-8-4" class="pilcrow">¶</a></p>
+<p id="section-8-5">Absence of <code>client_capabilities_supported</code> does not indicate that the server
+fails to support this specification.<a href="#section-8-5" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="extension-guidance">
+<section id="section-9">
+      <h2 id="name-guidance-for-extension-spec">
+<a href="#section-9" class="section-number selfRef">9. </a><a href="#name-guidance-for-extension-spec" class="section-name selfRef">Guidance for Extension Specifications</a>
+      </h2>
+<p id="section-9-1">An extension that needs a client to signal a processing capability <span class="bcp14">SHOULD</span>
+register a value in the registry established in <a href="#iana-registry" class="auto internal xref">Section 12.1</a> rather than
+define a dedicated request parameter, HTTP field, or client metadata field.<a href="#section-9-1" class="pilcrow">¶</a></p>
+<p id="section-9-2">The invariants in <a href="#invariants" class="auto internal xref">Section 5</a> are the admission criterion. A value may be
+justified on either of two grounds: that a server cannot safely exercise the
+behavior without it, or that a server choosing among several paths would
+otherwise select one the client cannot complete (<a href="#selection" class="auto internal xref">Section 7.1</a>). The second
+requires that the signal can change whether the operation completes, not merely
+make an already-workable path more convenient.<a href="#section-9-2" class="pilcrow">¶</a></p>
+<p id="section-9-3">One heuristic identifies most misclassifications:<a href="#section-9-3" class="pilcrow">¶</a></p>
+<ul class="normal ulEmpty">
+<li class="normal ulEmpty" id="section-9-4.1">
+          <p id="section-9-4.1.1">If an implementer would want the value to be attested, it is not a
+capability.<a href="#section-9-4.1.1" class="pilcrow">¶</a></p>
+</li>
+      </ul>
+<p id="section-9-5">A property that must be trustworthy to be useful is an assurance, and belongs
+in client attestation <span>[<a href="#ABCA" class="cite xref">ABCA</a>]</span>, a software statement <span>[<a href="#RFC7591" class="cite xref">RFC7591</a>]</span>, or an
+equivalent signed structure. A capability is an assertion, not an assurance; an
+extension that needs to bind it to a key or trust it in a policy decision has
+misclassified it.<a href="#section-9-5" class="pilcrow">¶</a></p>
+<p id="section-9-6">Additional points of discipline:<a href="#section-9-6" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-9-7.1">
+          <p id="section-9-7.1.1">Register a behavior, not a specification. See <a href="#values" class="auto internal xref">Section 4</a>.<a href="#section-9-7.1.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-9-7.2">
+          <p id="section-9-7.2.1">Prefer server-side discovery where it works. If the client-side behavior can
+be specified as a requirement conditioned on something the server advertises
+in its own metadata (<span>[<a href="#RFC8414" class="cite xref">RFC8414</a>]</span> or <span>[<a href="#RFC9728" class="cite xref">RFC9728</a>]</span>), specify it that way and
+register no capability. A capability is for behavior that cannot be made
+mandatory because the server cannot learn whether the client implements it.<a href="#section-9-7.2.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-9-7.3">
+          <p id="section-9-7.3.1">State, in the registration, the carriers and endpoints at which the value is
+meaningful.<a href="#section-9-7.3.1" class="pilcrow">¶</a></p>
+</li>
+      </ul>
+<p id="section-9-8">Because capability signals may be removed by an adversary, an extension <span class="bcp14">MUST</span>
+define a safe absent-signal fallback. If the enabled behavior is how a server
+obtains something it requires, the fallback is refusal, not proceeding without
+it. An extension that cannot describe a fallback at least as conservative as
+the pre-extension behavior has not satisfied CAP-1, whatever the value is
+named. The registration records the fallback (<a href="#iana-registry" class="auto internal xref">Section 12.1</a>).<a href="#section-9-8" class="pilcrow">¶</a></p>
+<p id="section-9-9">Acting on a falsely asserted capability can consume server resources
+(<a href="#dos" class="auto internal xref">Section 10.3</a>). An extension specification <span class="bcp14">MUST</span> analyze this cost and define any
+necessary rate-limiting, state-allocation, or replay protections.<a href="#section-9-9" class="pilcrow">¶</a></p>
+<p id="section-9-10">A capability set contributes to fingerprinting (<a href="#privacy-considerations" class="auto internal xref">Section 11</a>).
+Specifications defining capabilities whose availability depends on the
+deployment environment <span class="bcp14">MUST</span> assess whether signaling them creates a useful
+fingerprint and <span class="bcp14">SHOULD</span> choose names that describe behavior without exposing
+implementation details.<a href="#section-9-10" class="pilcrow">¶</a></p>
+<p id="section-9-11">Issuer-wide behavior is often the intended design, and coupling it to a
+per-issuer metadata flag is a legitimate choice. Where per-client or fractional
+rollout of a behavior that meets <a href="#invariants" class="auto internal xref">Section 5</a> is a requirement, however, an
+extension <span class="bcp14">SHOULD NOT</span> couple the behavior to such a flag, because it then
+becomes all-or-nothing for every client of the issuer; gate it on a capability
+instead. <span>[<a href="#RFC9207" class="cite xref">RFC9207</a>]</span> illustrates the trade-off: coupling the advertisement to a
+server-wide delivery commitment allows a client to enforce that <code>iss</code> is
+present, but the feature cannot be rolled out per client.<a href="#section-9-11" class="pilcrow">¶</a></p>
+<p id="section-9-12">This specification provides no delivery guarantee, and an extension <span class="bcp14">MUST NOT</span>
+rely on a capability signal or on <code>client_capabilities_supported</code> to supply
+one; <a href="#server-behavior" class="auto internal xref">Section 7</a> leaves delivery to the server. An extension that needs
+a delivery commitment defines it itself, along with how a client learns the
+server will honor it.<a href="#section-9-12" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="security-considerations">
+<section id="section-10">
+      <h2 id="name-security-considerations">
+<a href="#section-10" class="section-number selfRef">10. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
+      </h2>
+<p id="section-10-1">For general OAuth security considerations, see <span><a href="https://rfc-editor.org/rfc/rfc6749#section-10" class="relref">Section 10</a> of [<a href="#RFC6749" class="cite xref">RFC6749</a>]</span> and
+<span>[<a href="#RFC9700" class="cite xref">RFC9700</a>]</span>. The security properties of capability signaling rest on
+<a href="#invariants" class="auto internal xref">Section 5</a>.<a href="#section-10-1" class="pilcrow">¶</a></p>
+<div id="unverified-signals">
+<section id="section-10.1">
+        <h3 id="name-unverified-signals">
+<a href="#section-10.1" class="section-number selfRef">10.1. </a><a href="#name-unverified-signals" class="section-name selfRef">Unverified Signals</a>
+        </h3>
+<p id="section-10.1-1">A capability signal asserts, but does not prove, that the client implements the
+capability. Depending on their use, transport security, client authentication,
+a Request Object, or a signed software statement can authenticate or protect
+the assertion without proving it true.<a href="#section-10.1-1" class="pilcrow">¶</a></p>
+<p id="section-10.1-2">On the front channel, the user agent or another intermediary can modify a bare
+request parameter. Injection can produce a response the client cannot process;
+removal can deny optional functionality. Under CAP-1 through CAP-3, neither may
+weaken security, grant authorization, or skip evidence required by the enabled
+behavior.<a href="#section-10.1-2" class="pilcrow">¶</a></p>
+<p id="section-10.1-3">A signal is not an access control. Any party that can send a request, including
+one holding a stolen authorization code, refresh token, or access token, can
+assert a value, elicit the enabled behavior, and choose among the paths
+<a href="#selection" class="auto internal xref">Section 7.1</a> permits. Each enabled behavior and each selectable path therefore
+has to be safe when such a party chooses it while holding only the credentials
+the request carries, including a challenge that party could relay to another
+user. CAP-3 requires this, and an extension's security analysis states how its
+behavior meets it.<a href="#section-10.1-3" class="pilcrow">¶</a></p>
+<p id="section-10.1-4">Servers <span class="bcp14">MUST NOT</span> treat a capability signal as evidence of client identity,
+client software version, or client trustworthiness. Where a Request Object
+<span>[<a href="#RFC9101" class="cite xref">RFC9101</a>]</span> or software statement carries a set, the signature prevents
+third-party modification but does not prove implementation. See <a href="#param" class="auto internal xref">Section 6.1</a> and
+<a href="#precedence" class="auto internal xref">Section 6.4</a>.<a href="#section-10.1-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="downgrade">
+<section id="section-10.2">
+        <h3 id="name-downgrade">
+<a href="#section-10.2" class="section-number selfRef">10.2. </a><a href="#name-downgrade" class="section-name selfRef">Downgrade</a>
+        </h3>
+<p id="section-10.2-1">Because capability signals may be removed by an adversary, each extension
+defines a safe absent-signal fallback (<a href="#extension-guidance" class="auto internal xref">Section 9</a>). With such a
+fallback, removal costs client functionality, never a server security property.
+Removing a signal that narrows a set widens it instead:
+stripping a request parameter that overrides a metadata default restores the
+default, and stripping a field that replaces out-of-band knowledge restores
+that knowledge. Either can lead a server to exercise a behavior the instance
+cannot process, which is a failed exchange, not a weakened one. Corrupting a
+field so that it is invalid has the same effect as stripping it. Injecting
+<code>none</code> removes out-of-band knowledge, which is the safe direction. On the front
+channel, a signed Request Object or a pushed authorization request protects the
+integrity of the override it carries, but an attacker can still substitute an
+unprotected request unless the authorization server enforces its use:
+<code>require_signed_request_object</code> (<span><a href="https://rfc-editor.org/rfc/rfc9101#section-10.5" class="relref">Section 10.5</a> of [<a href="#RFC9101" class="cite xref">RFC9101</a>]</span>) for Request
+Objects, and <code>require_pushed_authorization_requests</code> (<span><a href="https://rfc-editor.org/rfc/rfc9126#section-5" class="relref">Section 5</a> of [<a href="#RFC9126" class="cite xref">RFC9126</a>]</span>)
+or equivalent policy for pushed requests.<a href="#section-10.2-1" class="pilcrow">¶</a></p>
+<p id="section-10.2-2">A security check that CAP-1 bars a capability from enabling belongs in policy or
+an authenticated negotiation mechanism.<a href="#section-10.2-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="dos">
+<section id="section-10.3">
+        <h3 id="name-denial-of-service">
+<a href="#section-10.3" class="section-number selfRef">10.3. </a><a href="#name-denial-of-service" class="section-name selfRef">Denial of Service</a>
+        </h3>
+<p id="section-10.3-1">A capability list is attacker-controllable in size. Servers <span class="bcp14">MUST</span> apply finite
+limits to the encoded length, number of members, and resources consumed while
+parsing a signal. Those limits <span class="bcp14">MUST</span> admit any otherwise-valid signal of at most
+4096 octets and at most 64 members, counting members before duplicates or
+unrecognized values are removed; a recipient <span class="bcp14">MAY</span> accept larger signals. The
+octets counted are those of the carrier's value, excluding its name and the
+surrounding message:<a href="#section-10.3-1" class="pilcrow">¶</a></p>
+<span id="name-octets-counted-toward-a-lim"></span><table class="center" id="table-1">
+          <caption>
+<a href="#table-1" class="selfRef">Table 1</a>:
+<a href="#name-octets-counted-toward-a-lim" class="selfRef">Octets counted toward a limit</a>
+          </caption>
+<thead>
+            <tr>
+              <th class="text-left" rowspan="1" colspan="1">Carrier</th>
+              <th class="text-left" rowspan="1" colspan="1">Octets counted</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">Request parameter</td>
+              <td class="text-left" rowspan="1" colspan="1">The form-encoded value, before percent-decoding</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">Request parameter in a Request Object</td>
+              <td class="text-left" rowspan="1" colspan="1">The JSON string as serialized in the decoded JWT Claims Set, including its quotes and escapes</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">HTTP field</td>
+              <td class="text-left" rowspan="1" colspan="1">The combined field value, including separators and parameters</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">Client metadata</td>
+              <td class="text-left" rowspan="1" colspan="1">The serialized JSON array, including brackets, quotes, whitespace, and escapes</td>
+            </tr>
+          </tbody>
+        </table>
+<p id="section-10.3-3">A signal that exceeds a limit <span class="bcp14">MUST</span> be treated as invalid: a request parameter
+then signals the empty set (<a href="#param" class="auto internal xref">Section 6.1</a>), a field is treated as absent
+(<a href="#field" class="auto internal xref">Section 6.2</a>), and a client metadata field is ignored (<a href="#metadata" class="auto internal xref">Section 6.3</a>). A server
+<span class="bcp14">MAY</span> instead reject the request or metadata document using an error response
+appropriate to the endpoint or application protocol. In particular,
+<code>invalid_request</code> is available at OAuth endpoints and <code>invalid_client_metadata</code>
+at a registration endpoint <span>[<a href="#RFC7591" class="cite xref">RFC7591</a>]</span>, while a protected resource can use an
+application-specific response.<a href="#section-10.3-3" class="pilcrow">¶</a></p>
+<p id="section-10.3-4">Acting on a falsely asserted capability can also consume server resources;
+each extension analyzes this cost (<a href="#extension-guidance" class="auto internal xref">Section 9</a>). A capability signal
+does not authorize the client to consume unbounded work.<a href="#section-10.3-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="unregistered-values">
+<section id="section-10.4">
+        <h3 id="name-unregistered-values">
+<a href="#section-10.4" class="section-number selfRef">10.4. </a><a href="#name-unregistered-values" class="section-name selfRef">Unregistered Values</a>
+        </h3>
+<p id="section-10.4-1">Two implementations can recognize the same unregistered value with different
+meanings. Ignoring unrecognized values does not help, because each recognizes
+the value, and authenticating the signal does not resolve a disagreement about
+its meaning. A server can then exercise a behavior the client cannot process,
+or spend resources on a behavior the client will not complete. Provided each
+implementation meets CAP-1 through CAP-3 on its own, the result is a failed
+exchange or wasted work, not weakened security. <a href="#naming" class="auto internal xref">Section 4.2</a> recommends confining
+unregistered values to deployments whose parties have agreed on their meaning,
+and seeking early allocation.<a href="#section-10.4-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="privacy-considerations">
+<section id="section-11">
+      <h2 id="name-privacy-considerations">
+<a href="#section-11" class="section-number selfRef">11. </a><a href="#name-privacy-considerations" class="section-name selfRef">Privacy Considerations</a>
+      </h2>
+<p id="section-11-1">A capability set discriminates over the client population and contributes to
+fingerprinting. On the front channel it is visible to the user agent, and in a
+publicly retrievable client metadata document it is visible to anyone. The
+marginal disclosure to an authorization server is smaller, since it already
+receives a <code>client_id</code> that often identifies the software, but a capability set
+can still add information.<a href="#section-11-1" class="pilcrow">¶</a></p>
+<p id="section-11-2">Clients that consider their capability set sensitive <span class="bcp14">SHOULD</span> use <span>[<a href="#RFC9126" class="cite xref">RFC9126</a>]</span> or
+an encrypted Request Object as defined in <span>[<a href="#RFC9101" class="cite xref">RFC9101</a>]</span>, <span class="bcp14">SHOULD</span>, when they hold
+the server's <code>client_capabilities_supported</code>, restrict signaled values to those
+it lists, and <span class="bcp14">SHOULD NOT</span> publish the set in public client metadata. A signed
+but unencrypted Request Object provides integrity, not confidentiality.<a href="#section-11-2" class="pilcrow">¶</a></p>
+<p id="section-11-3">Capability values <span class="bcp14">MUST NOT</span> encode information about an end user or a specific
+device. Extensions assess the fingerprinting effect of capabilities whose
+availability depends on the deployment environment (<a href="#extension-guidance" class="auto internal xref">Section 9</a>).<a href="#section-11-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="iana">
+<section id="section-12">
+      <h2 id="name-iana-considerations">
+<a href="#section-12" class="section-number selfRef">12. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
+      </h2>
+<div id="iana-registry">
+<section id="section-12.1">
+        <h3 id="name-oauth-client-capabilities-r">
+<a href="#section-12.1" class="section-number selfRef">12.1. </a><a href="#name-oauth-client-capabilities-r" class="section-name selfRef">OAuth Client Capabilities Registry</a>
+        </h3>
+<p id="section-12.1-1">This specification requests that IANA establish an "OAuth Client Capabilities"
+registry in the "OAuth Parameters" registry group. Values are registered on a
+Specification Required basis as defined in <span><a href="https://rfc-editor.org/rfc/rfc8126#section-4.6" class="relref">Section 4.6</a> of [<a href="#RFC8126" class="cite xref">RFC8126</a>]</span>.<a href="#section-12.1-1" class="pilcrow">¶</a></p>
+<p id="section-12.1-2">The registry contains the following fields:<a href="#section-12.1-2" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-12.1-3">
+          <dt id="section-12.1-3.1">Capability Value:</dt>
+          <dd style="margin-left: 1.5em" id="section-12.1-3.2">
+            <p id="section-12.1-3.2.1">The token, conforming to the <code>capability</code> production in <a href="#values" class="auto internal xref">Section 4</a>.<a href="#section-12.1-3.2.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-12.1-3.3">Description:</dt>
+          <dd style="margin-left: 1.5em" id="section-12.1-3.4">
+            <p id="section-12.1-3.4.1">A brief description of the client behavior signaled by the value.<a href="#section-12.1-3.4.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-12.1-3.5">Status:</dt>
+          <dd style="margin-left: 1.5em" id="section-12.1-3.6">
+            <p id="section-12.1-3.6.1">Either <code>current</code> or <code>obsolete</code>. A value is registered as <code>current</code>. Its
+change controller <span class="bcp14">MAY</span> later set it to <code>obsolete</code> to record that a superseding
+value exists; an obsolete value remains registered, and a server <span class="bcp14">MAY</span> continue
+to recognize it.<a href="#section-12.1-3.6.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-12.1-3.7">Absent-Signal Behavior:</dt>
+          <dd style="margin-left: 1.5em" id="section-12.1-3.8">
+            <p id="section-12.1-3.8.1">What the server does when the value is not in the effective set. Recording
+this makes CAP-1 in <a href="#invariants" class="auto internal xref">Section 5</a> checkable at registration time.<a href="#section-12.1-3.8.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-12.1-3.9">Carriers:</dt>
+          <dd style="margin-left: 1.5em" id="section-12.1-3.10">
+            <p id="section-12.1-3.10.1">The carriers in which the value is meaningful: any of "request parameter",
+"HTTP field", "client metadata".<a href="#section-12.1-3.10.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-12.1-3.11">Endpoints:</dt>
+          <dd style="margin-left: 1.5em" id="section-12.1-3.12">
+            <p id="section-12.1-3.12.1">The endpoints or request types at which the value is meaningful, where
+applicable.<a href="#section-12.1-3.12.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-12.1-3.13">Change Controller:</dt>
+          <dd style="margin-left: 1.5em" id="section-12.1-3.14">
+            <p id="section-12.1-3.14.1">For values defined in IETF stream documents, the IETF. Otherwise, the party
+responsible for the registration.<a href="#section-12.1-3.14.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-12.1-3.15">Specification Document(s):</dt>
+          <dd style="margin-left: 1.5em" id="section-12.1-3.16">
+            <p id="section-12.1-3.16.1">A reference to the document defining the value.<a href="#section-12.1-3.16.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+<p id="section-12.1-4">Designated experts evaluating a registration request should:<a href="#section-12.1-4" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-12.1-5.1">
+            <p id="section-12.1-5.1.1">confirm that the value satisfies CAP-1 through CAP-3 in <a href="#invariants" class="auto internal xref">Section 5</a> and the
+criterion in <a href="#extension-guidance" class="auto internal xref">Section 9</a>, that the specification meets the
+requirements this document places on extensions, including those in
+<a href="#param" class="auto internal xref">Section 6.1</a>, <a href="#selection" class="auto internal xref">Section 7.1</a>, and <a href="#extension-guidance" class="auto internal xref">Section 9</a>, and that its registered
+absent-signal behavior is at least as conservative as what the server would
+apply had the value never been defined;<a href="#section-12.1-5.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-12.1-5.2">
+            <p id="section-12.1-5.2.1">confirm that the specification defines the optional behavior enabled and
+identifies every applicable carrier and endpoint;<a href="#section-12.1-5.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-12.1-5.3">
+            <p id="section-12.1-5.3.1">consider the security, privacy, interoperability, and operational effects of
+false assertion and signal removal; and<a href="#section-12.1-5.3.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-12.1-5.4">
+            <p id="section-12.1-5.4.1">reject values that duplicate the semantics of an existing registration, differ
+from one only in letter case, or name a document revision rather than a
+behavior.<a href="#section-12.1-5.4.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+<p id="section-12.1-6">The designated experts should presume that a registration is acceptable when
+these requirements are met. They may obtain feedback from the OAuth Working
+Group or its successor, but working group consensus is not required.<a href="#section-12.1-6" class="pilcrow">¶</a></p>
+<p id="section-12.1-7">The registry's initial content is:<a href="#section-12.1-7" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-12.1-8">
+          <dt id="section-12.1-8.1">Capability Value:</dt>
+          <dd style="margin-left: 1.5em" id="section-12.1-8.2">
+            <p id="section-12.1-8.2.1"><code>none</code><a href="#section-12.1-8.2.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-12.1-8.3">Description:</dt>
+          <dd style="margin-left: 1.5em" id="section-12.1-8.4">
+            <p id="section-12.1-8.4.1">Reserved. Never a capability; sent alone, it signals no capability.<a href="#section-12.1-8.4.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-12.1-8.5">Status:</dt>
+          <dd style="margin-left: 1.5em" id="section-12.1-8.6">
+            <p id="section-12.1-8.6.1">current<a href="#section-12.1-8.6.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-12.1-8.7">Absent-Signal Behavior:</dt>
+          <dd style="margin-left: 1.5em" id="section-12.1-8.8">
+            <p id="section-12.1-8.8.1">Not applicable. <code>none</code> is reserved and is never a capability.<a href="#section-12.1-8.8.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-12.1-8.9">Carriers:</dt>
+          <dd style="margin-left: 1.5em" id="section-12.1-8.10">
+            <p id="section-12.1-8.10.1">request parameter, HTTP field<a href="#section-12.1-8.10.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-12.1-8.11">Endpoints:</dt>
+          <dd style="margin-left: 1.5em" id="section-12.1-8.12">
+            <p id="section-12.1-8.12.1">Any authorization server endpoint at which the request parameter is defined,
+and any protected resource<a href="#section-12.1-8.12.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-12.1-8.13">Change Controller:</dt>
+          <dd style="margin-left: 1.5em" id="section-12.1-8.14">
+            <p id="section-12.1-8.14.1">IETF<a href="#section-12.1-8.14.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-12.1-8.15">Specification Document(s):</dt>
+          <dd style="margin-left: 1.5em" id="section-12.1-8.16">
+            <p id="section-12.1-8.16.1">This specification, <a href="#none-value" class="auto internal xref">Section 4.3</a><a href="#section-12.1-8.16.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+</section>
+</div>
+<div id="iana-params">
+<section id="section-12.2">
+        <h3 id="name-oauth-parameters-registry">
+<a href="#section-12.2" class="section-number selfRef">12.2. </a><a href="#name-oauth-parameters-registry" class="section-name selfRef">OAuth Parameters Registry</a>
+        </h3>
+<p id="section-12.2-1">This specification requests registration of the following value in the IANA
+"OAuth Parameters" registry established by <span>[<a href="#RFC6749" class="cite xref">RFC6749</a>]</span>:<a href="#section-12.2-1" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-12.2-2">
+          <dt id="section-12.2-2.1">Parameter Name:</dt>
+          <dd style="margin-left: 1.5em" id="section-12.2-2.2">
+            <p id="section-12.2-2.2.1"><code>client_capabilities</code><a href="#section-12.2-2.2.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-12.2-2.3">Parameter Usage Location:</dt>
+          <dd style="margin-left: 1.5em" id="section-12.2-2.4">
+            <p id="section-12.2-2.4.1">authorization request, token request<a href="#section-12.2-2.4.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-12.2-2.5">Change Controller:</dt>
+          <dd style="margin-left: 1.5em" id="section-12.2-2.6">
+            <p id="section-12.2-2.6.1">IETF<a href="#section-12.2-2.6.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-12.2-2.7">Specification Document(s):</dt>
+          <dd style="margin-left: 1.5em" id="section-12.2-2.8">
+            <p id="section-12.2-2.8.1">This specification, <a href="#param" class="auto internal xref">Section 6.1</a><a href="#section-12.2-2.8.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+</section>
+</div>
+<div id="iana-dcr">
+<section id="section-12.3">
+        <h3 id="name-oauth-dynamic-client-regist">
+<a href="#section-12.3" class="section-number selfRef">12.3. </a><a href="#name-oauth-dynamic-client-regist" class="section-name selfRef">OAuth Dynamic Client Registration Metadata Registry</a>
+        </h3>
+<p id="section-12.3-1">This specification requests registration of the following value in the IANA
+"OAuth Dynamic Client Registration Metadata" registry established by
+<span>[<a href="#RFC7591" class="cite xref">RFC7591</a>]</span>:<a href="#section-12.3-1" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-12.3-2">
+          <dt id="section-12.3-2.1">Client Metadata Name:</dt>
+          <dd style="margin-left: 1.5em" id="section-12.3-2.2">
+            <p id="section-12.3-2.2.1"><code>client_capabilities</code><a href="#section-12.3-2.2.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-12.3-2.3">Client Metadata Description:</dt>
+          <dd style="margin-left: 1.5em" id="section-12.3-2.4">
+            <p id="section-12.3-2.4.1">JSON array of default capability values describing behaviors the client is
+able to process<a href="#section-12.3-2.4.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-12.3-2.5">Change Controller:</dt>
+          <dd style="margin-left: 1.5em" id="section-12.3-2.6">
+            <p id="section-12.3-2.6.1">IETF<a href="#section-12.3-2.6.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-12.3-2.7">Specification Document(s):</dt>
+          <dd style="margin-left: 1.5em" id="section-12.3-2.8">
+            <p id="section-12.3-2.8.1">This specification, <a href="#metadata" class="auto internal xref">Section 6.3</a><a href="#section-12.3-2.8.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+</section>
+</div>
+<div id="iana-as-metadata">
+<section id="section-12.4">
+        <h3 id="name-oauth-authorization-server-">
+<a href="#section-12.4" class="section-number selfRef">12.4. </a><a href="#name-oauth-authorization-server-" class="section-name selfRef">OAuth Authorization Server Metadata Registry</a>
+        </h3>
+<p id="section-12.4-1">This specification requests registration of the following value in the IANA
+"OAuth Authorization Server Metadata" registry established by <span>[<a href="#RFC8414" class="cite xref">RFC8414</a>]</span>:<a href="#section-12.4-1" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-12.4-2">
+          <dt id="section-12.4-2.1">Metadata Name:</dt>
+          <dd style="margin-left: 1.5em" id="section-12.4-2.2">
+            <p id="section-12.4-2.2.1"><code>client_capabilities_supported</code><a href="#section-12.4-2.2.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-12.4-2.3">Metadata Description:</dt>
+          <dd style="margin-left: 1.5em" id="section-12.4-2.4">
+            <p id="section-12.4-2.4.1">JSON array of capability values the authorization server recognizes and may
+act upon<a href="#section-12.4-2.4.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-12.4-2.5">Change Controller:</dt>
+          <dd style="margin-left: 1.5em" id="section-12.4-2.6">
+            <p id="section-12.4-2.6.1">IETF<a href="#section-12.4-2.6.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-12.4-2.7">Specification Document(s):</dt>
+          <dd style="margin-left: 1.5em" id="section-12.4-2.8">
+            <p id="section-12.4-2.8.1">This specification, <a href="#discovery" class="auto internal xref">Section 8</a><a href="#section-12.4-2.8.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+</section>
+</div>
+<div id="iana-pr-metadata">
+<section id="section-12.5">
+        <h3 id="name-oauth-protected-resource-me">
+<a href="#section-12.5" class="section-number selfRef">12.5. </a><a href="#name-oauth-protected-resource-me" class="section-name selfRef">OAuth Protected Resource Metadata Registry</a>
+        </h3>
+<p id="section-12.5-1">This specification requests registration of the following value in the IANA
+"OAuth Protected Resource Metadata" registry established by <span>[<a href="#RFC9728" class="cite xref">RFC9728</a>]</span>:<a href="#section-12.5-1" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-12.5-2">
+          <dt id="section-12.5-2.1">Metadata Name:</dt>
+          <dd style="margin-left: 1.5em" id="section-12.5-2.2">
+            <p id="section-12.5-2.2.1"><code>client_capabilities_supported</code><a href="#section-12.5-2.2.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-12.5-2.3">Metadata Description:</dt>
+          <dd style="margin-left: 1.5em" id="section-12.5-2.4">
+            <p id="section-12.5-2.4.1">JSON array of capability values the protected resource recognizes and may act
+upon<a href="#section-12.5-2.4.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-12.5-2.5">Change Controller:</dt>
+          <dd style="margin-left: 1.5em" id="section-12.5-2.6">
+            <p id="section-12.5-2.6.1">IETF<a href="#section-12.5-2.6.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-12.5-2.7">Specification Document(s):</dt>
+          <dd style="margin-left: 1.5em" id="section-12.5-2.8">
+            <p id="section-12.5-2.8.1">This specification, <a href="#discovery" class="auto internal xref">Section 8</a><a href="#section-12.5-2.8.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+</section>
+</div>
+<div id="iana-field">
+<section id="section-12.6">
+        <h3 id="name-http-field-name-registry">
+<a href="#section-12.6" class="section-number selfRef">12.6. </a><a href="#name-http-field-name-registry" class="section-name selfRef">HTTP Field Name Registry</a>
+        </h3>
+<p id="section-12.6-1">This specification requests registration of the following value in the
+"Hypertext Transfer Protocol (HTTP) Field Name" registry:<a href="#section-12.6-1" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-12.6-2">
+          <dt id="section-12.6-2.1">Field Name:</dt>
+          <dd style="margin-left: 1.5em" id="section-12.6-2.2">
+            <p id="section-12.6-2.2.1"><code>OAuth-Client-Capabilities</code><a href="#section-12.6-2.2.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-12.6-2.3">Status:</dt>
+          <dd style="margin-left: 1.5em" id="section-12.6-2.4">
+            <p id="section-12.6-2.4.1">permanent<a href="#section-12.6-2.4.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-12.6-2.5">Structured Type:</dt>
+          <dd style="margin-left: 1.5em" id="section-12.6-2.6">
+            <p id="section-12.6-2.6.1">List<a href="#section-12.6-2.6.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-12.6-2.7">Reference:</dt>
+          <dd style="margin-left: 1.5em" id="section-12.6-2.8">
+            <p id="section-12.6-2.8.1">This specification, <a href="#field" class="auto internal xref">Section 6.2</a><a href="#section-12.6-2.8.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+</section>
+</div>
+</section>
+</div>
+<div id="sec-combined-references">
+<section id="section-13">
+      <h2 id="name-references">
+<a href="#section-13" class="section-number selfRef">13. </a><a href="#name-references" class="section-name selfRef">References</a>
+      </h2>
+<div id="sec-normative-references">
+<section id="section-13.1">
+        <h3 id="name-normative-references">
+<a href="#section-13.1" class="section-number selfRef">13.1. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
+        </h3>
+<dl class="references">
+<dt id="RFC2119">[RFC2119]</dt>
+        <dd>
+<span class="refAuthor">Bradner, S.</span>, <span class="refTitle">"Key words for use in RFCs to Indicate Requirement Levels"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 2119</span>, <span class="seriesInfo">DOI 10.17487/RFC2119</span>, <time datetime="1997-03" class="refDate">March 1997</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc2119">https://www.rfc-editor.org/rfc/rfc2119</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC5234">[RFC5234]</dt>
+        <dd>
+<span class="refAuthor">Crocker, D., Ed.</span> and <span class="refAuthor">P. Overell</span>, <span class="refTitle">"Augmented BNF for Syntax Specifications: ABNF"</span>, <span class="seriesInfo">STD 68</span>, <span class="seriesInfo">RFC 5234</span>, <span class="seriesInfo">DOI 10.17487/RFC5234</span>, <time datetime="2008-01" class="refDate">January 2008</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc5234">https://www.rfc-editor.org/rfc/rfc5234</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC6749">[RFC6749]</dt>
+        <dd>
+<span class="refAuthor">Hardt, D., Ed.</span>, <span class="refTitle">"The OAuth 2.0 Authorization Framework"</span>, <span class="seriesInfo">RFC 6749</span>, <span class="seriesInfo">DOI 10.17487/RFC6749</span>, <time datetime="2012-10" class="refDate">October 2012</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc6749">https://www.rfc-editor.org/rfc/rfc6749</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC7591">[RFC7591]</dt>
+        <dd>
+<span class="refAuthor">Richer, J., Ed.</span>, <span class="refAuthor">Jones, M.</span>, <span class="refAuthor">Bradley, J.</span>, <span class="refAuthor">Machulak, M.</span>, and <span class="refAuthor">P. Hunt</span>, <span class="refTitle">"OAuth 2.0 Dynamic Client Registration Protocol"</span>, <span class="seriesInfo">RFC 7591</span>, <span class="seriesInfo">DOI 10.17487/RFC7591</span>, <time datetime="2015-07" class="refDate">July 2015</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc7591">https://www.rfc-editor.org/rfc/rfc7591</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8126">[RFC8126]</dt>
+        <dd>
+<span class="refAuthor">Cotton, M.</span>, <span class="refAuthor">Leiba, B.</span>, and <span class="refAuthor">T. Narten</span>, <span class="refTitle">"Guidelines for Writing an IANA Considerations Section in RFCs"</span>, <span class="seriesInfo">BCP 26</span>, <span class="seriesInfo">RFC 8126</span>, <span class="seriesInfo">DOI 10.17487/RFC8126</span>, <time datetime="2017-06" class="refDate">June 2017</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8126">https://www.rfc-editor.org/rfc/rfc8126</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8174">[RFC8174]</dt>
+        <dd>
+<span class="refAuthor">Leiba, B.</span>, <span class="refTitle">"Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 8174</span>, <span class="seriesInfo">DOI 10.17487/RFC8174</span>, <time datetime="2017-05" class="refDate">May 2017</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8174">https://www.rfc-editor.org/rfc/rfc8174</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8414">[RFC8414]</dt>
+        <dd>
+<span class="refAuthor">Jones, M.</span>, <span class="refAuthor">Sakimura, N.</span>, and <span class="refAuthor">J. Bradley</span>, <span class="refTitle">"OAuth 2.0 Authorization Server Metadata"</span>, <span class="seriesInfo">RFC 8414</span>, <span class="seriesInfo">DOI 10.17487/RFC8414</span>, <time datetime="2018-06" class="refDate">June 2018</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8414">https://www.rfc-editor.org/rfc/rfc8414</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9101">[RFC9101]</dt>
+        <dd>
+<span class="refAuthor">Sakimura, N.</span>, <span class="refAuthor">Bradley, J.</span>, and <span class="refAuthor">M. Jones</span>, <span class="refTitle">"The OAuth 2.0 Authorization Framework: JWT-Secured Authorization Request (JAR)"</span>, <span class="seriesInfo">RFC 9101</span>, <span class="seriesInfo">DOI 10.17487/RFC9101</span>, <time datetime="2021-08" class="refDate">August 2021</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9101">https://www.rfc-editor.org/rfc/rfc9101</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9110">[RFC9110]</dt>
+        <dd>
+<span class="refAuthor">Fielding, R., Ed.</span>, <span class="refAuthor">Nottingham, M., Ed.</span>, and <span class="refAuthor">J. Reschke, Ed.</span>, <span class="refTitle">"HTTP Semantics"</span>, <span class="seriesInfo">STD 97</span>, <span class="seriesInfo">RFC 9110</span>, <span class="seriesInfo">DOI 10.17487/RFC9110</span>, <time datetime="2022-06" class="refDate">June 2022</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9110">https://www.rfc-editor.org/rfc/rfc9110</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9126">[RFC9126]</dt>
+        <dd>
+<span class="refAuthor">Lodderstedt, T.</span>, <span class="refAuthor">Campbell, B.</span>, <span class="refAuthor">Sakimura, N.</span>, <span class="refAuthor">Tonge, D.</span>, and <span class="refAuthor">F. Skokan</span>, <span class="refTitle">"OAuth 2.0 Pushed Authorization Requests"</span>, <span class="seriesInfo">RFC 9126</span>, <span class="seriesInfo">DOI 10.17487/RFC9126</span>, <time datetime="2021-09" class="refDate">September 2021</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9126">https://www.rfc-editor.org/rfc/rfc9126</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9651">[RFC9651]</dt>
+        <dd>
+<span class="refAuthor">Nottingham, M.</span> and <span class="refAuthor">P. Kamp</span>, <span class="refTitle">"Structured Field Values for HTTP"</span>, <span class="seriesInfo">RFC 9651</span>, <span class="seriesInfo">DOI 10.17487/RFC9651</span>, <time datetime="2024-09" class="refDate">September 2024</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9651">https://www.rfc-editor.org/rfc/rfc9651</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9728">[RFC9728]</dt>
+      <dd>
+<span class="refAuthor">Jones, M.B.</span>, <span class="refAuthor">Hunt, P.</span>, and <span class="refAuthor">A. Parecki</span>, <span class="refTitle">"OAuth 2.0 Protected Resource Metadata"</span>, <span class="seriesInfo">RFC 9728</span>, <span class="seriesInfo">DOI 10.17487/RFC9728</span>, <time datetime="2025-04" class="refDate">April 2025</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9728">https://www.rfc-editor.org/rfc/rfc9728</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+</dl>
+</section>
+</div>
+<div id="sec-informative-references">
+<section id="section-13.2">
+        <h3 id="name-informative-references">
+<a href="#section-13.2" class="section-number selfRef">13.2. </a><a href="#name-informative-references" class="section-name selfRef">Informative References</a>
+        </h3>
+<dl class="references">
+<dt id="ABCA">[ABCA]</dt>
+        <dd>
+<span class="refTitle">"OAuth 2.0 Attestation-Based Client Authentication"</span>, <span>n.d.</span>, <span>&lt;<a href="https://datatracker.ietf.org/doc/draft-ietf-oauth-attestation-based-client-auth">https://datatracker.ietf.org/doc/draft-ietf-oauth-attestation-based-client-auth</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="CIMD">[CIMD]</dt>
+        <dd>
+<span class="refTitle">"OAuth Client ID Metadata Document"</span>, <span>n.d.</span>, <span>&lt;<a href="https://datatracker.ietf.org/doc/draft-ietf-oauth-client-id-metadata-document">https://datatracker.ietf.org/doc/draft-ietf-oauth-client-id-metadata-document</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="DTR">[DTR]</dt>
+        <dd>
+<span class="refTitle">"Deferred Token Response"</span>, <span>n.d.</span>, <span>&lt;<a href="https://datatracker.ietf.org/doc/draft-gerber-oauth-deferred-token-response">https://datatracker.ietf.org/doc/draft-gerber-oauth-deferred-token-response</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="FETCH">[FETCH]</dt>
+        <dd>
+<span class="refTitle">"Fetch Living Standard"</span>, <span>n.d.</span>, <span>&lt;<a href="https://fetch.spec.whatwg.org/">https://fetch.spec.whatwg.org/</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="FIRST-PARTY-APPS">[FIRST-PARTY-APPS]</dt>
+        <dd>
+<span class="refTitle">"OAuth 2.0 for First-Party Applications"</span>, <span>n.d.</span>, <span>&lt;<a href="https://datatracker.ietf.org/doc/draft-ietf-oauth-first-party-apps">https://datatracker.ietf.org/doc/draft-ietf-oauth-first-party-apps</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="IANA-OAUTH">[IANA-OAUTH]</dt>
+        <dd>
+<span class="refTitle">"OAuth Parameters"</span>, <span>n.d.</span>, <span>&lt;<a href="https://www.iana.org/assignments/oauth-parameters/">https://www.iana.org/assignments/oauth-parameters/</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="OAUTH21">[OAUTH21]</dt>
+        <dd>
+<span class="refAuthor">Hardt, D.</span>, <span class="refAuthor">Parecki, A.</span>, and <span class="refAuthor">T. Lodderstedt</span>, <span class="refTitle">"The OAuth 2.1 Authorization Framework"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-oauth-v2-1-17</span>, <time datetime="2026-10-30" class="refDate">30 October 2026</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-17">https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-17</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="OAUTH21-VERSIONS">[OAUTH21-VERSIONS]</dt>
+        <dd>
+<span class="refTitle">"How can an AS support both 2.0 and 2.1 clients concurrently"</span>, <span>n.d.</span>, <span>&lt;<a href="https://github.com/oauth-wg/oauth-v2-1/issues/120">https://github.com/oauth-wg/oauth-v2-1/issues/120</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="OIDC">[OIDC]</dt>
+        <dd>
+<span class="refTitle">"OpenID Connect Core 1.0"</span>, <span>n.d.</span>, <span>&lt;<a href="https://openid.net/specs/openid-connect-core-1_0.html">https://openid.net/specs/openid-connect-core-1_0.html</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RESOURCE-TOKEN-RESP">[RESOURCE-TOKEN-RESP]</dt>
+        <dd>
+<span class="refTitle">"Resource Token Response Parameter"</span>, <span>n.d.</span>, <span>&lt;<a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-resource-token-resp">https://datatracker.ietf.org/doc/draft-mcguinness-oauth-resource-token-resp</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC3261">[RFC3261]</dt>
+        <dd>
+<span class="refAuthor">Rosenberg, J.</span>, <span class="refAuthor">Schulzrinne, H.</span>, <span class="refAuthor">Camarillo, G.</span>, <span class="refAuthor">Johnston, A.</span>, <span class="refAuthor">Peterson, J.</span>, <span class="refAuthor">Sparks, R.</span>, <span class="refAuthor">Handley, M.</span>, and <span class="refAuthor">E. Schooler</span>, <span class="refTitle">"SIP: Session Initiation Protocol"</span>, <span class="seriesInfo">RFC 3261</span>, <span class="seriesInfo">DOI 10.17487/RFC3261</span>, <time datetime="2002-07" class="refDate">July 2002</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc3261">https://www.rfc-editor.org/rfc/rfc3261</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC7009">[RFC7009]</dt>
+        <dd>
+<span class="refAuthor">Lodderstedt, T., Ed.</span>, <span class="refAuthor">Dronia, S.</span>, and <span class="refAuthor">M. Scurtescu</span>, <span class="refTitle">"OAuth 2.0 Token Revocation"</span>, <span class="seriesInfo">RFC 7009</span>, <span class="seriesInfo">DOI 10.17487/RFC7009</span>, <time datetime="2013-08" class="refDate">August 2013</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc7009">https://www.rfc-editor.org/rfc/rfc7009</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC7120">[RFC7120]</dt>
+        <dd>
+<span class="refAuthor">Cotton, M.</span>, <span class="refTitle">"Early IANA Allocation of Standards Track Code Points"</span>, <span class="seriesInfo">BCP 100</span>, <span class="seriesInfo">RFC 7120</span>, <span class="seriesInfo">DOI 10.17487/RFC7120</span>, <time datetime="2014-01" class="refDate">January 2014</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc7120">https://www.rfc-editor.org/rfc/rfc7120</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC7240">[RFC7240]</dt>
+        <dd>
+<span class="refAuthor">Snell, J.</span>, <span class="refTitle">"Prefer Header for HTTP"</span>, <span class="seriesInfo">RFC 7240</span>, <span class="seriesInfo">DOI 10.17487/RFC7240</span>, <time datetime="2014-06" class="refDate">June 2014</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc7240">https://www.rfc-editor.org/rfc/rfc7240</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC7662">[RFC7662]</dt>
+        <dd>
+<span class="refAuthor">Richer, J., Ed.</span>, <span class="refTitle">"OAuth 2.0 Token Introspection"</span>, <span class="seriesInfo">RFC 7662</span>, <span class="seriesInfo">DOI 10.17487/RFC7662</span>, <time datetime="2015-10" class="refDate">October 2015</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc7662">https://www.rfc-editor.org/rfc/rfc7662</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8628">[RFC8628]</dt>
+        <dd>
+<span class="refAuthor">Denniss, W.</span>, <span class="refAuthor">Bradley, J.</span>, <span class="refAuthor">Jones, M.</span>, and <span class="refAuthor">H. Tschofenig</span>, <span class="refTitle">"OAuth 2.0 Device Authorization Grant"</span>, <span class="seriesInfo">RFC 8628</span>, <span class="seriesInfo">DOI 10.17487/RFC8628</span>, <time datetime="2019-08" class="refDate">August 2019</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8628">https://www.rfc-editor.org/rfc/rfc8628</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8942">[RFC8942]</dt>
+        <dd>
+<span class="refAuthor">Grigorik, I.</span> and <span class="refAuthor">Y. Weiss</span>, <span class="refTitle">"HTTP Client Hints"</span>, <span class="seriesInfo">RFC 8942</span>, <span class="seriesInfo">DOI 10.17487/RFC8942</span>, <time datetime="2021-02" class="refDate">February 2021</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8942">https://www.rfc-editor.org/rfc/rfc8942</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9207">[RFC9207]</dt>
+        <dd>
+<span class="refAuthor">Meyer zu Selhausen, K.</span> and <span class="refAuthor">D. Fett</span>, <span class="refTitle">"OAuth 2.0 Authorization Server Issuer Identification"</span>, <span class="seriesInfo">RFC 9207</span>, <span class="seriesInfo">DOI 10.17487/RFC9207</span>, <time datetime="2022-03" class="refDate">March 2022</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9207">https://www.rfc-editor.org/rfc/rfc9207</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9396">[RFC9396]</dt>
+        <dd>
+<span class="refAuthor">Lodderstedt, T.</span>, <span class="refAuthor">Richer, J.</span>, and <span class="refAuthor">B. Campbell</span>, <span class="refTitle">"OAuth 2.0 Rich Authorization Requests"</span>, <span class="seriesInfo">RFC 9396</span>, <span class="seriesInfo">DOI 10.17487/RFC9396</span>, <time datetime="2023-05" class="refDate">May 2023</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9396">https://www.rfc-editor.org/rfc/rfc9396</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9449">[RFC9449]</dt>
+        <dd>
+<span class="refAuthor">Fett, D.</span>, <span class="refAuthor">Campbell, B.</span>, <span class="refAuthor">Bradley, J.</span>, <span class="refAuthor">Lodderstedt, T.</span>, <span class="refAuthor">Jones, M.</span>, and <span class="refAuthor">D. Waite</span>, <span class="refTitle">"OAuth 2.0 Demonstrating Proof of Possession (DPoP)"</span>, <span class="seriesInfo">RFC 9449</span>, <span class="seriesInfo">DOI 10.17487/RFC9449</span>, <time datetime="2023-09" class="refDate">September 2023</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9449">https://www.rfc-editor.org/rfc/rfc9449</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9635">[RFC9635]</dt>
+        <dd>
+<span class="refAuthor">Richer, J., Ed.</span> and <span class="refAuthor">F. Imbault</span>, <span class="refTitle">"Grant Negotiation and Authorization Protocol (GNAP)"</span>, <span class="seriesInfo">RFC 9635</span>, <span class="seriesInfo">DOI 10.17487/RFC9635</span>, <time datetime="2024-10" class="refDate">October 2024</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9635">https://www.rfc-editor.org/rfc/rfc9635</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9700">[RFC9700]</dt>
+        <dd>
+<span class="refAuthor">Lodderstedt, T.</span>, <span class="refAuthor">Bradley, J.</span>, <span class="refAuthor">Labunets, A.</span>, and <span class="refAuthor">D. Fett</span>, <span class="refTitle">"Best Current Practice for OAuth 2.0 Security"</span>, <span class="seriesInfo">BCP 240</span>, <span class="seriesInfo">RFC 9700</span>, <span class="seriesInfo">DOI 10.17487/RFC9700</span>, <time datetime="2025-01" class="refDate">January 2025</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9700">https://www.rfc-editor.org/rfc/rfc9700</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="TXN-CHALLENGE">[TXN-CHALLENGE]</dt>
+      <dd>
+<span class="refTitle">"Transaction Authorization Challenge"</span>, <span>n.d.</span>, <span>&lt;<a href="https://datatracker.ietf.org/doc/draft-rosomakho-oauth-txn-challenge">https://datatracker.ietf.org/doc/draft-rosomakho-oauth-txn-challenge</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+</dl>
+</section>
+</div>
+</section>
+</div>
+<div id="examples">
+<section id="appendix-A">
+      <h2 id="name-examples">
+<a href="#appendix-A" class="section-number selfRef">Appendix A. </a><a href="#name-examples" class="section-name selfRef">Examples</a>
+      </h2>
+<p id="appendix-A-1">This specification registers no capability values. The
+<code>accept-deferred-response</code> and <code>txn-challenge</code> values below are illustrative,
+corresponding to behaviors described in <a href="#existing-drafts" class="auto internal xref">Appendix B</a>. Line breaks in
+the form-encoded request bodies are for display only.<a href="#appendix-A-1" class="pilcrow">¶</a></p>
+<p id="appendix-A-2">The following example shows a pushed authorization request carrying the
+parameter, which keeps the value off the authorization URI. The value applies
+only to that authorization request (<a href="#signal-scope" class="auto internal xref">Section 6.5</a>); the example illustrates
+the carrier:<a href="#appendix-A-2" class="pilcrow">¶</a></p>
+<span id="name-capability-carried-in-a-pus"></span><figure id="figure-4">
+        <div class="lang-http-message sourcecode" id="appendix-A-3.1">
+<pre>
+POST /par HTTP/1.1
+Host: as.example.com
+Content-Type: application/x-www-form-urlencoded
+
+response_type=code&amp;client_id=https%3A%2F%2Fapp.example%2Fclient
+&amp;redirect_uri=https%3A%2F%2Fapp.example%2Fcb
+&amp;code_challenge=W6uP...&amp;code_challenge_method=S256
+&amp;client_capabilities=accept-deferred-response
+</pre>
+</div>
+<figcaption><a href="#figure-4" class="selfRef">Figure 4</a>:
+<a href="#name-capability-carried-in-a-pus" class="selfRef">Capability carried in a pushed authorization request</a>
+        </figcaption></figure>
+<p id="appendix-A-4">The following example shows the claims of a Request Object carrying the
+parameter. The value is a JSON string, not an array (<a href="#param" class="auto internal xref">Section 6.1</a>):<a href="#appendix-A-4" class="pilcrow">¶</a></p>
+<span id="name-capability-carried-in-reque"></span><figure id="figure-5">
+        <div class="lang-json sourcecode" id="appendix-A-5.1">
+<pre>
+{
+  "iss": "https://app.example/client",
+  "aud": "https://as.example.com",
+  "response_type": "code",
+  "client_id": "https://app.example/client",
+  "redirect_uri": "https://app.example/cb",
+  "code_challenge": "W6uP...",
+  "code_challenge_method": "S256",
+  "client_capabilities": "accept-deferred-response"
+}
+</pre>
+</div>
+<figcaption><a href="#figure-5" class="selfRef">Figure 5</a>:
+<a href="#name-capability-carried-in-reque" class="selfRef">Capability carried in Request Object claims</a>
+        </figcaption></figure>
+<p id="appendix-A-6">The following example shows the same capability on the token request; the
+earlier signal does not carry over (<a href="#signal-scope" class="auto internal xref">Section 6.5</a>):<a href="#appendix-A-6" class="pilcrow">¶</a></p>
+<span id="name-signaling-at-the-endpoint-w"></span><figure id="figure-6">
+        <div class="lang-http-message sourcecode" id="appendix-A-7.1">
+<pre>
+POST /token HTTP/1.1
+Host: as.example.com
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=authorization_code&amp;code=SplxlOB...
+&amp;client_id=https%3A%2F%2Fapp.example%2Fclient
+&amp;redirect_uri=https%3A%2F%2Fapp.example%2Fcb
+&amp;code_verifier=dBjftJeZ...
+&amp;client_capabilities=accept-deferred-response
+</pre>
+</div>
+<figcaption><a href="#figure-6" class="selfRef">Figure 6</a>:
+<a href="#name-signaling-at-the-endpoint-w" class="selfRef">Signaling at the endpoint where the behavior occurs</a>
+        </figcaption></figure>
+<p id="appendix-A-8">The following example shows a client registration request <span>[<a href="#RFC7591" class="cite xref">RFC7591</a>]</span> that
+declares a default capability set. Every instance covered by the registration
+can process the behavior or overrides the default on its requests
+(<a href="#metadata" class="auto internal xref">Section 6.3</a>), as the next example shows:<a href="#appendix-A-8" class="pilcrow">¶</a></p>
+<span id="name-default-capability-set-in-a"></span><figure id="figure-7">
+        <div class="lang-http-message sourcecode" id="appendix-A-9.1">
+<pre>
+POST /register HTTP/1.1
+Host: as.example.com
+Content-Type: application/json
+
+{
+  "redirect_uris": ["https://app.example/cb"],
+  "token_endpoint_auth_method": "none",
+  "client_capabilities": ["accept-deferred-response"]
+}
+</pre>
+</div>
+<figcaption><a href="#figure-7" class="selfRef">Figure 7</a>:
+<a href="#name-default-capability-set-in-a" class="selfRef">Default capability set in a registration request</a>
+        </figcaption></figure>
+<p id="appendix-A-10">The following example shows a registered client retracting the capability
+its metadata declares, on a request made by an instance that cannot outlive
+the request:<a href="#appendix-A-10" class="pilcrow">¶</a></p>
+<span id="name-explicit-retraction-by-a-le"></span><figure id="figure-8">
+        <div class="lang-http-message sourcecode" id="appendix-A-11.1">
+<pre>
+POST /token HTTP/1.1
+Host: as.example.com
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=authorization_code&amp;code=SplxlOB...
+&amp;client_id=s6BhdRkqt3
+&amp;redirect_uri=https%3A%2F%2Fapp.example%2Fcb
+&amp;code_verifier=dBjftJeZ...
+&amp;client_capabilities=none
+</pre>
+</div>
+<figcaption><a href="#figure-8" class="selfRef">Figure 8</a>:
+<a href="#name-explicit-retraction-by-a-le" class="selfRef">Explicit retraction by a less-capable instance</a>
+        </figcaption></figure>
+<p id="appendix-A-12">The following examples show excerpts of authorization server metadata
+<span>[<a href="#RFC8414" class="cite xref">RFC8414</a>]</span> and protected resource metadata <span>[<a href="#RFC9728" class="cite xref">RFC9728</a>]</span> that advertise
+recognized values (<a href="#discovery" class="auto internal xref">Section 8</a>):<a href="#appendix-A-12" class="pilcrow">¶</a></p>
+<span id="name-authorization-server-metada"></span><figure id="figure-9">
+        <div class="lang-json sourcecode" id="appendix-A-13.1">
+<pre>
+{
+  "issuer": "https://as.example.com",
+  "token_endpoint": "https://as.example.com/token",
+  "client_capabilities_supported": ["accept-deferred-response"]
+}
+</pre>
+</div>
+<figcaption><a href="#figure-9" class="selfRef">Figure 9</a>:
+<a href="#name-authorization-server-metada" class="selfRef">Authorization server metadata excerpt</a>
+        </figcaption></figure>
+<span id="name-protected-resource-metadata"></span><figure id="figure-10">
+        <div class="lang-json sourcecode" id="appendix-A-14.1">
+<pre>
+{
+  "resource": "https://api.example.com",
+  "authorization_servers": ["https://as.example.com"],
+  "client_capabilities_supported": ["txn-challenge"]
+}
+</pre>
+</div>
+<figcaption><a href="#figure-10" class="selfRef">Figure 10</a>:
+<a href="#name-protected-resource-metadata" class="selfRef">Protected resource metadata excerpt</a>
+        </figcaption></figure>
+<p id="appendix-A-15">The following is an illustrative entry for the deferred-response behavior in
+<a href="#existing-drafts" class="auto internal xref">Appendix B</a>, filled in as <a href="#iana-registry" class="auto internal xref">Section 12.1</a> describes. It is not a
+registration request.<a href="#appendix-A-15" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="appendix-A-16">
+        <dt id="appendix-A-16.1">Capability Value:</dt>
+        <dd style="margin-left: 1.5em" id="appendix-A-16.2">
+          <p id="appendix-A-16.2.1"><code>accept-deferred-response</code><a href="#appendix-A-16.2.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="appendix-A-16.3">Description:</dt>
+        <dd style="margin-left: 1.5em" id="appendix-A-16.4">
+          <p id="appendix-A-16.4.1">The client can process a deferred token response.<a href="#appendix-A-16.4.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="appendix-A-16.5">Status:</dt>
+        <dd style="margin-left: 1.5em" id="appendix-A-16.6">
+          <p id="appendix-A-16.6.1">current<a href="#appendix-A-16.6.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="appendix-A-16.7">Absent-Signal Behavior:</dt>
+        <dd style="margin-left: 1.5em" id="appendix-A-16.8">
+          <p id="appendix-A-16.8.1">The authorization server does not defer. It responds synchronously only if
+it can complete every check it requires without deferral, and otherwise
+returns an error.<a href="#appendix-A-16.8.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="appendix-A-16.9">Carriers:</dt>
+        <dd style="margin-left: 1.5em" id="appendix-A-16.10">
+          <p id="appendix-A-16.10.1">request parameter, client metadata<a href="#appendix-A-16.10.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="appendix-A-16.11">Endpoints:</dt>
+        <dd style="margin-left: 1.5em" id="appendix-A-16.12">
+          <p id="appendix-A-16.12.1">token endpoint<a href="#appendix-A-16.12.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="appendix-A-16.13">Change Controller:</dt>
+        <dd style="margin-left: 1.5em" id="appendix-A-16.14">
+          <p id="appendix-A-16.14.1">The party responsible for the registration<a href="#appendix-A-16.14.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="appendix-A-16.15">Specification Document(s):</dt>
+        <dd style="margin-left: 1.5em" id="appendix-A-16.16">
+          <p id="appendix-A-16.16.1"><span>[<a href="#DTR" class="cite xref">DTR</a>]</span><a href="#appendix-A-16.16.1" class="pilcrow">¶</a></p>
+</dd>
+      <dd class="break"></dd>
+</dl>
+<div id="worked-adoption">
+<section id="appendix-A.1">
+        <h3 id="name-worked-adoption">
+<a href="#appendix-A.1" class="section-number selfRef">A.1. </a><a href="#name-worked-adoption" class="section-name selfRef">Worked Adoption</a>
+        </h3>
+<p id="appendix-A.1-1">This example follows one adoption of the deferred-response behavior in
+<a href="#existing-drafts" class="auto internal xref">Appendix B</a> from discovery to retraction. The deferred response and the
+behavior when the value is absent are those <span>[<a href="#DTR" class="cite xref">DTR</a>]</span> defines; this specification
+changes only how the client signals that it can process the response.<a href="#appendix-A.1-1" class="pilcrow">¶</a></p>
+<p id="appendix-A.1-2">The authorization server advertises <code>accept-deferred-response</code> in
+<code>client_capabilities_supported</code>, as in the authorization server metadata
+excerpt above. A client release that can process a deferred response signals
+the value explicitly on its token request, as in the token request example
+above. The authorization server elects to defer and, in place of a token
+response, returns the deferred response defined in Section 5.4 of <span>[<a href="#DTR" class="cite xref">DTR</a>]</span>:<a href="#appendix-A.1-2" class="pilcrow">¶</a></p>
+<span id="name-deferred-response-to-a-requ"></span><figure id="figure-11">
+          <div class="lang-http-message sourcecode" id="appendix-A.1-3.1">
+<pre>
+HTTP/1.1 400 Bad Request
+Content-Type: application/json
+Cache-Control: no-store
+
+{
+  "error": "authorization_pending",
+  "deferral_code": "8d67dc78-7faa-4d41-aabd-67707b374255",
+  "expires_in": 10800,
+  "interval": 60
+}
+</pre>
+</div>
+<figcaption><a href="#figure-11" class="selfRef">Figure 11</a>:
+<a href="#name-deferred-response-to-a-requ" class="selfRef">Deferred response to a request that signals the capability</a>
+          </figcaption></figure>
+<p id="appendix-A.1-4">The client then polls as <span>[<a href="#DTR" class="cite xref">DTR</a>]</span> describes. A request whose effective set does
+not contain the value is never deferred: the authorization server completes it
+synchronously, or returns an error under the grant's rules (Section 4.3 of
+<span>[<a href="#DTR" class="cite xref">DTR</a>]</span>). Omitting the value rules out deferral, not failure. The following
+response to the same token request without the value assumes that the
+authorization server can complete every check it requires without deferral:<a href="#appendix-A.1-4" class="pilcrow">¶</a></p>
+<span id="name-synchronous-response-when-t"></span><figure id="figure-12">
+          <div class="lang-http-message sourcecode" id="appendix-A.1-5.1">
+<pre>
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: no-store
+Pragma: no-cache
+
+{
+  "access_token": "2YotnFZFEjr1zCsicMWpAA",
+  "token_type": "Bearer",
+  "expires_in": 3600
+}
+</pre>
+</div>
+<figcaption><a href="#figure-12" class="selfRef">Figure 12</a>:
+<a href="#name-synchronous-response-when-t" class="selfRef">Synchronous response when the value is absent</a>
+          </figcaption></figure>
+<p id="appendix-A.1-6">A registered client can instead declare the value as a default, as in the
+registration request above. Its token requests then carry no
+<code>client_capabilities</code> parameter and receive the default (<a href="#precedence" class="auto internal xref">Section 6.4</a>), so
+the authorization server may defer them. An instance that cannot process a
+deferred response overrides the default with <code>none</code>, as in the retraction
+example above. Its token requests are then never deferred: each receives a
+token response, as in the previous figure, or an error.<a href="#appendix-A.1-6" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="existing-drafts">
+<section id="appendix-B">
+      <h2 id="name-applying-this-specification">
+<a href="#appendix-B" class="section-number selfRef">Appendix B. </a><a href="#name-applying-this-specification" class="section-name selfRef">Applying This Specification to Existing Drafts</a>
+      </h2>
+<p id="appendix-B-1">This appendix is informative and describes how the two extensions that
+motivated this work would use the mechanism.<a href="#appendix-B-1" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="appendix-B-2">
+        <dt id="appendix-B-2.1">Deferred Token Response:</dt>
+        <dd style="margin-left: 1.5em" id="appendix-B-2.2">
+          <p id="appendix-B-2.2.1"><code>completion_mode=deferred</code> becomes <code>client_capabilities</code> containing
+<code>accept-deferred-response</code>. The authorization server still defers only when
+the value is in the request's effective set. <a href="#signal-scope" class="auto internal xref">Section 6.5</a>
+requires the value in the token request's effective set; a signal at an
+earlier endpoint has no effect on the token response. The proposed
+single-purpose registry is subsumed by <a href="#iana-registry" class="auto internal xref">Section 12.1</a>, and the
+<code>deferred_token_response_supported</code> authorization server metadata Boolean
+by <code>client_capabilities_supported</code> containing the value. Either suffices to
+show that a server recognizes the capability, and a disagreement between
+them affects only which values a client chooses to send (<a href="#discovery" class="auto internal xref">Section 8</a>).<a href="#appendix-B-2.2.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="appendix-B-2.3">Transaction Authorization Challenge:</dt>
+        <dd style="margin-left: 1.5em" id="appendix-B-2.4">
+          <p id="appendix-B-2.4.1"><code>Accept-Txn-Challenge: ?1</code> becomes
+<code>OAuth-Client-Capabilities: txn-challenge</code>. The Boolean becomes membership
+of <code>txn-challenge</code> in the request's effective set (<a href="#precedence" class="auto internal xref">Section 6.4</a>).
+Out-of-band knowledge of support applies only when the request carries no
+valid field with at least one member.<a href="#appendix-B-2.4.1" class="pilcrow">¶</a></p>
+</dd>
+      <dd class="break"></dd>
+</dl>
+</section>
+</div>
+<div id="rationale">
+<section id="appendix-C">
+      <h2 id="name-design-rationale">
+<a href="#appendix-C" class="section-number selfRef">Appendix C. </a><a href="#name-design-rationale" class="section-name selfRef">Design Rationale</a>
+      </h2>
+<p id="appendix-C-1">This appendix is informative.<a href="#appendix-C-1" class="pilcrow">¶</a></p>
+<div id="survey">
+<section id="appendix-C.1">
+        <h3 id="name-survey-of-existing-mechanis">
+<a href="#appendix-C.1" class="section-number selfRef">C.1. </a><a href="#name-survey-of-existing-mechanis" class="section-name selfRef">Survey of Existing Mechanisms</a>
+        </h3>
+<p id="appendix-C.1-1">OAuth has static client declarations <span>[<a href="#RFC7591" class="cite xref">RFC7591</a>]</span>, extensible server metadata
+<span>[<a href="#RFC8414" class="cite xref">RFC8414</a>]</span> <span>[<a href="#RFC9728" class="cite xref">RFC9728</a>]</span>, and per-extension request parameters, HTTP fields, or
+signals implied by construction, such as a DPoP proof <span>[<a href="#RFC9449" class="cite xref">RFC9449</a>]</span>. Static
+metadata cannot express per-request or per-instance variation, while server
+metadata runs only server to client.<a href="#appendix-C.1-1" class="pilcrow">¶</a></p>
+<p id="appendix-C.1-2">Capabilities also differ from existing constructs. <code>scope</code> is an
+authorization construct: its values are consented to, are often displayed to a
+user, and are carried in the resulting grant and access token, while
+capabilities are not consented to, not displayed, and by CAP-2 barred from
+affecting the grant. <code>grant_types</code> and <code>response_types</code> select protocol flows
+and constrain which requests a registered client may make, so their absence can
+cause a request to fail; a capability describes optional response processing
+and has the safe-absence property in CAP-1. Client attestation <span>[<a href="#ABCA" class="cite xref">ABCA</a>]</span>
+addresses what can be proven about the client rather than what it can do
+(<a href="#extension-guidance" class="auto internal xref">Section 9</a>).<a href="#appendix-C.1-2" class="pilcrow">¶</a></p>
+<p id="appendix-C.1-3">Other protocols use shared vocabularies. SIP option tags <span>[<a href="#RFC3261" class="cite xref">RFC3261</a>]</span> pair
+<code>Supported</code> with <code>Require</code>; HTTP <code>Prefer</code> <span>[<a href="#RFC7240" class="cite xref">RFC7240</a>]</span> registers preferences
+such as <code>respond-async</code>; and Client Hints <span>[<a href="#RFC8942" class="cite xref">RFC8942</a>]</span> lets a server advertise
+what it wants sent. GNAP <span>[<a href="#RFC9635" class="cite xref">RFC9635</a>]</span> has generic, registry-backed
+server-to-client discovery and anticipates "any additional capabilities
+defined by extensions of this protocol", but represents client-to-server
+capabilities per feature.<a href="#appendix-C.1-3" class="pilcrow">¶</a></p>
+<p id="appendix-C.1-4">The IANA "OAuth Parameters" registry group currently contains no generic client
+capability parameter, field, or registry <span>[<a href="#IANA-OAUTH" class="cite xref">IANA-OAUTH</a>]</span>.<a href="#appendix-C.1-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="why-not-prefer">
+<section id="appendix-C.2">
+        <h3 id="name-comparison-with-http-prefer">
+<a href="#appendix-C.2" class="section-number selfRef">C.2. </a><a href="#name-comparison-with-http-prefer" class="section-name selfRef">Comparison with HTTP Prefer</a>
+        </h3>
+<p id="appendix-C.2-1"><code>Prefer</code> <span>[<a href="#RFC7240" class="cite xref">RFC7240</a>]</span> is the closest existing mechanism. A server may ignore a
+preference, as it may decline to exercise a capability, and <code>respond-async</code>
+lets a client indicate "its capability and preference for handling asynchronous
+responses" (<span><a href="https://rfc-editor.org/rfc/rfc7240#section-4.1" class="relref">Section 4.1</a> of [<a href="#RFC7240" class="cite xref">RFC7240</a>]</span>). A registered preference could carry
+each behavior in <a href="#existing-drafts" class="auto internal xref">Appendix B</a> on direct HTTP requests, such as token
+requests and protected resource requests.<a href="#appendix-C.2-1" class="pilcrow">¶</a></p>
+<p id="appendix-C.2-2"><code>Prefer</code> does not serve the rest of OAuth's topology, which is why a request
+parameter is needed in any case. As an HTTP field, it cannot cross the redirect
+at the authorization endpoint (<a href="#asymmetry" class="auto internal xref">Section 1.1</a>), cannot be carried in a Request
+Object, does not travel with the authorization request that a pushed
+authorization request represents, and has no client metadata form to supply
+defaults (<a href="#open-world" class="auto internal xref">Section 1.2</a>).<a href="#appendix-C.2-2" class="pilcrow">¶</a></p>
+<p id="appendix-C.2-3">For the HTTP carrier alone, a single registered preference listing capability
+values, such as <code>Prefer: oauth-client-capabilities="txn-challenge"</code>, could
+draw on the registry in <a href="#iana-registry" class="auto internal xref">Section 12.1</a> and its admission criterion. A
+server whose application of a preference affects caching must, however, list
+<code>Prefer</code> in <code>Vary</code> whether or not the request carried it
+(<span><a href="https://rfc-editor.org/rfc/rfc7240#section-2" class="relref">Section 2</a> of [<a href="#RFC7240" class="cite xref">RFC7240</a>]</span>), so caches would key on every preference a client
+sends rather than only on its capabilities. The list would also be a quoted
+string parsed by the <code>capability-list</code> rule in <a href="#values" class="auto internal xref">Section 4</a>, not a Structured
+Fields List with its own parser and error handling (<a href="#field" class="auto internal xref">Section 6.2</a>). Whether such a
+preference should replace the dedicated field is an open issue
+(<a href="#open-issues" class="auto internal xref">Appendix C.7</a>).<a href="#appendix-C.2-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="admission">
+<section id="appendix-C.3">
+        <h3 id="name-applying-the-admission-crit">
+<a href="#appendix-C.3" class="section-number selfRef">C.3. </a><a href="#name-applying-the-admission-crit" class="section-name selfRef">Applying the Admission Criterion</a>
+        </h3>
+<p id="appendix-C.3-1">The behaviors in <a href="#existing-drafts" class="auto internal xref">Appendix B</a> qualify if their registrations state the
+safe fallback: a synchronous response or error for deferred response, and
+refusal without the optional transaction challenge. Signal removal suppresses
+optional behavior without weakening a security check.<a href="#appendix-C.3-1" class="pilcrow">¶</a></p>
+<p id="appendix-C.3-2">Similar-looking behaviors do not necessarily qualify. A signal cannot gate DPoP
+nonce enforcement <span>[<a href="#RFC9449" class="cite xref">RFC9449</a>]</span>, because removing it would weaken replay
+protection, and CAP-2 prevents using it to justify longer-lived tokens.
+Offering the <code>use_dpop_nonce</code> challenge is a different question: where server
+policy already requires a nonce and the absent-signal behavior is refusal, the
+choice between challenging and refusing is a selection (<a href="#selection" class="auto internal xref">Section 7.1</a>) and
+could qualify. Whether it warrants a value is a separate matter, since
+<span><a href="https://rfc-editor.org/rfc/rfc9449#section-8.2" class="relref">Section 8.2</a> of [<a href="#RFC9449" class="cite xref">RFC9449</a>]</span> already requires a client to use a nonce supplied in
+a successful token response.<a href="#appendix-C.3-2" class="pilcrow">¶</a></p>
+<p id="appendix-C.3-3">The <code>redirect_to_web</code> fallback in <span>[<a href="#FIRST-PARTY-APPS" class="cite xref">FIRST-PARTY-APPS</a>]</span> qualifies only if
+defined as optional server behavior with a safe absent-signal outcome. If
+server metadata can instead make the client behavior conditional, discovery is
+preferable.<a href="#appendix-C.3-3" class="pilcrow">¶</a></p>
+<p id="appendix-C.3-4">Adding a parameter to a response is almost never a capability. Sections
+4.1.2 and 5.1 of <span>[<a href="#RFC6749" class="cite xref">RFC6749</a>]</span> already require clients to ignore unrecognized
+authorization response parameters and unrecognized token response members, so
+delivery is safe for any conforming client and needs no gate.
+<span>[<a href="#RESOURCE-TOKEN-RESP" class="cite xref">RESOURCE-TOKEN-RESP</a>]</span> is a case of this kind: it returns a <code>resource</code>
+parameter so a client can confirm which resource its token is valid for, and
+what it needs is a way for clients to learn that a server implements it. That
+is server metadata, not a client capability.<a href="#appendix-C.3-4" class="pilcrow">¶</a></p>
+<p id="appendix-C.3-5">On gating grounds the criterion also rejects client authentication methods,
+endpoint selection, client-initiated parameters, and behavior a specification
+makes mandatory to implement.<a href="#appendix-C.3-5" class="pilcrow">¶</a></p>
+<p id="appendix-C.3-6">Path selection is the one exception. A behavior safe to issue unconditionally
+needs no gating signal, yet can still qualify where a server must choose among
+paths and the signal prevents it selecting one the client cannot complete;
+<a href="#selection" class="auto internal xref">Section 7.1</a> governs that case and <a href="#extension-guidance" class="auto internal xref">Section 9</a> bounds it.<a href="#appendix-C.3-6" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="no-require">
+<section id="appendix-C.4">
+        <h3 id="name-absence-of-mandatory-to-und">
+<a href="#appendix-C.4" class="section-number selfRef">C.4. </a><a href="#name-absence-of-mandatory-to-und" class="section-name selfRef">Absence of Mandatory-to-Understand Semantics</a>
+        </h3>
+<p id="appendix-C.4-1">SIP <span>[<a href="#RFC3261" class="cite xref">RFC3261</a>]</span> pairs <code>Supported</code> with <code>Require</code>, letting a client insist an
+extension be understood or the request fail. This specification omits the
+analogue: <code>Require</code> answers a different question, whether the client insists
+the server implement something, while a capability states that the client can
+process behavior the server remains free not to exercise. Extensions needing
+hard failure define their own errors; CAP-1 still prevents removal from
+weakening security.<a href="#appendix-C.4-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="profiles">
+<section id="appendix-C.5">
+        <h3 id="name-capabilities-and-profile-se">
+<a href="#appendix-C.5" class="section-number selfRef">C.5. </a><a href="#name-capabilities-and-profile-se" class="section-name selfRef">Capabilities and Profile Selection</a>
+        </h3>
+<p id="appendix-C.5-1">Selecting a protocol version or profile, such as OAuth 2.0 or OAuth 2.1 rules
+for a client <span>[<a href="#OAUTH21-VERSIONS" class="cite xref">OAUTH21-VERSIONS</a>]</span>, is outside this mechanism. A version changes
+the authorization server's request-processing policy, not what a client must
+process in a response, and a signal that enables a check is what CAP-1
+excludes. OAuth 2.1 leaves the choice to the authorization server's
+configuration for each client and defines no version signal
+(<span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-17#section-1.8" class="relref">Section 1.8</a> of [<a href="#OAUTH21" class="cite xref">OAUTH21</a>]</span>).<a href="#appendix-C.5-1" class="pilcrow">¶</a></p>
+<p id="appendix-C.5-2">A revision that changes what a client must process in a response is different:
+it is a client-side behavior, and <a href="#naming" class="auto internal xref">Section 4.2</a> gives it a new capability value.<a href="#appendix-C.5-2" class="pilcrow">¶</a></p>
+<p id="appendix-C.5-3">A removable version selector, sent on each request so that updated releases can
+opt in, cannot establish a security minimum for the client while requests
+without it are still accepted, because an attacker sending a request under the
+same <code>client_id</code> omits it. Protections a server attaches to credentials issued
+under such a selector, such as rotation of a refresh token family
+(<span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-17#section-4.3.1" class="relref">Section 4.3.1</a> of [<a href="#OAUTH21" class="cite xref">OAUTH21</a>]</span>), can persist after a later omission. Whether to
+define such a selector belongs to the OAuth 2.1 work.<a href="#appendix-C.5-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="tradeoffs">
+<section id="appendix-C.6">
+        <h3 id="name-trade-offs">
+<a href="#appendix-C.6" class="section-number selfRef">C.6. </a><a href="#name-trade-offs" class="section-name selfRef">Trade-offs</a>
+        </h3>
+<p id="appendix-C.6-1">Cache keys become coarser. A protected resource whose responses vary by
+capability sends <code>Vary: OAuth-Client-Capabilities</code>, keying the cache on the
+whole list. Per-feature fields are more precise, though protected responses are
+typically not shared-cacheable.<a href="#appendix-C.6-1" class="pilcrow">¶</a></p>
+<p id="appendix-C.6-2">Coordination replaces autonomy. Registering a dedicated parameter requires no
+shared vocabulary; this registry requires naming discipline and agreement on
+CAP-1 through CAP-3.<a href="#appendix-C.6-2" class="pilcrow">¶</a></p>
+<p id="appendix-C.6-3">A request set replaces the metadata default rather than adding to it
+(<a href="#precedence" class="auto internal xref">Section 6.4</a>). A client that adds one value on a request repeats every
+default it still wants; in exchange, a less-capable instance can retract a
+default without a per-value removal syntax.<a href="#appendix-C.6-3" class="pilcrow">¶</a></p>
+<p id="appendix-C.6-4">The current extension count is small. The registry anticipates continued growth
+and is easier to establish before more incompatible carriers ship.<a href="#appendix-C.6-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="open-issues">
+<section id="appendix-C.7">
+        <h3 id="name-open-issues">
+<a href="#appendix-C.7" class="section-number selfRef">C.7. </a><a href="#name-open-issues" class="section-name selfRef">Open Issues</a>
+        </h3>
+<ul class="normal">
+<li class="normal" id="appendix-C.7-1.1">
+            <p id="appendix-C.7-1.1.1">Should a server report which capabilities it acted upon, as <span>[<a href="#RFC7240" class="cite xref">RFC7240</a>]</span> does
+with <code>Preference-Applied</code>? The current answer is no because the response
+reveals the behavior; implementation experience might show a debugging need.<a href="#appendix-C.7-1.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="appendix-C.7-1.2">
+            <p id="appendix-C.7-1.2.1"><code>OAuth-Client-Capabilities</code> matches the naming of <code>OAuth-Client-Attestation</code>
+              <span>[<a href="#ABCA" class="cite xref">ABCA</a>]</span>. <code>Accept-OAuth-Capabilities</code> would match the <code>Accept-*</code> family. The
+former is preferred because the field declares client behavior rather than
+negotiating content, but the choice is not settled.<a href="#appendix-C.7-1.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="appendix-C.7-1.3">
+            <p id="appendix-C.7-1.3.1">Whether the HTTP carrier should be a single registered <code>Prefer</code> preference
+rather than a dedicated field (<a href="#why-not-prefer" class="auto internal xref">Appendix C.2</a>).<a href="#appendix-C.7-1.3.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="appendix-C.7-1.4">
+            <p id="appendix-C.7-1.4.1">Whether the <code>.</code> and <code>:</code> characters the syntax allows should carry any
+structure. No structure is needed today: a revision with different
+client-side processing registers a new value (<a href="#naming" class="auto internal xref">Section 4.2</a>).<a href="#appendix-C.7-1.4.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="appendix-C.7-1.5">
+            <p id="appendix-C.7-1.5.1">Whether client software capabilities and running instance capabilities are
+adequately separated by the replacement rule in <a href="#precedence" class="auto internal xref">Section 6.4</a>, or whether
+instance-level identity mechanisms should carry a capability set of their
+own.<a href="#appendix-C.7-1.5.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+</section>
+</div>
+</section>
+</div>
+<div id="acknowledgments">
+<section id="appendix-D">
+      <h2 id="name-acknowledgments">
+<a href="#name-acknowledgments" class="section-name selfRef">Acknowledgments</a>
+      </h2>
+<p id="appendix-D-1">This work was motivated by <span>[<a href="#DTR" class="cite xref">DTR</a>]</span> and <span>[<a href="#TXN-CHALLENGE" class="cite xref">TXN-CHALLENGE</a>]</span>, whose authors
+independently identified the same requirement and whose divergent solutions
+made the general problem visible.<a href="#appendix-D-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="authors-addresses">
+<section id="appendix-E">
+      <h2 id="name-authors-address">
+<a href="#name-authors-address" class="section-name selfRef">Author's Address</a>
+      </h2>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Karl McGuinness</span></div>
+<div dir="auto" class="left"><span class="org">Independent</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:public@karlmcguinness.com" class="email">public@karlmcguinness.com</a>
+</div>
+</address>
+</section>
+</div>
+<script>const toc = document.getElementById("toc");
+toc.querySelector("h2").addEventListener("click", e => {
+  toc.classList.toggle("active");
+});
+toc.querySelector("nav").addEventListener("click", e => {
+  toc.classList.remove("active");
+});
+</script>
+</body>
+</html>
