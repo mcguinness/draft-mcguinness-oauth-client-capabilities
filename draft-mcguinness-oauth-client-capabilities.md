@@ -1144,6 +1144,61 @@ Change Controller:
 Specification Document(s):
 : {{DTR}}
 
+## Worked Adoption {#worked-adoption}
+
+This example follows one adoption of the deferred-response behavior in
+{{existing-drafts}} from discovery to retraction. The deferred response and the
+behavior when the value is absent are those {{DTR}} defines; this specification
+changes only how the client signals that it can process the response.
+
+The authorization server advertises `accept-deferred-response` in
+`client_capabilities_supported`, as in the authorization server metadata
+excerpt above. A client release that can process a deferred response signals
+the value explicitly on its token request, as in the token request example
+above. The authorization server elects to defer and, in place of a token
+response, returns the deferred response defined in Section 5.4 of {{DTR}}:
+
+~~~ http-message
+HTTP/1.1 400 Bad Request
+Content-Type: application/json
+Cache-Control: no-store
+
+{
+  "error": "authorization_pending",
+  "deferral_code": "8d67dc78-7faa-4d41-aabd-67707b374255",
+  "expires_in": 10800,
+  "interval": 60
+}
+~~~
+{: title="Deferred response to a request that signals the capability"}
+
+The client then polls as {{DTR}} describes. A request whose effective set does
+not contain the value is never deferred: the authorization server completes it
+synchronously, or returns an error under the grant's rules (Section 4.3 of
+{{DTR}}). For the same token request without the value, the result is an
+ordinary token response:
+
+~~~ http-message
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: no-store
+
+{
+  "access_token": "2YotnFZFEjr1zCsicMWpAA",
+  "token_type": "Bearer",
+  "expires_in": 3600
+}
+~~~
+{: title="Synchronous response when the value is absent"}
+
+A registered client can instead declare the value as a default, as in the
+registration request above. Its token requests then carry no
+`client_capabilities` parameter and receive the default ({{precedence}}), so
+the authorization server may defer them. An instance that cannot process a
+deferred response overrides the default with `none`, as in the retraction
+example above, and receives the synchronous behavior shown in the previous
+figure.
+
 # Applying This Specification to Existing Drafts {#existing-drafts}
 
 This appendix is informative and describes how the two extensions that
