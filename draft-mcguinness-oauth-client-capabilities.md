@@ -433,8 +433,7 @@ The parameter is defined for use at the authorization endpoint and token
 endpoint. A pushed authorization request can carry this parameter as specified
 by {{RFC9126}}. The parameter MAY appear inside a Request Object {{RFC9101}}.
 An extension MAY define its use at another endpoint that accepts OAuth request
-parameters. An extension registering a capability value states every endpoint
-at which the value is meaningful.
+parameters.
 
 ~~~ http-message
 POST /token HTTP/1.1
@@ -742,9 +741,6 @@ misclassified it.
 Additional points of discipline:
 
 - Register a behavior, not a specification. See {{values}}.
-- State the absent-signal behavior, not only the behavior enabled. An extension
-  that cannot describe a fallback at least as conservative as the pre-extension
-  behavior has not satisfied CAP-1, whatever the value is named.
 - Prefer server-side discovery where it works. If the client-side behavior can
   be specified as a requirement conditioned on something the server advertises
   in its own metadata ({{RFC8414}} or {{RFC9728}}), specify it that way and
@@ -752,6 +748,23 @@ Additional points of discipline:
   mandatory because the server cannot learn whether the client implements it.
 - State, in the registration, the carriers and endpoints at which the value is
   meaningful.
+
+Because capability signals may be removed by an adversary, an extension MUST
+define a safe absent-signal fallback. If the enabled behavior is how a server
+obtains something it requires, the fallback is refusal, not proceeding without
+it. An extension that cannot describe a fallback at least as conservative as
+the pre-extension behavior has not satisfied CAP-1, whatever the value is
+named. The registration records the fallback ({{iana-registry}}).
+
+Acting on a falsely asserted capability can consume server resources
+({{dos}}). An extension specification MUST analyze this cost and define any
+necessary rate-limiting, state-allocation, or replay protections.
+
+A capability set contributes to fingerprinting ({{privacy-considerations}}).
+Specifications defining capabilities whose availability depends on the
+deployment environment MUST assess whether signaling them creates a useful
+fingerprint and SHOULD choose names that describe behavior without exposing
+implementation details.
 
 Issuer-wide behavior is often the intended design, and coupling it to a
 per-issuer metadata flag is a legitimate choice. Where per-client or fractional
@@ -805,11 +818,10 @@ third-party modification but does not prove implementation. See {{precedence}}.
 
 ## Downgrade {#downgrade}
 
-Because capability signals may be removed by an adversary, an extension MUST
-define a safe absent-signal fallback. If the enabled behavior is how a server
-obtains something it requires, the fallback is refusal, not proceeding without
-it. With such a fallback, removal costs client functionality, never a server
-security property. Removing a signal that narrows a set widens it instead:
+Because capability signals may be removed by an adversary, each extension
+defines a safe absent-signal fallback ({{extension-guidance}}). With such a
+fallback, removal costs client functionality, never a server security property.
+Removing a signal that narrows a set widens it instead:
 stripping a request parameter that overrides a metadata default restores the
 default, and stripping a field that replaces out-of-band knowledge restores
 that knowledge. Either can lead a server to exercise a behavior the instance
@@ -859,9 +871,8 @@ appropriate to the endpoint or application protocol. In particular,
 at a registration endpoint {{RFC7591}}, while a protected resource can use an
 application-specific response.
 
-Acting on a falsely asserted capability can also consume server resources. An
-extension specification MUST analyze this cost and define any necessary
-rate-limiting, state-allocation, or replay protections. A capability signal
+Acting on a falsely asserted capability can also consume server resources;
+each extension analyzes this cost ({{extension-guidance}}). A capability signal
 does not authorize the client to consume unbounded work.
 
 ## Unregistered Values {#unregistered-values}
@@ -892,10 +903,8 @@ it lists, and SHOULD NOT publish the set in public client metadata. A signed
 but unencrypted Request Object provides integrity, not confidentiality.
 
 Capability values MUST NOT encode information about an end user or a specific
-device. Specifications defining capabilities whose availability depends on the
-deployment environment MUST assess whether signaling them creates a useful
-fingerprint and SHOULD choose names that describe behavior without exposing
-implementation details.
+device. Extensions assess the fingerprinting effect of capabilities whose
+availability depends on the deployment environment ({{extension-guidance}}).
 
 # IANA Considerations {#iana}
 
@@ -941,15 +950,13 @@ Specification Document(s):
 Designated experts evaluating a registration request should:
 
 - confirm that the value satisfies CAP-1 through CAP-3 in {{invariants}} and the
-  criterion in {{extension-guidance}}, and that its registered absent-signal
-  behavior is at least as conservative as what the server would apply had the
-  value never been defined;
+  criterion in {{extension-guidance}}, that the specification meets the
+  requirements this document places on extensions, including those in
+  {{param}}, {{selection}}, and {{extension-guidance}}, and that its registered
+  absent-signal behavior is at least as conservative as what the server would
+  apply had the value never been defined;
 - confirm that the specification defines the optional behavior enabled and
   identifies every applicable carrier and endpoint;
-- confirm that the specification meets the requirements this document places
-  on extensions, including those in {{param}}, {{selection}},
-  {{extension-guidance}}, {{downgrade}}, {{dos}}, and
-  {{privacy-considerations}};
 - consider the security, privacy, interoperability, and operational effects of
   false assertion and signal removal; and
 - reject values that duplicate the semantics of an existing registration, differ
