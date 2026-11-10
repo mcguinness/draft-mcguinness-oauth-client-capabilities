@@ -42,6 +42,9 @@ informative:
   RFC7240:
   RFC7120:
   RFC9207:
+  RFC7009:
+  RFC7662:
+  RFC8628:
   RFC8942:
   RFC9396:
   RFC9449:
@@ -469,12 +472,19 @@ may relay a challenge to a component that completes it. The sender is
 accountable for the assertion. Because the field does not necessarily identify
 the OAuth client, client metadata supplies no default for it ({{precedence}}).
 
-A client MUST NOT use the field on a request at an endpoint where the
-`client_capabilities` parameter is defined; it uses the request parameter
-({{param}}) there instead. An authorization server MUST ignore the field on any
-request to such an endpoint. Using only the parameter at authorization server
-endpoints gives each request one unambiguous effective set, and allows Request
-Object or pushed-request protections where those apply.
+A client MUST NOT use the field on a request to an endpoint where the
+`client_capabilities` request parameter is defined: the authorization, pushed
+authorization request, and token endpoints, and any endpoint where an extension
+defines the parameter. It uses the request parameter there ({{param}}), and an
+authorization server MUST ignore the field on any request to such an endpoint.
+Using only the parameter at these endpoints gives each request one unambiguous
+effective set, and allows Request Object or pushed-request protections where
+those apply. The field plays no part at other authorization server endpoints
+either, such as the introspection {{RFC7662}}, revocation {{RFC7009}}, and
+device authorization {{RFC8628}} endpoints ({{precedence}}); an extension that
+needs a capability at one of them defines the request parameter there
+({{param}}). At the client registration endpoint, a client declares
+capabilities in client metadata ({{metadata}}).
 
 The field's value is a Structured Fields List ({{Section 3.1 of RFC9651}}). Each
 member MUST be an Item whose bare item is a Token containing a capability value
