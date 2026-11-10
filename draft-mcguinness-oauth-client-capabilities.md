@@ -130,6 +130,12 @@ A general mechanism cannot be an HTTP field alone, and cannot be a request
 parameter alone. Two request carriers over one shared vocabulary is the minimum
 that covers OAuth's topology.
 
+The extensions in {{existing-drafts}} need only direct HTTP requests, at the
+token endpoint and at protected resources. The request parameter's coverage of
+the authorization endpoint anticipates extensions whose behavior changes the
+authorization response; the pushed authorization request and Request Object
+examples ({{examples}}) illustrate the carrier.
+
 ## Open-World Deployment {#open-world}
 
 Classic OAuth establishes client behavior at registration. Metadata fields such
