@@ -849,6 +849,9 @@ Designated experts evaluating a registration request should:
   value never been defined;
 - confirm that the specification defines the optional behavior enabled and
   identifies every applicable carrier and endpoint;
+- confirm that the specification meets the requirements this document places
+  on extensions, including those in {{param}}, {{extension-guidance}},
+  {{downgrade}}, {{dos}}, and {{privacy-considerations}};
 - consider the security, privacy, interoperability, and operational effects of
   false assertion and signal removal; and
 - reject values that duplicate the semantics of an existing registration, differ
