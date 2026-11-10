@@ -937,6 +937,8 @@ Designated experts evaluating a registration request should:
   apply had the value never been defined;
 - confirm that the specification defines the optional behavior enabled and
   identifies every applicable carrier and endpoint;
+- confirm that the value encodes no information about an end user or a specific
+  device ({{privacy-considerations}});
 - consider the security, privacy, interoperability, and operational effects of
   false assertion and signal removal; and
 - reject values that duplicate the semantics of an existing registration, differ
