@@ -1853,10 +1853,11 @@ serializes an empty List by omitting the field (<span><a href="https://rfc-edito
 and parses an empty field value as an empty List.<a href="#section-7.2-10" class="pilcrow">¶</a></p>
 <p id="section-7.2-11">A browser-based client that sends the field on a cross-origin request causes a
 CORS preflight, because <code>OAuth-Client-Capabilities</code> is not a CORS-safelisted
-request header <span>[<a href="#FETCH" class="cite xref">FETCH</a>]</span>. A protected resource that serves such clients
-includes the field name in <code>Access-Control-Allow-Headers</code>; otherwise the
-browser does not send the request, and ignoring unrecognized values cannot
-help.<a href="#section-7.2-11" class="pilcrow">¶</a></p>
+request header <span>[<a href="#FETCH" class="cite xref">FETCH</a>]</span>. A protected resource that serves such clients has to
+allow the field in its preflight response, most simply by listing the field
+name in <code>Access-Control-Allow-Headers</code>; a <code>*</code> value there covers the field only
+when the request's credentials mode is not <code>include</code>. Otherwise the browser
+does not send the request, and ignoring unrecognized values cannot help.<a href="#section-7.2-11" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="metadata">
@@ -1882,10 +1883,10 @@ denote the empty set. If the value is not an array, or any element is not a
 string, does not conform to the <code>capability</code> production, or is <code>none</code>, the
 field is invalid. A recipient <span class="bcp14">MUST</span> ignore an invalid field, deriving no
 capabilities from it, and <span class="bcp14">MUST NOT</span> reject an otherwise-valid metadata document
-or registration request solely because this field is invalid. This rule
-concerns only the <code>client_capabilities</code> field; it does not change how the
-containing protocol handles invalid JSON, a failed signature, or its other
-required validation.<a href="#section-7.3-3" class="pilcrow">¶</a></p>
+or registration request solely because this field is invalid, except as
+permitted by <a href="#dos" class="auto internal xref">Section 11.3</a>. This rule concerns only the <code>client_capabilities</code> field;
+it does not change how the containing protocol handles invalid JSON, a failed
+signature, or its other required validation.<a href="#section-7.3-3" class="pilcrow">¶</a></p>
 <p id="section-7.3-4">A party publishing or registering this metadata <span class="bcp14">MUST NOT</span> declare a capability
 unless every client instance covered by that metadata can process the enabled
 behavior, or every less-capable instance will override the default on its
@@ -2179,6 +2180,10 @@ surrounding message:<a href="#section-11.3-1" class="pilcrow">¶</a></p>
               <td class="text-left" rowspan="1" colspan="1">The form-encoded value, before percent-decoding</td>
             </tr>
             <tr>
+              <td class="text-left" rowspan="1" colspan="1">Request parameter in a Request Object</td>
+              <td class="text-left" rowspan="1" colspan="1">The JSON string as serialized in the decoded JWT Claims Set, including its quotes and escapes</td>
+            </tr>
+            <tr>
               <td class="text-left" rowspan="1" colspan="1">HTTP field</td>
               <td class="text-left" rowspan="1" colspan="1">The combined field value, including separators and parameters</td>
             </tr>
@@ -2193,11 +2198,13 @@ retraction signal: a request parameter or a field whose entire value is <code>no
 This does not extend to a larger input that reduces to <code>none</code> only after
 duplicates or parameters are removed.<a href="#section-11.3-3" class="pilcrow">¶</a></p>
 <p id="section-11.3-4">A signal that exceeds a limit <span class="bcp14">MUST</span> be treated as invalid: a request parameter
-then signals the empty set (<a href="#values" class="auto internal xref">Section 4</a>), and a field is treated as absent
-(<a href="#field" class="auto internal xref">Section 7.2</a>); a server <span class="bcp14">MAY</span> instead reject the request using an error response
+then signals the empty set (<a href="#values" class="auto internal xref">Section 4</a>), a field is treated as absent
+(<a href="#field" class="auto internal xref">Section 7.2</a>), and a client metadata field is ignored (<a href="#metadata" class="auto internal xref">Section 7.3</a>). A server
+<span class="bcp14">MAY</span> instead reject the request or metadata document using an error response
 appropriate to the endpoint or application protocol. In particular,
-<code>invalid_request</code> is available at OAuth endpoints, while a protected resource
-can use an application-specific response.<a href="#section-11.3-4" class="pilcrow">¶</a></p>
+<code>invalid_request</code> is available at OAuth endpoints and <code>invalid_client_metadata</code>
+at a registration endpoint <span>[<a href="#RFC7591" class="cite xref">RFC7591</a>]</span>, while a protected resource can use an
+application-specific response.<a href="#section-11.3-4" class="pilcrow">¶</a></p>
 <p id="section-11.3-5">Acting on a falsely asserted capability can also consume server resources. An
 extension specification <span class="bcp14">MUST</span> analyze this cost and define any necessary
 rate-limiting, state-allocation, or replay protections. A capability signal

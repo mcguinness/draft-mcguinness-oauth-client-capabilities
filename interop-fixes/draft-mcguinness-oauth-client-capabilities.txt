@@ -588,9 +588,11 @@ Table of Contents
    A browser-based client that sends the field on a cross-origin request
    causes a CORS preflight, because OAuth-Client-Capabilities is not a
    CORS-safelisted request header [FETCH].  A protected resource that
-   serves such clients includes the field name in Access-Control-Allow-
-   Headers; otherwise the browser does not send the request, and
-   ignoring unrecognized values cannot help.
+   serves such clients has to allow the field in its preflight response,
+   most simply by listing the field name in Access-Control-Allow-
+   Headers; a * value there covers the field only when the request's
+   credentials mode is not include.  Otherwise the browser does not send
+   the request, and ignoring unrecognized values cannot help.
 
 7.3.  Client Metadata Declaration
 
@@ -610,10 +612,10 @@ Table of Contents
    production, or is none, the field is invalid.  A recipient MUST
    ignore an invalid field, deriving no capabilities from it, and MUST
    NOT reject an otherwise-valid metadata document or registration
-   request solely because this field is invalid.  This rule concerns
-   only the client_capabilities field; it does not change how the
-   containing protocol handles invalid JSON, a failed signature, or its
-   other required validation.
+   request solely because this field is invalid, except as permitted by
+   Section 11.3.  This rule concerns only the client_capabilities field;
+   it does not change how the containing protocol handles invalid JSON,
+   a failed signature, or its other required validation.
 
    A party publishing or registering this metadata MUST NOT declare a
    capability unless every client instance covered by that metadata can
@@ -884,20 +886,26 @@ Table of Contents
    counted are those of the carrier's value, excluding its name and the
    surrounding message:
 
-     +===================+===========================================+
-     | Carrier           | Octets counted                            |
-     +===================+===========================================+
-     | Request parameter | The form-encoded value, before percent-   |
-     |                   | decoding                                  |
-     +-------------------+-------------------------------------------+
-     | HTTP field        | The combined field value, including       |
-     |                   | separators and parameters                 |
-     +-------------------+-------------------------------------------+
-     | Client metadata   | The serialized JSON array, including      |
-     | or discovery      | brackets, quotes, whitespace, and escapes |
-     +-------------------+-------------------------------------------+
+        +=====================+==================================+
+        | Carrier             | Octets counted                   |
+        +=====================+==================================+
+        | Request parameter   | The form-encoded value, before   |
+        |                     | percent-decoding                 |
+        +---------------------+----------------------------------+
+        | Request parameter   | The JSON string as serialized in |
+        | in a Request Object | the decoded JWT Claims Set,      |
+        |                     | including its quotes and escapes |
+        +---------------------+----------------------------------+
+        | HTTP field          | The combined field value,        |
+        |                     | including separators and         |
+        |                     | parameters                       |
+        +---------------------+----------------------------------+
+        | Client metadata or  | The serialized JSON array,       |
+        | discovery           | including brackets, quotes,      |
+        |                     | whitespace, and escapes          |
+        +---------------------+----------------------------------+
 
-                   Table 1: Octets counted toward a limit
+                  Table 1: Octets counted toward a limit
 
    A limit specific to a capability or a deployment MUST also admit the
    canonical retraction signal: a request parameter or a field whose
@@ -905,12 +913,14 @@ Table of Contents
    reduces to none only after duplicates or parameters are removed.
 
    A signal that exceeds a limit MUST be treated as invalid: a request
-   parameter then signals the empty set (Section 4), and a field is
-   treated as absent (Section 7.2); a server MAY instead reject the
-   request using an error response appropriate to the endpoint or
+   parameter then signals the empty set (Section 4), a field is treated
+   as absent (Section 7.2), and a client metadata field is ignored
+   (Section 7.3).  A server MAY instead reject the request or metadata
+   document using an error response appropriate to the endpoint or
    application protocol.  In particular, invalid_request is available at
-   OAuth endpoints, while a protected resource can use an application-
-   specific response.
+   OAuth endpoints and invalid_client_metadata at a registration
+   endpoint [RFC7591], while a protected resource can use an
+   application-specific response.
 
    Acting on a falsely asserted capability can also consume server
    resources.  An extension specification MUST analyze this cost and
