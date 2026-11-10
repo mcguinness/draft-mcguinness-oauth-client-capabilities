@@ -301,11 +301,10 @@ deployment.
 
 Because client-side processing may change while an extension is being revised,
 an extension SHOULD register a value only once the processing it names is
-stable. Unregistered values are not a general substitute in the interim.
-Ignoring an unrecognized value protects a recipient that has never seen it, but
-not one that has independently assigned the same token different semantics, in
-which case the recipient exercises a behavior the sender cannot process.
-Unregistered values therefore SHOULD be confined to deployments whose parties
+stable. Unregistered values are not a general substitute in the interim,
+because two implementations can give one value different meanings
+({{unregistered-values}}). Unregistered values therefore SHOULD be confined
+to deployments whose parties
 have agreed on their meaning out of band, and early allocation SHOULD be sought
 once deployment becomes interoperable, as {{RFC7120}} describes.
 
