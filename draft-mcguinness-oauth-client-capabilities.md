@@ -757,7 +757,8 @@ extension SHOULD NOT couple the behavior to such a flag, because it then
 becomes all-or-nothing for every client of the issuer; gate it on a capability
 instead. {{RFC9207}} illustrates the trade-off: coupling the advertisement to a
 server-wide delivery commitment allows a client to enforce that `iss` is
-present, but the feature cannot be rolled out per client.
+present, but the feature cannot be rolled out per client. A capability could
+not carry that commitment; see the next paragraph.
 
 This specification provides no delivery guarantee, and an extension MUST NOT
 rely on a capability signal or on `client_capabilities_supported` to supply
