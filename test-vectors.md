@@ -1,8 +1,8 @@
 # Test Vectors
 
 Parsing test vectors for draft-mcguinness-oauth-client-capabilities. They are
-kept here rather than in the draft until the open questions on limits and on
-retraction at a protected resource are settled. Section names refer to the
+kept here rather than in the draft until the open question on size limits is
+settled. Section names refer to the
 draft. Each row applies the rules of the specification to one input, and names
 the rule where it is not obvious. The values `a`, `b` and `c` are placeholders
 that the server recognizes.
@@ -37,19 +37,34 @@ With a Request Object, and the same metadata default:
 
 ## HTTP Field
 
-No out-of-band knowledge applies.
+Without out-of-band knowledge:
 
 | Field value | Effective set | Rule |
 |---|---|---|
 | (absent) | (empty) | |
+| (empty field value) | (empty) | An empty List is treated as absent |
 | `b, c` | b, c | |
 | `b;x=1` | b | Parameters are ignored |
-| `b, none` | b | A `none` member is ignored |
+| `b, none` | (empty) | `none` with other members |
 | `b c` | (empty) | Invalid: not a Structured Fields List |
 | `"b"` | (empty) | Invalid: a String member |
 | `(b c)` | (empty) | Invalid: an Inner List member |
 | `*b` | (empty) | Invalid: violates the `capability` production |
 *HTTP field test vectors*
+
+When the server knows out of band that the client supports `a`:
+
+| Field value | Effective set | Rule |
+|---|---|---|
+| (absent) | a | Out-of-band knowledge applies |
+| (empty field value) | a | Treated as absent |
+| `b` | b | A valid field replaces out-of-band knowledge |
+| `x`, which the server does not recognize | (nothing recognized) | A valid field replaces out-of-band knowledge |
+| `none` | (empty) | Retracts out-of-band knowledge |
+| `none, b` | (empty) | `none` with other members |
+| `none, "b"` | a | Invalid, so treated as absent |
+| A list over the server's limit | a, or the request is rejected | Treated as invalid ("Denial of Service") |
+*HTTP field test vectors with out-of-band knowledge*
 
 ## Client Metadata
 
@@ -65,6 +80,3 @@ whether the document or request is rejected or the field ignored
 | `["b c"]` | Invalid: an element contains a space |
 | `["b", 1]` | Invalid: an element is not a string |
 *Client metadata test vectors*
-
- 
- This appendix is informative and describes how the two extensions that

@@ -326,16 +326,19 @@ must process; see {{profiles}}.
 ## The `none` Sentinel {#none-value}
 
 The token `none` is reserved for use as the complete value of the
-`client_capabilities` request parameter. It denotes the empty set: the client
-signals no capabilities. A client uses it to retract a statically declared set
-({{precedence}}). It is registered only to reserve the token
-({{iana-registry}}); it is not a capability and has no meaning in the HTTP
-field or client metadata carriers.
+`client_capabilities` request parameter or as the only member of the
+`OAuth-Client-Capabilities` field. It denotes the empty set: the client signals
+no capabilities. A client uses it to retract a statically declared set or, at a
+protected resource, any out-of-band knowledge ({{precedence}}). It is
+registered only to reserve the token ({{iana-registry}}); it is not a
+capability and has no meaning in client metadata.
 
 `none` MUST NOT appear together with any capability value. A server that
-receives `none` alongside other values MUST treat the value as signaling the
-empty set. Resolving the conflict to the empty set, rather than rejecting the
-request, keeps the signal non-fatal ({{server-behavior}}).
+receives `none` alongside other values, in the request parameter or in a valid
+field, MUST treat the signal as the empty set. Resolving the conflict to the
+empty set, rather than rejecting the request, keeps the signal non-fatal
+({{server-behavior}}). An invalid field is treated as absent even if it
+contains `none` ({{field}}).
 
 # Capability Invariants {#invariants}
 
@@ -496,14 +499,17 @@ knowledge an extension defines.
 
 A recipient MUST ignore parameters.
 
-The `none` sentinel ({{none-value}}) MUST NOT be sent in this field, and a
-recipient MUST ignore a member whose value is `none`.
+A field whose only member is `none` ({{none-value}}) is valid and signals the
+empty set. A client sends it to override any out-of-band knowledge an extension
+defines ({{precedence}}).
 
 A server whose response varies with the field MUST include
 `OAuth-Client-Capabilities` in the `Vary` field of the response, or use
 `Vary: *` ({{Section 12.5.5 of RFC9110}}).
 
-An empty List and an absent field are equivalent: both signal the empty set.
+An empty List is treated as an absent field ({{precedence}}). Structured Fields
+serializes an empty List by omitting the field ({{Section 3.1 of RFC9651}}),
+and parses an empty field value as an empty List.
 
 ## Client Metadata Declaration {#metadata}
 
@@ -556,9 +562,12 @@ Request values replace rather than augment metadata so that a less-capable
 instance can retract a default. To retract everything, it sends
 `client_capabilities=none`.
 
-For a protected resource request, a valid field is the effective set. Without
-one, the set is empty, subject to any out-of-band knowledge an extension
-defines.
+For a protected resource request, a valid field with at least one member is the
+effective set and replaces any out-of-band knowledge an extension defines, even
+if the server recognizes no value in it. Without such a field, the set is
+empty, subject to that out-of-band knowledge; an absent field, an empty List,
+and an invalid field are treated alike. A client that needs the empty set to
+replace out-of-band knowledge sends `none` ({{none-value}}).
 
 When an authorization request uses a Request Object, the authorization server
 uses only the parameters inside it ({{Section 6.3 of RFC9101}}). A
@@ -738,11 +747,12 @@ policy or an authenticated negotiation mechanism.
 
 A capability list is attacker-controllable in size. Servers MUST apply finite
 limits to the encoded length, number of members, and resources consumed while
-parsing a signal. A signal that exceeds a limit MUST be treated as signaling
-the empty set; a server MAY instead reject the request using an error response
-appropriate to the endpoint or application protocol. In particular,
-`invalid_request` is available at OAuth endpoints, while a protected resource
-can use an application-specific response.
+parsing a signal. A signal that exceeds a limit MUST be treated as invalid: a
+request parameter then signals the empty set ({{values}}), and a field is
+treated as absent ({{field}}); a server MAY instead reject the request using an
+error response appropriate to the endpoint or application protocol. In
+particular, `invalid_request` is available at OAuth endpoints, while a
+protected resource can use an application-specific response.
 
 Acting on a falsely asserted capability can also consume server resources. An
 extension specification MUST analyze this cost and define any necessary
@@ -844,10 +854,11 @@ Absent-Signal Behavior:
 : Not applicable. `none` is a sentinel rather than a capability.
 
 Carriers:
-: request parameter
+: request parameter, HTTP field
 
 Endpoints:
-: Any authorization server endpoint at which the request parameter is defined
+: Any authorization server endpoint at which the request parameter is defined,
+  and any protected resource
 
 Change Controller:
 : IETF
@@ -1108,9 +1119,10 @@ Deferred Token Response:
 
 Transaction Authorization Challenge:
 : `Accept-Txn-Challenge: ?1` becomes
-  `OAuth-Client-Capabilities: txn-challenge`. The normative rule and the
-  out-of-band knowledge provision are unchanged. The Boolean becomes list
-  membership; absence expresses false.
+  `OAuth-Client-Capabilities: txn-challenge`. The Boolean becomes membership
+  of `txn-challenge` in the request's effective set ({{precedence}}).
+  Out-of-band knowledge of support still applies, but only when the request
+  carries no valid field.
 
 # Design Rationale {#rationale}
 
