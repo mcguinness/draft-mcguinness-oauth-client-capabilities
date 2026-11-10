@@ -75,6 +75,9 @@ informative:
   IANA-OAUTH:
     target: https://www.iana.org/assignments/oauth-parameters/
     title: "OAuth Parameters"
+  FETCH:
+    target: https://fetch.spec.whatwg.org/
+    title: "Fetch Living Standard"
   OIDC:
     target: https://openid.net/specs/openid-connect-core-1_0.html
     title: "OpenID Connect Core 1.0"
@@ -538,6 +541,13 @@ including responses to requests that omit the field, or use `Vary: *`
 An empty List is treated as an absent field ({{precedence}}). Structured Fields
 serializes an empty List by omitting the field ({{Section 3.1 of RFC9651}}),
 and parses an empty field value as an empty List.
+
+A browser-based client that sends the field on a cross-origin request causes a
+CORS preflight, because `OAuth-Client-Capabilities` is not a CORS-safelisted
+request header {{FETCH}}. A protected resource that serves such clients
+includes the field name in `Access-Control-Allow-Headers`; otherwise the
+browser does not send the request, and ignoring unrecognized values cannot
+help.
 
 ## Client Metadata Declaration {#metadata}
 
