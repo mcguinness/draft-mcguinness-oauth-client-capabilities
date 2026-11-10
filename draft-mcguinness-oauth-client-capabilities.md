@@ -280,14 +280,6 @@ value appears, in every carrier in {{carriers}} and in {{discovery}}:
 
 What a non-conforming value causes differs by carrier, and is stated with each.
 
-For the request parameter, `capability-list` is applied after
-`application/x-www-form-urlencoded` decoding. An empty value is treated as
-omitted, as required by {{RFC6749}}. A non-empty value that does not match this
-production, including a value with leading, trailing, or repeated spaces, is
-invalid. A recipient MUST treat an invalid value as signaling the empty set and
-MUST NOT reject the request solely because the value is invalid, except as
-permitted by {{dos}}.
-
 Capability values MUST NOT carry parameters. An extension that needs structured
 detail alongside a capability defines a companion request parameter, or uses
 `authorization_details` {{RFC9396}}. The registry is a flat vocabulary.
@@ -455,6 +447,14 @@ grant_type=refresh_token&refresh_token=tGzv3JOkF0XG5Qx2TlKWIA
 ~~~
 {: title="A capability signaled on a token request"}
 
+The `capability-list` production ({{syntax}}) is applied to the parameter's
+value after `application/x-www-form-urlencoded` decoding. An empty value is
+treated as omitted, as required by {{RFC6749}}. A non-empty value that does not
+match this production, including a value with leading, trailing, or repeated
+spaces, is invalid. A recipient MUST treat an invalid value as signaling the
+empty set and MUST NOT reject the request solely because the value is invalid,
+except as permitted by {{dos}}.
+
 The parameter is not defined for the client registration endpoint. A client
 declares capabilities there using the `client_capabilities` metadata field in
 {{metadata}}.
@@ -476,7 +476,7 @@ value. A request that includes `client_capabilities` more than once is
 malformed, as Sections 3.1 and 3.2 of {{RFC6749}} provide for that
 specification's own parameters, and an authorization server MUST reject it with
 the `invalid_request` error code (Sections 4.1.2.1 and 5.2 of {{RFC6749}}).
-This differs from an invalid value, which is not rejected ({{values}}).
+This differs from an invalid value, which is not rejected.
 
 Where the parameter would otherwise be carried in the query component of an
 authorization request URI, and the client holds authorization server metadata
@@ -599,7 +599,7 @@ For requests directed to an authorization server, the effective capability set
 is determined as follows:
 
 1. If the request's OAuth parameters contain `client_capabilities`, its value
-   is the effective set. A value that is invalid ({{values}}) or exceeds a limit
+   is the effective set. A value that is invalid ({{param}}) or exceeds a limit
    ({{dos}}) is still present, and its effective set is empty.
 2. Otherwise, the `client_capabilities` value from the client metadata that the
    authorization server considers authoritative for that client is the
@@ -849,7 +849,7 @@ This does not extend to a larger input that reduces to `none` only after
 duplicates or parameters are removed.
 
 A signal that exceeds a limit MUST be treated as invalid: a request parameter
-then signals the empty set ({{values}}), a field is treated as absent
+then signals the empty set ({{param}}), a field is treated as absent
 ({{field}}), and a client metadata field is ignored ({{metadata}}). A server
 MAY instead reject the request or metadata document using an error response
 appropriate to the endpoint or application protocol. In particular,
