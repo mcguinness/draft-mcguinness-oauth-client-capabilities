@@ -619,7 +619,11 @@ request rather than rely on a metadata default.
 
 # Server Behavior {#server-behavior}
 
-Presence of an unrecognized capability value MUST NOT cause a request to fail.
+A server MUST NOT reject a request solely because a capability value is
+unrecognized. This does not prevent an extension from refusing a request when
+the effective capability set provides no usable processing path
+({{selection}}), or a server from rejecting an oversized signal ({{dos}}) or a
+repeated request parameter ({{param}}).
 
 Signaling a capability does not entitle a client to the corresponding behavior.
 A server retains discretion over whether to exercise optional behavior.
