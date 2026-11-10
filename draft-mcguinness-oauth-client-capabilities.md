@@ -1295,9 +1295,20 @@ motivated this work would use the mechanism.
 Deferred Token Response:
 : `completion_mode=deferred` becomes `client_capabilities` containing
   `accept-deferred-response`. The authorization server still defers only when
-  the value is in the request's effective set. {{signal-scope}}
-  requires the value in the token request's effective set; a signal at an
-  earlier endpoint has no effect on the token response. The proposed
+  the value is in the token request's effective set ({{signal-scope}}). The
+  pre-token hint of {{DTR}} becomes the value in the effective set of the
+  authorization request or pushed authorization request. The authorization
+  server can act on the hint for the originating grant as Section 4.2 of
+  {{DTR}} describes, provided it decides the assurance the grant requires
+  without it ({{selection}}) and relaxes no consent requirement (CAP-2); the
+  hint does not by itself permit a deferred token response. Adoption drops the
+  rule in Section 4.2 of {{DTR}} that a token request omitting `deferred` after
+  a hint is rejected with `invalid_request`. A request-level signal applies
+  only to that request ({{signal-scope}}), and CAP-1 bars a capability from
+  enabling stricter validation of the client's own requests ({{invariants}}).
+  A token request without the value after a hint is therefore answered without
+  deferral, synchronously or with an error under the grant's rules (Section 4.3
+  of {{DTR}}). The proposed
   single-purpose registry is subsumed by {{iana-registry}}, and the
   `deferred_token_response_supported` authorization server metadata Boolean
   by `client_capabilities_supported` containing the value. Either suffices to
