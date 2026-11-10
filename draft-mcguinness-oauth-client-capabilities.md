@@ -165,7 +165,7 @@ document. Suppose an updated release can accept a deferred token response
 ({{existing-drafts}}). The document continues to declare only what every
 instance can process. The updated release sends its complete set, including the
 illustrative `accept-deferred-response`, to one authorization server, since a
-request set replaces the metadata default rather than adding to it
+request-level signal replaces the metadata default rather than adding to it
 ({{precedence}}). It sends other authorization servers nothing new, and older
 releases are unaffected. Stopping is equally local while the value stays out of
 the document. Once the document declares it, an instance withdraws it only by
@@ -220,6 +220,11 @@ Signal:
 Effective capability set:
 : The capability set that applies to a request after the carrier and precedence
   rules in {{carriers}} have been applied. Also called the effective set.
+
+Request-level signal:
+: The signal carried on the request itself: the request parameter on an OAuth
+  request, or the HTTP field on a protected resource request ({{precedence}}).
+  Client metadata supplies a default, not a request-level signal.
 
 Out-of-band knowledge:
 : Knowledge, where an extension defines it, that a protected resource has of a
@@ -618,9 +623,9 @@ default into a per-request declaration.
 
 ## Scope of a Signal {#signal-scope}
 
-A request signal applies only to that request, not to later requests in the
-grant. Client metadata supplies a default for each request as described in
-{{precedence}}; it does not make a prior request signal persist. A server
+A request-level signal applies only to that request, not to later requests in
+the grant. Client metadata supplies a default for each request as described in
+{{precedence}}; it does not make a prior request-level signal persist. A server
 MUST NOT promote a request-level capability set to durable client metadata or
 to out-of-band knowledge.
 
@@ -679,8 +684,9 @@ The array MUST NOT contain `none`. If the value is not an array, or any element
 is not a string or does not conform to the `capability` production, the value
 of this member is invalid and MUST be ignored in its entirety.
 
-A client that holds a server's `client_capabilities_supported` SHOULD signal
-only values that appear in it. This does not apply to `none` ({{none-value}}),
+A client that holds a server's `client_capabilities_supported` SHOULD include
+in a request-level signal to that server only values that appear in it. This
+does not apply to `none` ({{none-value}}),
 which a server does not list: if filtering leaves no value and the client
 needs to override a metadata default or out-of-band knowledge, it sends `none`.
 A client that does not hold the list MAY signal values without retrieving it
@@ -871,8 +877,9 @@ can still add information.
 
 Clients that consider their capability set sensitive SHOULD use {{RFC9126}} or
 an encrypted Request Object as defined in {{RFC9101}}, SHOULD, when they hold
-the server's `client_capabilities_supported`, restrict signaled values to those
-it lists, and SHOULD NOT publish the set in public client metadata. A signed
+the server's `client_capabilities_supported`, restrict request-level signals to
+values it lists, and SHOULD NOT publish the set in public client metadata. A
+signed
 but unencrypted Request Object provides integrity, not confidentiality.
 
 Capability values MUST NOT encode information about an end user or a specific
@@ -1430,7 +1437,7 @@ Coordination replaces autonomy. Registering a dedicated parameter requires no
 shared vocabulary; this registry requires naming discipline and agreement on
 CAP-1 through CAP-3.
 
-A request set replaces the metadata default rather than adding to it
+A request-level signal replaces the metadata default rather than adding to it
 ({{precedence}}). A client that adds one value on a request repeats every
 default it still wants; in exchange, a less-capable instance can retract a
 default without a per-value removal syntax.
