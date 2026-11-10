@@ -103,6 +103,7 @@ Table of Contents
      14.1.  Normative References
      14.2.  Informative References
    Appendix A.  Examples
+     A.1.  Worked Adoption
    Appendix B.  Applying This Specification to Existing Drafts
    Appendix C.  Design Rationale
      C.1.  Survey of Existing Mechanisms
@@ -148,6 +149,13 @@ Table of Contents
    A general mechanism cannot be an HTTP field alone, and cannot be a
    request parameter alone.  Two request carriers over one shared
    vocabulary is the minimum that covers OAuth's topology.
+
+   The extensions in Appendix B need only direct HTTP requests, at the
+   token endpoint and at protected resources.  The request parameter's
+   coverage of the authorization endpoint anticipates extensions whose
+   behavior changes the authorization response; the pushed authorization
+   request and Request Object examples (Appendix A) illustrate the
+   carrier.
 
 1.2.  Open-World Deployment
 
@@ -1443,6 +1451,65 @@ Appendix A.  Examples
    Change Controller:  The party responsible for the registration
 
    Specification Document(s):  [DTR]
+
+A.1.  Worked Adoption
+
+   This example follows one adoption of the deferred-response behavior
+   in Appendix B from discovery to retraction.  The deferred response
+   and the behavior when the value is absent are those [DTR] defines;
+   this specification changes only how the client signals that it can
+   process the response.
+
+   The authorization server advertises accept-deferred-response in
+   client_capabilities_supported, as in the authorization server
+   metadata excerpt above.  A client release that can process a deferred
+   response signals the value explicitly on its token request, as in the
+   token request example above.  The authorization server elects to
+   defer and, in place of a token response, returns the deferred
+   response defined in Section 5.4 of [DTR]:
+
+   HTTP/1.1 400 Bad Request
+   Content-Type: application/json
+   Cache-Control: no-store
+
+   {
+     "error": "authorization_pending",
+     "deferral_code": "8d67dc78-7faa-4d41-aabd-67707b374255",
+     "expires_in": 10800,
+     "interval": 60
+   }
+
+   Figure 11: Deferred response to a request that signals the capability
+
+   The client then polls as [DTR] describes.  A request whose effective
+   set does not contain the value is never deferred: the authorization
+   server completes it synchronously, or returns an error under the
+   grant's rules (Section 4.3 of [DTR]).  Omitting the value rules out
+   deferral, not failure.  The following response to the same token
+   request without the value assumes that the authorization server can
+   complete every check it requires without deferral:
+
+   HTTP/1.1 200 OK
+   Content-Type: application/json
+   Cache-Control: no-store
+   Pragma: no-cache
+
+   {
+     "access_token": "2YotnFZFEjr1zCsicMWpAA",
+     "token_type": "Bearer",
+     "expires_in": 3600
+   }
+
+          Figure 12: Synchronous response when the value is absent
+
+   A registered client can instead declare the value as a default, as in
+   the registration request above.  Its token requests then carry no
+   client_capabilities parameter and receive the default (Section 7.4),
+   so the authorization server may defer them.  An instance that cannot
+   process a deferred response overrides the default with none, as in
+   the retraction example above.  Its token requests are then never
+   deferred: each receives a token response, as in the previous figure,
+   or an error.
 
 Appendix B.  Applying This Specification to Existing Drafts
 
