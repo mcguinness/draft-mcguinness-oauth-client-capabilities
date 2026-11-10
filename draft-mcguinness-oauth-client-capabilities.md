@@ -519,7 +519,12 @@ request header {{FETCH}}. A protected resource that serves such clients has to
 allow the field in its preflight response, most simply by listing the field
 name in `Access-Control-Allow-Headers`; a `*` value there covers the field only
 when the request's credentials mode is not `include`. Otherwise the browser
-does not send the request, and ignoring unrecognized values cannot help.
+does not send the request, and ignoring unrecognized values cannot help. A
+resource that advertises `client_capabilities_supported` ({{discovery}}) and
+serves browser-based clients therefore allows the field. A browser-based client
+SHOULD NOT send the field on a cross-origin request unless it knows that the
+protected resource allows the field, for example because the resource
+advertises `client_capabilities_supported`.
 
 ## Client Metadata Declaration {#metadata}
 
@@ -676,7 +681,8 @@ only values that appear in it. This does not apply to `none` ({{none-value}}),
 which a server does not list: if filtering leaves no value and the client
 needs to override a metadata default or out-of-band knowledge, it sends `none`.
 A client that does not hold the list MAY signal values without retrieving it
-first; a server that does not recognize a value ignores it. Advertising
+first, except as {{field}} limits for browser-based clients; a server that does
+not recognize a value ignores it. Advertising
 recognized values lets a client that holds the list bound request size and
 fingerprinting exposure, following the pattern of Client Hints {{RFC8942}}.
 
