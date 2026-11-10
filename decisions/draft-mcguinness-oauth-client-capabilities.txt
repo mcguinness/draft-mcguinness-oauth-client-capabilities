@@ -424,9 +424,9 @@ Table of Contents
    can receive a response it cannot process, but CAP-2 and CAP-3 keep
    the false claim from being accepted as authorization, authentication,
    or proof of a security-relevant property.  An adversary who removes
-   values degrades the client to the behavior it would receive with no
-   capabilities, which under CAP-1 is the safe direction; see
-   Section 11.
+   values from a signal denies optional behavior, which under CAP-1 is
+   the safe direction.  Removing a signal that narrows a set instead
+   restores a metadata default or out-of-band knowledge (Section 11.2).
 
    These invariants also serve as the admission criterion for the
    registry; see Section 10.
@@ -532,13 +532,13 @@ Table of Contents
    ignore the field on any request to such an endpoint.  Using only the
    parameter at these endpoints gives each request one unambiguous
    effective set, and allows Request Object or pushed-request
-   protections where those apply.  At other authorization server
-   endpoints, such as the introspection [RFC7662], revocation [RFC7009],
-   and device authorization [RFC8628] endpoints, this specification
-   defines no carrier; a capability value's registration states which
-   carrier, if any, applies there (Section 13.1).  At the client
-   registration endpoint, a client declares capabilities in client
-   metadata (Section 7.3).
+   protections where those apply.  The field plays no part at other
+   authorization server endpoints either, such as the introspection
+   [RFC7662], revocation [RFC7009], and device authorization [RFC8628]
+   endpoints (Section 7.4); an extension that needs a capability at one
+   of them defines the request parameter there (Section 7.1).  At the
+   client registration endpoint, a client declares capabilities in
+   client metadata (Section 7.3).
 
    The field's value is a Structured Fields List (Section 3.1 of
    [RFC9651]).  Each member MUST be an Item whose bare item is a Token
@@ -1372,9 +1372,9 @@ Appendix B.  Applying This Specification to Existing Drafts
 
    Transaction Authorization Challenge:  Accept-Txn-Challenge: ?1
       becomes OAuth-Client-Capabilities: txn-challenge.  The Boolean
-      becomes list membership: a valid field without the value expresses
-      false, and out-of-band knowledge of support applies only when the
-      request carries no valid field (Section 7.4).
+      becomes membership of txn-challenge in the request's effective set
+      (Section 7.4).  Out-of-band knowledge of support still applies,
+      but only when the request carries no valid field.
 
 Appendix C.  Design Rationale
 

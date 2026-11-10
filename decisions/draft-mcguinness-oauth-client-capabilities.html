@@ -1672,9 +1672,10 @@ required by the behavior it enables.<a href="#section-5-2.6.1" class="pilcrow">�
 <p id="section-5-3">Two consequences follow. A client that claims a capability it lacks can receive
 a response it cannot process, but CAP-2 and CAP-3 keep the false claim from
 being accepted as authorization, authentication, or proof of a
-security-relevant property. An adversary who removes values degrades the client
-to the behavior it would receive with no capabilities, which under CAP-1 is the
-safe direction; see <a href="#security-considerations" class="auto internal xref">Section 11</a>.<a href="#section-5-3" class="pilcrow">¶</a></p>
+security-relevant property. An adversary who removes values from a signal
+denies optional behavior, which under CAP-1 is the safe direction. Removing a
+signal that narrows a set instead restores a metadata default or out-of-band
+knowledge (<a href="#downgrade" class="auto internal xref">Section 11.2</a>).<a href="#section-5-3" class="pilcrow">¶</a></p>
 <p id="section-5-4">These invariants also serve as the admission criterion for the registry; see
 <a href="#extension-guidance" class="auto internal xref">Section 10</a>.<a href="#section-5-4" class="pilcrow">¶</a></p>
 </section>
@@ -1803,12 +1804,12 @@ defines the parameter. It uses the request parameter there (<a href="#param" cla
 authorization server <span class="bcp14">MUST</span> ignore the field on any request to such an endpoint.
 Using only the parameter at these endpoints gives each request one unambiguous
 effective set, and allows Request Object or pushed-request protections where
-those apply. At other authorization server endpoints, such as the introspection
-<span>[<a href="#RFC7662" class="cite xref">RFC7662</a>]</span>, revocation <span>[<a href="#RFC7009" class="cite xref">RFC7009</a>]</span>, and device authorization <span>[<a href="#RFC8628" class="cite xref">RFC8628</a>]</span>
-endpoints, this specification defines no carrier; a capability value's
-registration states which carrier, if any, applies there (<a href="#iana-registry" class="auto internal xref">Section 13.1</a>).
-At the client registration endpoint, a client declares capabilities in client
-metadata (<a href="#metadata" class="auto internal xref">Section 7.3</a>).<a href="#section-7.2-3" class="pilcrow">¶</a></p>
+those apply. The field plays no part at other authorization server endpoints
+either, such as the introspection <span>[<a href="#RFC7662" class="cite xref">RFC7662</a>]</span>, revocation <span>[<a href="#RFC7009" class="cite xref">RFC7009</a>]</span>, and
+device authorization <span>[<a href="#RFC8628" class="cite xref">RFC8628</a>]</span> endpoints (<a href="#precedence" class="auto internal xref">Section 7.4</a>); an extension that
+needs a capability at one of them defines the request parameter there
+(<a href="#param" class="auto internal xref">Section 7.1</a>). At the client registration endpoint, a client declares
+capabilities in client metadata (<a href="#metadata" class="auto internal xref">Section 7.3</a>).<a href="#section-7.2-3" class="pilcrow">¶</a></p>
 <p id="section-7.2-4">The field's value is a Structured Fields List (<span><a href="https://rfc-editor.org/rfc/rfc9651#section-3.1" class="relref">Section 3.1</a> of [<a href="#RFC9651" class="cite xref">RFC9651</a>]</span>). Each
 member <span class="bcp14">MUST</span> be an Item whose bare item is a Token containing a capability value
 as defined in <a href="#values" class="auto internal xref">Section 4</a>:<a href="#section-7.2-4" class="pilcrow">¶</a></p>
@@ -2859,10 +2860,10 @@ them affects only which values a client chooses to send (<a href="#discovery" cl
 <dt id="appendix-B-2.3">Transaction Authorization Challenge:</dt>
         <dd style="margin-left: 1.5em" id="appendix-B-2.4">
           <p id="appendix-B-2.4.1"><code>Accept-Txn-Challenge: ?1</code> becomes
-<code>OAuth-Client-Capabilities: txn-challenge</code>. The Boolean becomes list
-membership: a valid field without the value expresses false, and out-of-band
-knowledge of support applies only when the request carries no valid field
-(<a href="#precedence" class="auto internal xref">Section 7.4</a>).<a href="#appendix-B-2.4.1" class="pilcrow">¶</a></p>
+<code>OAuth-Client-Capabilities: txn-challenge</code>. The Boolean becomes membership
+of <code>txn-challenge</code> in the request's effective set (<a href="#precedence" class="auto internal xref">Section 7.4</a>).
+Out-of-band knowledge of support still applies, but only when the request
+carries no valid field.<a href="#appendix-B-2.4.1" class="pilcrow">¶</a></p>
 </dd>
       <dd class="break"></dd>
 </dl>
