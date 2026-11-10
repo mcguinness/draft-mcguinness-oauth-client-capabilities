@@ -539,11 +539,14 @@ in a software statement. Depending on the mechanism, it can describe client
 software, a deployed instance, or both; see {{precedence}}.
 
 The array MUST NOT contain `none`. An absent field and an empty array both
-denote the empty set. If any element is not a string, does not conform to the
-`capability` production, or is `none`, the field is invalid. A recipient
-MUST NOT derive any capabilities from an invalid field; the containing metadata
-protocol determines whether the document or request is rejected or the field is
-ignored.
+denote the empty set. If the value is not an array, or any element is not a
+string, does not conform to the `capability` production, or is `none`, the
+field is invalid. A recipient MUST ignore an invalid field, deriving no
+capabilities from it, and MUST NOT reject an otherwise-valid metadata document
+or registration request solely because this field is invalid. This rule
+concerns only the `client_capabilities` field; it does not change how the
+containing protocol handles invalid JSON, a failed signature, or its other
+required validation.
 
 A party publishing or registering this metadata MUST NOT declare a capability
 unless every client instance covered by that metadata can process the enabled
