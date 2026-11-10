@@ -782,6 +782,18 @@ extension specification MUST analyze this cost and define any necessary
 rate-limiting, state-allocation, or replay protections. A capability signal
 does not authorize the client to consume unbounded work.
 
+## Unregistered Values {#unregistered-values}
+
+Two implementations can recognize the same unregistered value with different
+meanings. Ignoring unrecognized values does not help, because each recognizes
+the value, and authenticating the signal does not resolve a disagreement about
+its meaning. A server can then exercise a behavior the client cannot process,
+or spend resources on a behavior the client will not complete. CAP-1 through
+CAP-3 still constrain the enabled behavior, so the result is a failed exchange
+or wasted work, not weakened security. {{naming}} recommends confining
+unregistered values to deployments whose parties have agreed on their meaning,
+and seeking early allocation.
+
 # Privacy Considerations {#privacy-considerations}
 
 A capability set discriminates over the client population and contributes to
