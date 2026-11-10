@@ -321,9 +321,9 @@ in a proof) and it needs no capability value. ABCA drafted it differently.
 | | DPoP nonce (RFC 9449) | ABCA challenge ([ABCA]) |
 |---|---|---|
 | Server advertises that it uses the mechanism | No; the server challenges reactively | Yes; `challenge_endpoint` in RFC 8414 metadata, which the AS "MUST signal" |
-| Client-side requirement | Non-normative: "will typically retry", "is expected to retry" | Normative but conditional: "If the Authorization Server offers a challenge endpoint, the Client MUST retrieve a challenge and MUST use this challenge" |
+| Client-side requirement | Split. After a `use_dpop_nonce` error, non-normative: "will typically retry", "is expected to retry". On a successful response, normative: "The client MUST use the new nonce value supplied for the next token request" (Section 8.2) | Normative but conditional: "If the Authorization Server offers a challenge endpoint, the Client MUST retrieve a challenge and MUST use this challenge" |
 | Can the server know in advance whether the client will cope? | No | Yes; it published the endpoint, and client conformance follows from that |
-| Capability value needed? | No; barred by CAP-2, see above | No; discovery plus a conditional MUST |
+| Capability value needed? | Not to gate nonce enforcement (fails CAP-1) or to buy token lifetime (fails CAP-2). Offering the recovery challenge passes as a selection; whether it is worth a value is a separate question, see above | No; discovery plus a conditional MUST |
 
 Version -10 extends the pattern in two directions that matter here. The
 challenge endpoint may now be offered by a resource server as well, advertised
@@ -353,11 +353,18 @@ mandatory, because it is genuinely optional for the client on grounds of
 platform, cost, or deployment shape, and the server therefore cannot discover
 conformance. ABCA could make its challenge mandatory because fetching one is
 cheap and universally implementable. RFC 9449 could not take the same route for
-nonces, because whether to demand a nonce is a per-request risk decision rather
-than a static posture, and advertising it in metadata would not describe the
-behavior. That is why ABCA could close its gap by discovery. RFC 9449 cannot, which leaves
-the DPoP nonce neither discoverable nor admissible as a capability, and so
-outside this mechanism's reach entirely.
+the retry after a `use_dpop_nonce` error, because whether to demand a nonce is a
+per-request risk decision rather than a static posture, and advertising it in
+metadata would not describe the behavior. That is why ABCA could close its gap
+by discovery and RFC 9449 cannot.
+
+What remains of the DPoP nonce splits three ways. Enforcing a nonce stays
+outside this mechanism: a removable signal cannot gate it (CAP-1) or buy a
+longer token lifetime (CAP-2). Using a nonce delivered in a successful response
+needs no signal, because Section 8.2 already requires it. Offering the
+`use_dpop_nonce` recovery challenge, where policy already requires a nonce and
+refusal is the fallback, is admissible as a selection; whether it is worth a
+value is a question of usefulness, not admissibility.
 
 ### Attestation as a carrier for capabilities
 
@@ -493,7 +500,8 @@ Three findings, in descending order of consequence.
    security property" would have excluded the transaction challenge, which is a
    sound candidate; stating it as "the absent-signal fallback must itself be
    safe" admits it correctly and tells an extension author what to write. CAP-2
-   then removes what CAP-1 alone would let through, as the DPoP nonce shows.
+   then removes what CAP-1 alone would let through, as the reliance framing of
+   the DPoP nonce shows.
 
 2. **Registry entries should record the absent-signal fallback, not only the
    enabled behavior.** CAP-1 is unverifiable at registration time without it,
