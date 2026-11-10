@@ -2879,14 +2879,16 @@ Cache-Control: no-store
 <p id="appendix-A.1-4">The client then polls as <span>[<a href="#DTR" class="cite xref">DTR</a>]</span> describes. A request whose effective set does
 not contain the value is never deferred: the authorization server completes it
 synchronously, or returns an error under the grant's rules (Section 4.3 of
-<span>[<a href="#DTR" class="cite xref">DTR</a>]</span>). For the same token request without the value, the result is an
-ordinary token response:<a href="#appendix-A.1-4" class="pilcrow">¶</a></p>
+<span>[<a href="#DTR" class="cite xref">DTR</a>]</span>). Omitting the value rules out deferral, not failure. The following
+response to the same token request without the value assumes that the
+authorization server can complete every check it requires without deferral:<a href="#appendix-A.1-4" class="pilcrow">¶</a></p>
 <span id="name-synchronous-response-when-t"></span><figure id="figure-12">
           <div class="lang-http-message sourcecode" id="appendix-A.1-5.1">
 <pre>
 HTTP/1.1 200 OK
 Content-Type: application/json
 Cache-Control: no-store
+Pragma: no-cache
 
 {
   "access_token": "2YotnFZFEjr1zCsicMWpAA",
@@ -2903,8 +2905,8 @@ registration request above. Its token requests then carry no
 <code>client_capabilities</code> parameter and receive the default (<a href="#precedence" class="auto internal xref">Section 7.4</a>), so
 the authorization server may defer them. An instance that cannot process a
 deferred response overrides the default with <code>none</code>, as in the retraction
-example above, and receives the synchronous behavior shown in the previous
-figure.<a href="#appendix-A.1-6" class="pilcrow">¶</a></p>
+example above. Its token requests are then never deferred: each receives a
+token response, as in the previous figure, or an error.<a href="#appendix-A.1-6" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
