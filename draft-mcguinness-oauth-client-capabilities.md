@@ -516,9 +516,10 @@ A field whose only member is `none` ({{none-value}}) is valid and signals the
 empty set. A client sends it to override any out-of-band knowledge an extension
 defines ({{precedence}}).
 
-A server whose response varies with the field MUST include
-`OAuth-Client-Capabilities` in the `Vary` field of the response, or use
-`Vary: *` ({{Section 12.5.5 of RFC9110}}).
+A server whose response can vary with the field MUST include
+`OAuth-Client-Capabilities` in the `Vary` field of every such response,
+including responses to requests that omit the field, or use `Vary: *`
+({{Section 12.5.5 of RFC9110}}).
 
 An empty List is treated as an absent field ({{precedence}}). Structured Fields
 serializes an empty List by omitting the field ({{Section 3.1 of RFC9651}}),
