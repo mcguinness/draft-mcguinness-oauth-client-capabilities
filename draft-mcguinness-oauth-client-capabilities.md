@@ -627,7 +627,8 @@ default into a per-request declaration.
 
 A request signal applies only to that request, not to later requests in the
 grant. Client metadata supplies a default for each request as described in
-{{precedence}}; it does not make a prior request signal persist.
+{{precedence}}; it does not make a prior request signal persist. A server
+MUST NOT promote a request-level capability set to durable client metadata.
 
 A capability in a pushed authorization request applies to the authorization
 request represented by the resulting `request_uri`, and nothing else. A
@@ -654,9 +655,6 @@ not give any capability mandatory-to-understand semantics; see {{no-require}}.
 An extension MAY define an error for a case in which the server cannot proceed
 without a particular client-side behavior. Such an error reports the
 extension's condition; it does not turn the signal into an authorization input.
-
-A server MUST NOT promote a request-level capability set to durable client
-metadata.
 
 ## Selecting Among Alternatives {#selection}
 
