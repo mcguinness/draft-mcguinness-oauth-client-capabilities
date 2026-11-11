@@ -869,7 +869,8 @@ Identifier URL {{CIMD}}: an otherwise acceptable document whose
 `client_capabilities` field exceeds a limit is accepted with the field ignored,
 as {{metadata}} requires. Rejecting such a document would be a terminal
 discovery failure ({{Section 6.1 of CIMD}}), failing the client's requests
-until the document changes without telling the client why. Limits on the whole
+until the document changes, and may leave the client without an actionable
+diagnostic, particularly at the authorization endpoint. Limits on the whole
 document, such as the maximum response size in {{Section 10.11 of CIMD}}, still
 apply, even when the field accounts for most of its size; a client publishing
 its metadata this way keeps the field well within them.
