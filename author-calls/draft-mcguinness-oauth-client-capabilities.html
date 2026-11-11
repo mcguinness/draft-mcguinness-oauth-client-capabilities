@@ -2256,10 +2256,15 @@ endpoint or application protocol. In particular, <code>invalid_request</code> is
 at OAuth endpoints and <code>invalid_client_metadata</code> at a registration endpoint
 <span>[<a href="#RFC7591" class="cite xref">RFC7591</a>]</span>, while a protected resource can use an application-specific
 response. This does not extend to a metadata document published at a Client
-Identifier URL <span>[<a href="#CIMD" class="cite xref">CIMD</a>]</span>, which <a href="#metadata" class="auto internal xref">Section 6.3</a> therefore requires a server to
-accept with the field ignored. Rejecting such a document would be a terminal
+Identifier URL <span>[<a href="#CIMD" class="cite xref">CIMD</a>]</span>: an otherwise acceptable document whose
+<code>client_capabilities</code> field exceeds a limit is accepted with the field ignored,
+as <a href="#metadata" class="auto internal xref">Section 6.3</a> requires. Rejecting such a document would be a terminal
 discovery failure (<span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-client-id-metadata-document-03#section-6.1" class="relref">Section 6.1</a> of [<a href="#CIMD" class="cite xref">CIMD</a>]</span>), failing the client's requests
-until the document changes without telling the client why.<a href="#section-10.3-4" class="pilcrow">¶</a></p>
+until the document changes, and may leave the client without an actionable
+diagnostic, particularly at the authorization endpoint. Limits on the whole
+document, such as the maximum response size in <span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-client-id-metadata-document-03#section-10.11" class="relref">Section 10.11</a> of [<a href="#CIMD" class="cite xref">CIMD</a>]</span>, still
+apply, even when the field accounts for most of its size; a client publishing
+its metadata this way keeps the field well within them.<a href="#section-10.3-4" class="pilcrow">¶</a></p>
 <p id="section-10.3-5">Acting on a falsely asserted capability can also consume server, downstream,
 and human resources; each extension analyzes this cost (<a href="#extension-guidance" class="auto internal xref">Section 9</a>).
 A capability signal

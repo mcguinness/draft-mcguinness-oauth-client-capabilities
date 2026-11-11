@@ -971,11 +971,17 @@ Table of Contents
    OAuth endpoints and invalid_client_metadata at a registration
    endpoint [RFC7591], while a protected resource can use an
    application-specific response.  This does not extend to a metadata
-   document published at a Client Identifier URL [CIMD], which
-   Section 6.3 therefore requires a server to accept with the field
-   ignored.  Rejecting such a document would be a terminal discovery
-   failure (Section 6.1 of [CIMD]), failing the client's requests until
-   the document changes without telling the client why.
+   document published at a Client Identifier URL [CIMD]: an otherwise
+   acceptable document whose client_capabilities field exceeds a limit
+   is accepted with the field ignored, as Section 6.3 requires.
+   Rejecting such a document would be a terminal discovery failure
+   (Section 6.1 of [CIMD]), failing the client's requests until the
+   document changes, and may leave the client without an actionable
+   diagnostic, particularly at the authorization endpoint.  Limits on
+   the whole document, such as the maximum response size in
+   Section 10.11 of [CIMD], still apply, even when the field accounts
+   for most of its size; a client publishing its metadata this way keeps
+   the field well within them.
 
    Acting on a falsely asserted capability can also consume server,
    downstream, and human resources; each extension analyzes this cost
