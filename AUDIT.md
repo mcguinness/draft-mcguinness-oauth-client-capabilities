@@ -224,10 +224,11 @@ relaying `acr_values` only a SHOULD (Section 4), so a new advertisement would
 not tell the resource server which existing clients do it. The retry after a
 DPoP `use_dpop_nonce` error is in the same position.
 
-Note the carrier consequence. A protected resource does not hold client metadata,
-so selection at a resource server can only read the HTTP field. A client that
-wants its paths chosen well has to send the field on resource requests; a metadata
-default cannot serve this use.
+Note the carrier consequence. Client metadata supplies no default at a protected
+resource, so selection at a resource server reads the HTTP field and any
+out-of-band knowledge an extension defines. A client that wants its paths chosen
+well sends the field on resource requests, unless such out-of-band knowledge
+already covers it; a metadata default cannot serve this use.
 
 ## Tier 3: capability-shaped but already served by static client metadata
 
