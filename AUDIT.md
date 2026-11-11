@@ -508,13 +508,16 @@ client that cannot reach a browser.
 
 ### The systematic finding
 
-Two independent documents specify the gate and omit the fallback, and a third
-shows the alternative:
+The same omission appears in two forms, and a third draft shows the
+alternative:
 
-- `txn-challenge`: "MUST NOT return a transaction authorization challenge
-  unless" signaled, with no statement of what the resource server does instead.
-- `first-party-apps`: `redirect_to_web`, with no guidance if the client cannot
-  fall back.
+- `txn-challenge`: an existing signal gate with an unspecified fallback. A
+  protected resource "MUST NOT return a transaction authorization challenge
+  unless" signaled, with no statement of what it does instead.
+- `first-party-apps`: a potential capability whose unavailable behavior needs
+  consideration. It defines `redirect_to_web` without conditioning it on any
+  client signal, and gives no guidance for a client that cannot fall back to a
+  browser.
 - `attestation-based-client-auth` at -10 avoided the problem by making
   retrieval of a challenge a MUST conditioned on a metadata advertisement,
   which removed the absent case rather than defining it. Version -12 relaxes
@@ -523,10 +526,11 @@ shows the alternative:
 
 This is the strongest available argument for the `Absent-Signal Behavior`
 registry field. It is not process overhead: it catches an omission that
-extension authors make consistently. Authors specify what the capability turns
-*on* and leave what happens when it is *off* implicit, and the implicit answer
-is nearly always "proceed without it," which is the CAP-1-violating direction in
-both cases above. Requiring the fallback at registration time forces the
+extension authors make consistently. Authors specify what a signal or behavior
+turns *on* and leave what happens when it is *off* implicit, and the implicit
+answer is nearly always "proceed without it," which would be the
+CAP-1-violating direction in both cases above once a gate exists. Requiring the
+fallback at registration time forces the
 question while there is still a designated expert reading the answer.
 
 ## What this changes in the draft
@@ -547,8 +551,10 @@ Three findings, in descending order of consequence.
    says only what the capability turns on. Adding this as a registry field
    makes the invariant checkable rather than aspirational.
 
-3. **Unstated fallbacks are systematic, not incidental.** Two drafts specify
-   the gate and omit the absent case; see the sweep. The transaction challenge
+3. **Unstated fallbacks are systematic, not incidental.** One draft specifies
+   a signal gate and omits the absent case, and another defines a behavior that
+   would need a capability and leaves the unavailable case open; see the sweep.
+   The transaction challenge
    draft's unstated fallback is the first thing the field would have caught, which is a reasonable argument that the
    field belongs in the registry rather than in prose guidance.
 
