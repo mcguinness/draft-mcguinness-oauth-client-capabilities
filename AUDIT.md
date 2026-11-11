@@ -188,7 +188,9 @@ leaves the selection question open. Step-up is where that matters; see
 - **Client-initiated features.** `authorization_details` (RFC 9396), resource
   indicators (RFC 8707), `response_mode`, and the OpenID Connect `prompt`,
   `display`, and `ui_locales` parameters. The client asks for the behavior; a
-  server that responds within what was requested cannot surprise it.
+  server that responds within what was requested cannot surprise it. Request
+  Object encryption (`request_object_encryption_alg` and `_enc`) belongs here
+  too: it describes what the client produces, not a response it must process.
 - **Presence is the signal.** The DPoP proof itself (RFC 9449), client
   attestation headers. The artifact's presence proves the capability, which is
   why any DPoP capability would concern the nonce challenge, not DPoP itself.
@@ -236,10 +238,9 @@ For these the question is not shape (they are all genuinely "what I can
 process") but whether per-request or per-instance variation matters. Mostly it
 does not, and the existing static field is the right answer.
 
-- **Response and request encryption.** `id_token_encrypted_response_alg` and
-  `_enc`, `userinfo_encrypted_response_alg` and `_enc`,
-  `request_object_encryption_alg` and `_enc`; all registered client metadata in
-  the IANA OAuth Dynamic Client Registration Metadata registry. These are
+- **Response encryption.** `id_token_encrypted_response_alg` and `_enc`, and
+  `userinfo_encrypted_response_alg` and `_enc`; all registered client metadata
+  in the IANA OAuth Dynamic Client Registration Metadata registry. These are
   algorithm and key properties of the client software, uniform across
   instances. Static is correct.
 - **Logout.** `frontchannel_logout_uri`, `backchannel_logout_uri`,
