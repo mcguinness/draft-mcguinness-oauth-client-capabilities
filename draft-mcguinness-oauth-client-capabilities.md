@@ -563,8 +563,9 @@ signature, or its other required validation.
 A party publishing or registering this metadata MUST NOT declare a capability
 unless every client instance covered by that metadata can process the enabled
 behavior, or every less-capable instance will override the default on its
-requests. Clients with heterogeneous instances SHOULD omit the metadata field
-and signal capabilities on each request.
+requests. A client whose instances differ can instead omit the field and signal
+capabilities on each request, which does not depend on every less-capable
+instance overriding the default.
 
 A client metadata document published at a Client Identifier URL {{CIMD}} is
 publicly retrievable, applies uniformly to every deployment using the URL, and

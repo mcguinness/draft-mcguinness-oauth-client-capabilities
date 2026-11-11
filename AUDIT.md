@@ -295,10 +295,10 @@ three of its properties cut against the client metadata field.
   its metadata applies uniformly to every use of that URL. The draft's Client
   Metadata Declaration section already forbids declaring a capability unless
   every instance covered by the metadata can process the enabled behavior or
-  overrides the default, and recommends that clients with heterogeneous
-  instances omit the field. For CIMD that is not an edge case; it is the
-  default for any software deployed more than once, which is the population
-  the draft's Open-World Deployment section holds up as its motivation. The
+  overrides the default, and notes that clients whose instances differ can
+  omit the field instead. For CIMD that is not an edge case; it is the default
+  for any software deployed more than once, which is the population the
+  draft's Open-World Deployment section holds up as its motivation. The
   metadata carrier is thus usually the wrong choice for precisely the clients
   that motivate the mechanism.
 - **Stale by construction.** An authorization server "MAY cache the client
