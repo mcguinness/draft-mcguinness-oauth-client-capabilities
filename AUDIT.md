@@ -324,26 +324,35 @@ per-request presence of the `OAuth-Client-Attestation` and
 `OAuth-Client-Attestation-PoP` fields is self-signaling. Tier 2.
 
 The interesting part is ABCA's **challenge**, because it is the same mechanism
-shape as the DPoP nonce (a server-issued freshness value the client must echo
-in a proof) and it needs no capability value. ABCA drafted it differently.
+shape as the DPoP nonce: a server-issued freshness value the client must echo
+in a proof. It needs no capability value, for a reason the DPoP nonce cannot
+borrow. A client that uses ABCA, as its authentication method or as an
+additional security signal (Section 7.6), takes on its challenge handling: "If
+a Challenge is provided, the Client MUST include it in the proof of possession"
+(Section 6). Using ABCA is the signal, as in tier 2. RFC 9449 is already
+deployed, and using DPoP does not imply that a client retries after a
+`use_dpop_nonce` error.
 
-| | DPoP nonce (RFC 9449) | ABCA challenge ([ABCA]) |
+| | DPoP nonce (RFC 9449) | ABCA challenge ([ABCA] -12) |
 |---|---|---|
-| Server advertises that it uses the mechanism | No; the server challenges reactively | Yes; `challenge_endpoint` in RFC 8414 metadata, which the AS "MUST signal" |
+| Server advertises that it uses the mechanism | No; the server challenges reactively | Partly. "Support for Challenges is OPTIONAL", and a server that offers a challenge endpoint "MUST signal support for the challenge endpoint" in its metadata (Section 6.3) |
 | Client-side requirement | Split. After a `use_dpop_nonce` error, non-normative: "will typically retry", "is expected to retry". On a successful response, normative: "The client MUST use the new nonce value supplied for the next token request" (Section 8.2) | Normative for a challenge the client holds: "A Client MUST include the most recently received Challenge". A client without one "SHOULD obtain a Challenge from that endpoint", and after a `use_attestation_challenge` error "SHOULD retry the request once" (Section 6; -10 said "MUST retrieve") |
 | Can the server know in advance whether the client will cope? | For a nonce delivered in a successful response, yes: Section 8.2 obliges the client to use it. For the `use_dpop_nonce` challenge, no | For a challenge it has supplied, yes: the client must use it. Whether a client fetches one up front or retries after an error, only by the SHOULDs |
-| Capability value needed? | Not to gate nonce enforcement (fails CAP-1) or to buy token lifetime (fails CAP-2). Offering the recovery challenge passes as a selection; whether it is worth a value is a separate question, see above | No; a MUST to use a challenge the client holds, with fetching and retrying SHOULDs |
+| Capability value needed? | Not to gate nonce enforcement (fails CAP-1) or to buy token lifetime (fails CAP-2). Offering the recovery challenge passes as a selection; whether it is worth a value is a separate question, see above | No; using ABCA commits the client to the MUST, and the SHOULDs cover the rest |
 
-Version -10 extended the pattern to resource servers, which may offer the
-challenge endpoint through protected resource metadata (RFC 9728 is registered
-alongside RFC 8414 for `challenge_endpoint`), and -12 keeps that. Version -10
-also applied the challenge to DPoP proofs. Version -12 confines it to the Client
-Attestation PoP JWT and uses `use_dpop_nonce` and `DPoP-Nonce` in the DPoP
-combined mode. Its challenge endpoint returns a fresh `DPoP-Nonce` when the
-server uses DPoP nonces, "both when using the DPoP combined mode ... and when
-using DPoP independently of this specification" (Section 6.3), so a DPoP client
-can obtain a nonce up front. Nothing in -12 obliges a DPoP client to do so,
-however, so a server still cannot tell which deployed DPoP clients will.
+Version -10 went further. It made retrieval a MUST conditioned on the
+advertised endpoint ("the Client MUST retrieve a challenge and MUST use this
+challenge"), let resource servers offer the endpoint through protected
+resource metadata (RFC 9728 is registered alongside RFC 8414 for
+`challenge_endpoint`), and applied the challenge to DPoP proofs. Version -12
+keeps the resource-server endpoint but relaxes retrieval to a SHOULD and
+confines the challenge to the Client Attestation PoP JWT, using
+`use_dpop_nonce` and `DPoP-Nonce` in the DPoP combined mode. Its challenge
+endpoint does return a fresh `DPoP-Nonce` when the server uses DPoP nonces,
+"both when using the DPoP combined mode ... and when using DPoP independently
+of this specification" (Section 6.3), so any DPoP client can obtain a nonce up
+front. Nothing obliges a DPoP client to do so, however, so a server still
+cannot tell which deployed DPoP clients will.
 
 ABCA also covers the reactive case: a fresh challenge may arrive on any response
 in the `OAuth-Client-Attestation-Challenge` field (Section 6.2), and "A Client
@@ -352,25 +361,26 @@ parallels the obligation in RFC 9449 Section 8.2 to use a nonce delivered on
 success. After a `use_attestation_challenge` error, a client "SHOULD retry the
 request once" (Section 6), where RFC 9449's retry has no keyword.
 
-**The general rule this yields** is more useful than the capability candidate
-itself, because it bounds the registry:
+**The general rule** that ABCA -10 illustrated is more useful than the
+capability candidate itself, because it bounds the registry:
 
 > Server-side discovery plus a conditional client requirement is an alternative
 > to a capability signal. Where an extension can express the client-side
 > behavior as a MUST conditioned on something the server advertises in its own
 > metadata, it should do that instead of registering a capability.
 
-A capability is what remains when the client-side behavior cannot be made
-mandatory, because it is genuinely optional for the client on grounds of
-platform, cost, or deployment shape, and the server therefore cannot discover
-conformance. ABCA, still a draft, could write client obligations into the
-specification: at -10, retrieving a challenge from the advertised endpoint was a
-MUST, and at -12 using a challenge the client holds still is. That the server
-decides per request was no obstacle: ABCA's challenges also arrive dynamically,
-in errors and in other responses (Section 6 of [ABCA]). RFC 9449 cannot now
-take the same route for the retry after a `use_dpop_nonce` error, because
-deployed clients were never required to retry ("will typically retry"), and a
-new advertisement would not tell a server which of them do.
+Version -12 shows where the rule stops: a specification can decline to make the
+behavior mandatory, as ABCA now does for retrieval, and then the server is back
+to reacting. A capability is what remains when the client-side behavior cannot
+be made mandatory, because it is genuinely optional for the client on grounds
+of platform, cost, or deployment shape, and the server therefore cannot
+discover conformance. ABCA, still a draft, could write its client obligations
+into the specification, and a client that adopts it takes them on. That the
+server decides per request was no obstacle: ABCA's challenges also arrive
+dynamically, in errors and in other responses (Section 6 of [ABCA]). RFC 9449
+cannot now take the same route for the retry after a `use_dpop_nonce` error,
+because deployed clients were never required to retry ("will typically
+retry"), and a new advertisement would not tell a server which of them do.
 
 What remains of the DPoP nonce splits three ways. Enforcing a nonce stays
 outside this mechanism: a removable signal cannot gate it (CAP-1) or buy a
