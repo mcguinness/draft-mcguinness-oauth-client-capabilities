@@ -1125,12 +1125,14 @@ parameter. The value is a JSON string, not an array ({{param}}):
 {: title="Capability carried in Request Object claims"}
 
 The following example shows the same capability on the token request; the
-earlier signal does not carry over ({{signal-scope}}):
+earlier signal does not carry over ({{signal-scope}}). The DPoP proof
+{{RFC9449}} is explained in {{worked-adoption}}:
 
 ~~~ http-message
 POST /token HTTP/1.1
 Host: as.example.com
 Content-Type: application/x-www-form-urlencoded
+DPoP: eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7...
 
 grant_type=authorization_code&code=SplxlOB...
 &client_id=https%3A%2F%2Fapp.example%2Fclient
@@ -1242,9 +1244,12 @@ changes only how the client signals that it can process the response.
 The authorization server advertises `accept-deferred-response` in
 `client_capabilities_supported`, as in the authorization server metadata
 excerpt above. A client release that can process a deferred response signals
-the value explicitly on its token request, as in the token request example
-above. The authorization server elects to defer and, in place of a token
-response, returns the deferred response defined in Section 6.4 of {{DTR}}:
+the value explicitly on its token request, as in the authorization code token
+request example above that signals it. The client is public, so that request
+also carries a DPoP proof {{RFC9449}}, which Section 11.1 of {{DTR}} requires on
+a token request that yields a deferred response. The authorization server
+elects to defer and, in place of a token response, returns the deferred
+response defined in Section 6.4 of {{DTR}}:
 
 ~~~ http-message
 HTTP/1.1 400 Bad Request
@@ -1260,12 +1265,14 @@ Cache-Control: no-store
 ~~~
 {: title="Deferred response to a request that signals the capability"}
 
-The client then polls as {{DTR}} describes. The polls continue the deferral
-that the original request elicited; a registration of the value states whether
-they also carry it ({{signal-scope}}). A token request whose effective set does
-not contain the value never elicits a deferral: the authorization server
-completes it synchronously, or returns an error under the grant's rules
-(Section 5.3 of {{DTR}}), which is `invalid_request` after a pre-token hint
+The client then polls as {{DTR}} describes. Each poll carries a DPoP proof
+signed by the key that signed the token request's proof, and the access token
+eventually issued is bound to that key. The polls continue the deferral that
+the original request elicited; a registration of the value states whether they
+also carry it ({{signal-scope}}). A token request whose effective set does not
+contain the value never elicits a deferral: the authorization server completes
+it synchronously, or returns an error under the grant's rules (Section 5.3 of
+{{DTR}}), which is `invalid_request` after a pre-token hint
 ({{existing-drafts}}). Omitting the value rules out deferral, not failure. The
 following response to the same token request without the value assumes that no
 pre-token hint preceded it and that the authorization server can complete every
@@ -1279,7 +1286,7 @@ Pragma: no-cache
 
 {
   "access_token": "2YotnFZFEjr1zCsicMWpAA",
-  "token_type": "Bearer",
+  "token_type": "DPoP",
   "expires_in": 3600
 }
 ~~~
@@ -1288,10 +1295,10 @@ Pragma: no-cache
 A registered client can instead declare the value as a default, as in the
 registration request above. Its token requests then carry no
 `client_capabilities` parameter and receive the default ({{precedence}}), so
-the authorization server may defer them. An instance that cannot process a
-deferred response overrides the default with `none`, as in the retraction
-example above. Its token requests are then never deferred: each receives a
-token response, as in the previous figure, or an error.
+the authorization server may defer them, and they carry DPoP proofs for the
+same reason. An instance that cannot process a deferred response overrides the
+default with `none`, as in the retraction example above. Its token requests are
+then never deferred: each receives a token response or an error.
 
 # Applying This Specification to Existing Drafts {#existing-drafts}
 
