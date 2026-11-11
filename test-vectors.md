@@ -135,9 +135,10 @@ does not change the kind.
 ## Client Metadata
 
 An invalid field is ignored and yields no capabilities. An otherwise-valid
-document or registration request is not rejected because of it, unless the
-field exceeds the server's size limit ("Client Metadata Declaration", "Denial
-of Service").
+document or registration request is not rejected because of it. The one
+exception is a field that exceeds the server's size limit in a registration
+request; a Client ID Metadata Document is never rejected for it ("Client
+Metadata Declaration", "Denial of Service").
 
 | Metadata value | Default set | Rule |
 |---|---|---|
@@ -151,6 +152,7 @@ of Service").
 | `"b"` | (empty) | Invalid: not an array |
 | `"a"` 64 times, without whitespace: 257 octets | a | Within the size every server admits |
 | `"a"` 65 times, without whitespace: 261 octets | a; or, where the server's limit is 64 members, (empty) or the registration request is rejected | Members are counted before duplicates are removed ("Denial of Service") |
+| The same array in a Client ID Metadata Document | a; or, where the server's limit is 64 members, (empty) | The document is not rejected ("Denial of Service") |
 *Client metadata test vectors*
 
 ## Discovery

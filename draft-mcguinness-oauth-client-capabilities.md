@@ -859,11 +859,16 @@ applies a finite limit to the encoded length.
 A signal that exceeds a limit MUST be treated as invalid: a request parameter
 then signals the empty set ({{param}}), a field is treated as absent
 ({{field}}), and a client metadata field is ignored ({{metadata}}). A server
-MAY instead reject the request or metadata document using an error response
-appropriate to the endpoint or application protocol. In particular,
-`invalid_request` is available at OAuth endpoints and `invalid_client_metadata`
-at a registration endpoint {{RFC7591}}, while a protected resource can use an
-application-specific response.
+MAY instead reject the request that carries the signal, or a registration
+request whose metadata carries it, using an error response appropriate to the
+endpoint or application protocol. In particular, `invalid_request` is available
+at OAuth endpoints and `invalid_client_metadata` at a registration endpoint
+{{RFC7591}}, while a protected resource can use an application-specific
+response. This does not extend to a metadata document published at a Client
+Identifier URL {{CIMD}}, which {{metadata}} therefore requires a server to
+accept with the field ignored. Rejecting such a document would be a terminal
+discovery failure ({{Section 6.1 of CIMD}}), failing the client's requests
+until the document changes without telling the client why.
 
 Acting on a falsely asserted capability can also consume server, downstream,
 and human resources; each extension analyzes this cost ({{extension-guidance}}).
