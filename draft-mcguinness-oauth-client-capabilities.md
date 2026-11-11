@@ -1259,11 +1259,12 @@ The client then polls as {{DTR}} describes. The polls continue the deferral
 that the original request elicited; a registration of the value states whether
 they also carry it ({{signal-scope}}). A token request whose effective set does
 not contain the value never elicits a deferral: the authorization server
-completes it
-synchronously, or returns an error under the grant's rules (Section 5.3 of
-{{DTR}}). Omitting the value rules out deferral, not failure. The following
-response to the same token request without the value assumes that the
-authorization server can complete every check it requires without deferral:
+completes it synchronously, or returns an error under the grant's rules
+(Section 5.3 of {{DTR}}), which is `invalid_request` after a pre-token hint
+({{existing-drafts}}). Omitting the value rules out deferral, not failure. The
+following response to the same token request without the value assumes that no
+pre-token hint preceded it and that the authorization server can complete every
+check it requires without deferral:
 
 ~~~ http-message
 HTTP/1.1 200 OK
@@ -1297,22 +1298,28 @@ Deferred Token Response:
   `accept-deferred-response`, and `deferred_interactive` would become a second
   value that a client sends together with it. The authorization server still
   defers only when `accept-deferred-response` is in the token request's
-  effective set ({{signal-scope}}). The pre-token hint of {{DTR}} becomes that
-  value in the effective set of the preceding request; where that request goes
-  to an endpoint other than the authorization or pushed authorization request
+  effective set ({{signal-scope}}). The pre-token hint of {{DTR}} becomes the
+  value in the preceding request's effective set when that set comes from its
+  `client_capabilities` parameter ({{precedence}}); a metadata default is not a
+  hint, because the client did not send it. Where that request goes to an
+  endpoint other than the authorization or pushed authorization request
   endpoint, such as the device authorization endpoint, {{DTR}} would define the
-  request parameter there ({{param}}). The authorization server can act on the
+  request parameter there ({{param}}). The authorization server can act on a
   hint for the originating grant as Section 5.2 of {{DTR}} describes, provided
-  it decides the assurance the grant requires without it ({{selection}}) and
-  relaxes no consent requirement (CAP-2); the hint does not by itself permit a
-  deferred token response. Adoption drops the rule in Section 5.2 of {{DTR}}
-  that a token request omitting `deferred` after a hint is rejected with
-  `invalid_request`. A request-level signal applies only to that request
-  ({{signal-scope}}), and CAP-1 bars a capability from enabling stricter
-  validation of the client's own requests ({{invariants}}). A token request
-  without the value after a hint is therefore answered without deferral,
-  synchronously or with an error under the grant's rules (Section 5.3 of
-  {{DTR}}). The proposed
+  the assurance the grant requires is decided without the hint ({{selection}})
+  and no consent requirement is relaxed (CAP-2). The rule in Section 5.2 of
+  {{DTR}} that a token request omitting `deferred` after a hint is rejected
+  with `invalid_request` carries over, whether or not the server acted on the
+  hint: a token request whose effective set lacks the value after a hint,
+  including one that sends `none`, is rejected. That is an error the extension
+  defines ({{server-behavior}}), and a consequence of the earlier request rather
+  than a capability carried forward: the token request is deferred only if its
+  own effective set contains the value ({{signal-scope}}). Nor is it a security
+  check, which CAP-1 bars. If the hint is stripped, the check goes with it, but
+  the token request is still handled under its own effective set and the
+  absent-signal behavior, so no protection is lost. Retracting the value at the
+  token endpoint rules out deferral but does not guarantee success. The
+  proposed
   single-purpose registry is subsumed by {{iana-registry}}, and the
   `deferred_token_response_supported` authorization server metadata Boolean
   by `client_capabilities_supported` containing the value. Either suffices to
