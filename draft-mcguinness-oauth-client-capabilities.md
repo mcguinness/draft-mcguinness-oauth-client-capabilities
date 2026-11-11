@@ -1323,8 +1323,10 @@ Deferred Token Response:
   defers only when `accept-deferred-response` is in the token request's
   effective set ({{signal-scope}}). The pre-token hint of {{DTR}} becomes the
   value in the preceding request's effective set when that set comes from its
-  `client_capabilities` parameter ({{precedence}}); a metadata default is not a
-  hint, because the client did not send it. Where that request goes to an
+  `client_capabilities` parameter ({{precedence}}). A metadata default is not
+  a hint: the client did not send it, and counting it would subject a
+  less-capable instance that redeems the code to the consistency rule below for
+  a hint it never made. Where that request goes to an
   endpoint other than the authorization or pushed authorization request
   endpoint, such as the device authorization endpoint, {{DTR}} would define the
   request parameter there ({{param}}). The authorization server can act on a
