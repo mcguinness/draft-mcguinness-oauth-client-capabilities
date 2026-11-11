@@ -325,20 +325,22 @@ per-request presence of the `OAuth-Client-Attestation` and
 
 The interesting part is ABCA's **challenge**, because it is the same mechanism
 shape as the DPoP nonce: a server-issued freshness value the client must echo
-in a proof. It needs no capability value, for a reason the DPoP nonce cannot
-borrow. A client that uses ABCA, as its authentication method or as an
-additional security signal (Section 7.6), takes on its challenge handling: "If
-a Challenge is provided, the Client MUST include it in the proof of possession"
-(Section 6). Using ABCA is the signal, as in tier 2. RFC 9449 is already
-deployed, and using DPoP does not imply that a client retries after a
-`use_dpop_nonce` error.
+in a proof. The two inclusion obligations match. ABCA says "If a Challenge is
+provided, the Client MUST include it in the proof of possession" (Section 6).
+RFC 9449 Section 4.2 says that when a server provides a `DPoP-Nonce` header in
+a response, "the DPoP proof MUST also contain" it, and that includes a nonce
+delivered with a `use_dpop_nonce` error. Neither obligation says whether the
+client retries. What differs is the retry and the server's options: after a
+`use_attestation_challenge` error a client "SHOULD retry the request once",
+ABCA defines what happens if it does not, and a server can advertise a
+challenge endpoint. RFC 9449's retry has no keyword.
 
 | | DPoP nonce (RFC 9449) | ABCA challenge ([ABCA] -12) |
 |---|---|---|
 | Server advertises that it uses the mechanism | No; the server challenges reactively | Partly. "Support for Challenges is OPTIONAL", and a server that offers a challenge endpoint "MUST signal support for the challenge endpoint" in its metadata (Section 6.3) |
-| Client-side requirement | Split. After a `use_dpop_nonce` error, non-normative: "will typically retry", "is expected to retry". On a successful response, normative: "The client MUST use the new nonce value supplied for the next token request" (Section 8.2) | Normative for a challenge the client holds: "A Client MUST include the most recently received Challenge". A client without one "SHOULD obtain a Challenge from that endpoint", and after a `use_attestation_challenge` error "SHOULD retry the request once" (Section 6; -10 said "MUST retrieve") |
-| Can the server know in advance whether the client will cope? | For a nonce delivered in a successful response, yes: Section 8.2 obliges the client to use it. For the `use_dpop_nonce` challenge, no | For a challenge it has supplied, yes: the client must use it. Whether a client fetches one up front or retries after an error, only by the SHOULDs |
-| Capability value needed? | Not to gate nonce enforcement (fails CAP-1) or to buy token lifetime (fails CAP-2). Offering the recovery challenge passes as a selection; whether it is worth a value is a separate question, see above | No; using ABCA commits the client to the MUST, and the SHOULDs cover the rest |
+| Client-side requirement | Split. A proof "MUST also contain" a nonce the server supplied, including one delivered with an error (Section 4.2), and after a successful response "The client MUST use the new nonce value supplied for the next token request" (Section 8.2). The retry after a `use_dpop_nonce` error is non-normative: "will typically retry", "is expected to retry" | Normative for a challenge the client holds: "A Client MUST include the most recently received Challenge". A client without one "SHOULD obtain a Challenge from that endpoint", and after a `use_attestation_challenge` error "SHOULD retry the request once" (Section 6; -10 said "MUST retrieve") |
+| Can the server know in advance whether the client will cope? | For a nonce the client holds, yes: Sections 4.2 and 8.2 oblige the client to use it. Whether it retries after a `use_dpop_nonce` error, no | For a challenge the client holds, yes: the client must use it. Whether a client fetches one up front or retries after an error, only by the SHOULDs |
+| Capability value needed? | Not to gate nonce enforcement (fails CAP-1) or to buy token lifetime (fails CAP-2). Offering the recovery challenge passes as a selection; whether it is worth a value is a separate question, see above | No. A value would be admissible as a selection, as for the DPoP recovery challenge, but would add little; see below |
 
 Version -10 went further. It made retrieval a MUST conditioned on the
 advertised endpoint ("the Client MUST retrieve a challenge and MUST use this
@@ -356,10 +358,19 @@ cannot tell which deployed DPoP clients will.
 
 ABCA also covers the reactive case: a fresh challenge may arrive on any response
 in the `OAuth-Client-Attestation-Challenge` field (Section 6.2), and "A Client
-MUST include the most recently received Challenge" (Section 6). That MUST
-parallels the obligation in RFC 9449 Section 8.2 to use a nonce delivered on
-success. After a `use_attestation_challenge` error, a client "SHOULD retry the
-request once" (Section 6), where RFC 9449's retry has no keyword.
+MUST include the most recently received Challenge" (Section 6), as RFC 9449
+Section 4.2 requires for a supplied nonce. After a `use_attestation_challenge`
+error, a client "SHOULD retry the request once" and "MUST NOT retry
+indefinitely" (Section 6), where RFC 9449's retry has no keyword.
+
+Whether the challenge would be worth a capability value is a question of
+usefulness, separate from the comparison above. A value would be admissible as
+a selection, as the DPoP recovery challenge is, but it would add little here: a
+conforming client already SHOULD retry once, a client that does not gets the
+error ABCA defines, and a server that wants to avoid the round trip can offer
+the challenge endpoint. For the DPoP nonce, a retry with no keyword leaves the
+server less to rely on, which is why the recovery challenge there remains an
+open question of usefulness rather than a settled no.
 
 **The general rule** that ABCA -10 illustrated is more useful than the
 capability candidate itself, because it bounds the registry:
@@ -432,7 +443,7 @@ verdicts are not all equally well-evidenced.
 
 | Draft | New client-facing server behavior? | Verdict | Basis |
 |---|---|---|---|
-| `attestation-based-client-auth` | Challenge, with a client MUST to use a challenge it holds and an advertised challenge endpoint | No capability needed; see the attestation section | Targeted read at -10; challenge text rechecked at -12 |
+| `attestation-based-client-auth` | Challenge, with a client MUST to include a challenge it holds (as RFC 9449 has for nonces), a retry SHOULD, and an advertised challenge endpoint | No capability needed; see the attestation section | Targeted read at -10; challenge text rechecked at -12 |
 | `client-id-metadata-document` | None; an `https` `client_id` self-signals | No | Targeted read at -02 |
 | `first-party-apps` | **`redirect_to_web`**, client fallback non-normative, no AS guidance if the client cannot | **Tier 1 candidate**, conditionally; see below | Targeted read at -04 |
 | `refresh-token-expiration` | `refresh_token_timeout`, `authorization_expires_in`; additive, no client MUST to process | No; additive and ignorable | Targeted read at -03 |
