@@ -497,7 +497,8 @@ client that cannot reach a browser.
 
 ### The systematic finding
 
-Three independent documents now specify the gate and omit the fallback:
+Two independent documents specify the gate and omit the fallback, and a third
+shows the alternative:
 
 - `txn-challenge`: "MUST NOT return a transaction authorization challenge
   unless" signaled, with no statement of what the resource server does instead.
@@ -535,7 +536,7 @@ Three findings, in descending order of consequence.
    says only what the capability turns on. Adding this as a registry field
    makes the invariant checkable rather than aspirational.
 
-3. **Unstated fallbacks are systematic, not incidental.** Three drafts specify
+3. **Unstated fallbacks are systematic, not incidental.** Two drafts specify
    the gate and omit the absent case; see the sweep. The transaction challenge
    draft's unstated fallback is the first thing the field would have caught, which is a reasonable argument that the
    field belongs in the registry rather than in prose guidance.
