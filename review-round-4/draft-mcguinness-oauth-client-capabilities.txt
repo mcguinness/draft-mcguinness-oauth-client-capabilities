@@ -4,8 +4,8 @@
 
 Web Authorization Protocol                                 K. McGuinness
 Internet-Draft                                               Independent
-Intended status: Standards Track                        10 November 2026
-Expires: 14 May 2027
+Intended status: Standards Track                        11 November 2026
+Expires: 15 May 2027
 
 
                      OAuth 2.0 Client Capabilities
@@ -46,7 +46,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 14 May 2027.
+   This Internet-Draft will expire on 15 May 2027.
 
 Copyright Notice
 
@@ -1365,8 +1365,9 @@ Appendix A.  Examples
 
    The following example shows a pushed authorization request carrying
    the parameter, which keeps the value off the authorization URI.  The
-   value applies only to that authorization request (Section 6.5); the
-   example illustrates the carrier:
+   value applies only to that authorization request (Section 6.5),
+   where, under the adoption in Appendix B, it would be a pre-token
+   hint:
 
    POST /par HTTP/1.1
    Host: as.example.com
@@ -1397,11 +1398,13 @@ Appendix A.  Examples
            Figure 5: Capability carried in Request Object claims
 
    The following example shows the same capability on the token request;
-   the earlier signal does not carry over (Section 6.5):
+   the earlier signal does not carry over (Section 6.5).  The DPoP proof
+   [RFC9449] is explained in Appendix A.1:
 
    POST /token HTTP/1.1
    Host: as.example.com
    Content-Type: application/x-www-form-urlencoded
+   DPoP: eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7...
 
    grant_type=authorization_code&code=SplxlOB...
    &client_id=https%3A%2F%2Fapp.example%2Fclient
@@ -1476,11 +1479,18 @@ Appendix A.  Examples
 
    Absent-Signal Behavior:  The authorization server does not defer.  It
       responds synchronously only if it can complete every check it
-      requires without deferral, and otherwise returns an error.
+      requires without deferral, and otherwise returns an error.  If an
+      earlier request in the grant carried the value as a pre-token
+      hint, it instead rejects the token request with invalid_request
+      (Appendix B).
 
    Carriers:  request parameter, client metadata
 
-   Endpoints:  token endpoint
+   Endpoints:  token endpoint, on a request that can be deferred but not
+      on polls; and, as a pre-token hint carried only in the request
+      parameter, any endpoint whose request precedes the token request
+      in the grant, such as the authorization or pushed authorization
+      request endpoint (Appendix B)
 
    Change Controller:  The party responsible for the registration
 
@@ -1498,7 +1508,10 @@ A.1.  Worked Adoption
    client_capabilities_supported, as in the authorization server
    metadata excerpt above.  A client release that can process a deferred
    response signals the value explicitly on its token request, as in the
-   token request example above.  The authorization server elects to
+   authorization code token request example above that signals it.  The
+   client is public, so that request also carries a DPoP proof
+   [RFC9449], which Section 11.1 of [DTR] requires on a token request
+   that yields a deferred response.  The authorization server elects to
    defer and, in place of a token response, returns the deferred
    response defined in Section 6.4 of [DTR]:
 
@@ -1515,14 +1528,18 @@ A.1.  Worked Adoption
 
    Figure 11: Deferred response to a request that signals the capability
 
-   The client then polls as [DTR] describes.  The polls continue the
-   deferral that the original request elicited; a registration of the
-   value states whether they also carry it (Section 6.5).  A token
-   request whose effective set does not contain the value never elicits
-   a deferral: the authorization server completes it synchronously, or
-   returns an error under the grant's rules (Section 5.3 of [DTR]).
-   Omitting the value rules out deferral, not failure.  The following
-   response to the same token request without the value assumes that the
+   The client then polls as [DTR] describes.  Each poll carries a DPoP
+   proof signed by the key that signed the token request's proof, and
+   the access token eventually issued is bound to that key.  The polls
+   continue the deferral that the original request elicited; a
+   registration of the value states whether they also carry it
+   (Section 6.5).  A token request whose effective set does not contain
+   the value never elicits a deferral: the authorization server
+   completes it synchronously, or returns an error under the grant's
+   rules (Section 5.3 of [DTR]), which is invalid_request after a pre-
+   token hint (Appendix B).  Omitting the value rules out deferral, not
+   failure.  The following response to the same token request without
+   the value assumes that no pre-token hint preceded it and that the
    authorization server can complete every check it requires without
    deferral:
 
@@ -1533,7 +1550,7 @@ A.1.  Worked Adoption
 
    {
      "access_token": "2YotnFZFEjr1zCsicMWpAA",
-     "token_type": "Bearer",
+     "token_type": "DPoP",
      "expires_in": 3600
    }
 
@@ -1542,11 +1559,11 @@ A.1.  Worked Adoption
    A registered client can instead declare the value as a default, as in
    the registration request above.  Its token requests then carry no
    client_capabilities parameter and receive the default (Section 6.4),
-   so the authorization server may defer them.  An instance that cannot
-   process a deferred response overrides the default with none, as in
-   the retraction example above.  Its token requests are then never
-   deferred: each receives a token response, as in the previous figure,
-   or an error.
+   so the authorization server may defer them, and they carry DPoP
+   proofs for the same reason.  An instance that cannot process a
+   deferred response overrides the default with none, as in the
+   retraction example above.  Its token requests are then never
+   deferred: each receives a token response or an error.
 
 Appendix B.  Applying This Specification to Existing Drafts
 
@@ -1559,23 +1576,30 @@ Appendix B.  Applying This Specification to Existing Drafts
       sends together with it.  The authorization server still defers
       only when accept-deferred-response is in the token request's
       effective set (Section 6.5).  The pre-token hint of [DTR] becomes
-      that value in the effective set of the preceding request; where
-      that request goes to an endpoint other than the authorization or
-      pushed authorization request endpoint, such as the device
-      authorization endpoint, [DTR] would define the request parameter
-      there (Section 6.1).  The authorization server can act on the hint
-      for the originating grant as Section 5.2 of [DTR] describes,
-      provided it decides the assurance the grant requires without it
-      (Section 7.1) and relaxes no consent requirement (CAP-2); the hint
-      does not by itself permit a deferred token response.  Adoption
-      drops the rule in Section 5.2 of [DTR] that a token request
-      omitting deferred after a hint is rejected with invalid_request.
-      A request-level signal applies only to that request (Section 6.5),
-      and CAP-1 bars a capability from enabling stricter validation of
-      the client's own requests (Section 5).  A token request without
-      the value after a hint is therefore answered without deferral,
-      synchronously or with an error under the grant's rules
-      (Section 5.3 of [DTR]).  The proposed single-purpose registry is
+      the value in the preceding request's effective set when that set
+      comes from its client_capabilities parameter (Section 6.4); a
+      metadata default is not a hint, because the client did not send
+      it.  Where that request goes to an endpoint other than the
+      authorization or pushed authorization request endpoint, such as
+      the device authorization endpoint, [DTR] would define the request
+      parameter there (Section 6.1).  The authorization server can act
+      on a hint for the originating grant as Section 5.2 of [DTR]
+      describes, provided the assurance the grant requires is decided
+      without the hint (Section 7.1) and no consent requirement is
+      relaxed (CAP-2).  The rule in Section 5.2 of [DTR] that a token
+      request omitting deferred after a hint is rejected with
+      invalid_request carries over, whether or not the server acted on
+      the hint: a token request whose effective set lacks the value
+      after a hint, including one that sends none, is rejected.  That is
+      an error the extension defines (Section 7), and a consequence of
+      the earlier request rather than a capability carried forward: the
+      token request is deferred only if its own effective set contains
+      the value (Section 6.5).  Nor is it a security check, which CAP-1
+      bars.  If the hint is stripped, the check goes with it, but the
+      token request is still handled under its own effective set and the
+      absent-signal behavior, so no protection is lost.  Retracting the
+      value at the token endpoint rules out deferral but does not
+      guarantee success.  The proposed single-purpose registry is
       subsumed by Section 12.1, and the
       deferred_token_response_supported authorization server metadata
       Boolean by client_capabilities_supported containing the value.

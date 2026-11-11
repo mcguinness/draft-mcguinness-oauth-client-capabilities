@@ -1062,7 +1062,7 @@ svg {
 </tr></thead>
 <tfoot><tr>
 <td class="left">McGuinness</td>
-<td class="center">Expires 14 May 2027</td>
+<td class="center">Expires 15 May 2027</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1075,12 +1075,12 @@ svg {
 <dd class="internet-draft">draft-mcguinness-oauth-client-capabilities-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-11-10" class="published">10 November 2026</time>
+<time datetime="2026-11-11" class="published">11 November 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2027-05-14">14 May 2027</time></dd>
+<dd class="expires"><time datetime="2027-05-15">15 May 2027</time></dd>
 <dt class="label-authors">Author:</dt>
 <dd class="authors">
 <div class="author">
@@ -1127,7 +1127,7 @@ without changing metadata that every instance shares.<a href="#section-abstract-
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 14 May 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 15 May 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -2782,8 +2782,8 @@ corresponding to behaviors described in <a href="#existing-drafts" class="auto i
 the form-encoded request bodies are for display only.<a href="#appendix-A-1" class="pilcrow">¶</a></p>
 <p id="appendix-A-2">The following example shows a pushed authorization request carrying the
 parameter, which keeps the value off the authorization URI. The value applies
-only to that authorization request (<a href="#signal-scope" class="auto internal xref">Section 6.5</a>); the example illustrates
-the carrier:<a href="#appendix-A-2" class="pilcrow">¶</a></p>
+only to that authorization request (<a href="#signal-scope" class="auto internal xref">Section 6.5</a>), where, under the
+adoption in <a href="#existing-drafts" class="auto internal xref">Appendix B</a>, it would be a pre-token hint:<a href="#appendix-A-2" class="pilcrow">¶</a></p>
 <span id="name-capability-carried-in-a-pus"></span><figure id="figure-4">
         <div class="lang-http-message sourcecode" id="appendix-A-3.1">
 <pre>
@@ -2821,13 +2821,15 @@ parameter. The value is a JSON string, not an array (<a href="#param" class="aut
 <a href="#name-capability-carried-in-reque" class="selfRef">Capability carried in Request Object claims</a>
         </figcaption></figure>
 <p id="appendix-A-6">The following example shows the same capability on the token request; the
-earlier signal does not carry over (<a href="#signal-scope" class="auto internal xref">Section 6.5</a>):<a href="#appendix-A-6" class="pilcrow">¶</a></p>
+earlier signal does not carry over (<a href="#signal-scope" class="auto internal xref">Section 6.5</a>). The DPoP proof
+<span>[<a href="#RFC9449" class="cite xref">RFC9449</a>]</span> is explained in <a href="#worked-adoption" class="auto internal xref">Appendix A.1</a>:<a href="#appendix-A-6" class="pilcrow">¶</a></p>
 <span id="name-signaling-at-the-endpoint-w"></span><figure id="figure-6">
         <div class="lang-http-message sourcecode" id="appendix-A-7.1">
 <pre>
 POST /token HTTP/1.1
 Host: as.example.com
 Content-Type: application/x-www-form-urlencoded
+DPoP: eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7...
 
 grant_type=authorization_code&amp;code=SplxlOB...
 &amp;client_id=https%3A%2F%2Fapp.example%2Fclient
@@ -2932,7 +2934,9 @@ registration request.<a href="#appendix-A-15" class="pilcrow">¶</a></p>
         <dd style="margin-left: 1.5em" id="appendix-A-16.8">
           <p id="appendix-A-16.8.1">The authorization server does not defer. It responds synchronously only if
 it can complete every check it requires without deferral, and otherwise
-returns an error.<a href="#appendix-A-16.8.1" class="pilcrow">¶</a></p>
+returns an error. If an earlier request in the grant carried the value as a
+pre-token hint, it instead rejects the token request with <code>invalid_request</code>
+(<a href="#existing-drafts" class="auto internal xref">Appendix B</a>).<a href="#appendix-A-16.8.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
 <dt id="appendix-A-16.9">Carriers:</dt>
@@ -2942,7 +2946,10 @@ returns an error.<a href="#appendix-A-16.8.1" class="pilcrow">¶</a></p>
         <dd class="break"></dd>
 <dt id="appendix-A-16.11">Endpoints:</dt>
         <dd style="margin-left: 1.5em" id="appendix-A-16.12">
-          <p id="appendix-A-16.12.1">token endpoint<a href="#appendix-A-16.12.1" class="pilcrow">¶</a></p>
+          <p id="appendix-A-16.12.1">token endpoint, on a request that can be deferred but not on polls; and, as
+a pre-token hint carried only in the request parameter, any endpoint whose
+request precedes the token request in the grant, such as the authorization
+or pushed authorization request endpoint (<a href="#existing-drafts" class="auto internal xref">Appendix B</a>)<a href="#appendix-A-16.12.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
 <dt id="appendix-A-16.13">Change Controller:</dt>
@@ -2968,9 +2975,12 @@ changes only how the client signals that it can process the response.<a href="#a
 <p id="appendix-A.1-2">The authorization server advertises <code>accept-deferred-response</code> in
 <code>client_capabilities_supported</code>, as in the authorization server metadata
 excerpt above. A client release that can process a deferred response signals
-the value explicitly on its token request, as in the token request example
-above. The authorization server elects to defer and, in place of a token
-response, returns the deferred response defined in Section 6.4 of <span>[<a href="#DTR" class="cite xref">DTR</a>]</span>:<a href="#appendix-A.1-2" class="pilcrow">¶</a></p>
+the value explicitly on its token request, as in the authorization code token
+request example above that signals it. The client is public, so that request
+also carries a DPoP proof <span>[<a href="#RFC9449" class="cite xref">RFC9449</a>]</span>, which Section 11.1 of <span>[<a href="#DTR" class="cite xref">DTR</a>]</span> requires on
+a token request that yields a deferred response. The authorization server
+elects to defer and, in place of a token response, returns the deferred
+response defined in Section 6.4 of <span>[<a href="#DTR" class="cite xref">DTR</a>]</span>:<a href="#appendix-A.1-2" class="pilcrow">¶</a></p>
 <span id="name-deferred-response-to-a-requ"></span><figure id="figure-11">
           <div class="lang-http-message sourcecode" id="appendix-A.1-3.1">
 <pre>
@@ -2989,15 +2999,18 @@ Cache-Control: no-store
 <figcaption><a href="#figure-11" class="selfRef">Figure 11</a>:
 <a href="#name-deferred-response-to-a-requ" class="selfRef">Deferred response to a request that signals the capability</a>
           </figcaption></figure>
-<p id="appendix-A.1-4">The client then polls as <span>[<a href="#DTR" class="cite xref">DTR</a>]</span> describes. The polls continue the deferral
-that the original request elicited; a registration of the value states whether
-they also carry it (<a href="#signal-scope" class="auto internal xref">Section 6.5</a>). A token request whose effective set does
-not contain the value never elicits a deferral: the authorization server
-completes it
-synchronously, or returns an error under the grant's rules (Section 5.3 of
-<span>[<a href="#DTR" class="cite xref">DTR</a>]</span>). Omitting the value rules out deferral, not failure. The following
-response to the same token request without the value assumes that the
-authorization server can complete every check it requires without deferral:<a href="#appendix-A.1-4" class="pilcrow">¶</a></p>
+<p id="appendix-A.1-4">The client then polls as <span>[<a href="#DTR" class="cite xref">DTR</a>]</span> describes. Each poll carries a DPoP proof
+signed by the key that signed the token request's proof, and the access token
+eventually issued is bound to that key. The polls continue the deferral that
+the original request elicited; a registration of the value states whether they
+also carry it (<a href="#signal-scope" class="auto internal xref">Section 6.5</a>). A token request whose effective set does not
+contain the value never elicits a deferral: the authorization server completes
+it synchronously, or returns an error under the grant's rules (Section 5.3 of
+<span>[<a href="#DTR" class="cite xref">DTR</a>]</span>), which is <code>invalid_request</code> after a pre-token hint
+(<a href="#existing-drafts" class="auto internal xref">Appendix B</a>). Omitting the value rules out deferral, not failure. The
+following response to the same token request without the value assumes that no
+pre-token hint preceded it and that the authorization server can complete every
+check it requires without deferral:<a href="#appendix-A.1-4" class="pilcrow">¶</a></p>
 <span id="name-synchronous-response-when-t"></span><figure id="figure-12">
           <div class="lang-http-message sourcecode" id="appendix-A.1-5.1">
 <pre>
@@ -3008,7 +3021,7 @@ Pragma: no-cache
 
 {
   "access_token": "2YotnFZFEjr1zCsicMWpAA",
-  "token_type": "Bearer",
+  "token_type": "DPoP",
   "expires_in": 3600
 }
 </pre>
@@ -3019,10 +3032,10 @@ Pragma: no-cache
 <p id="appendix-A.1-6">A registered client can instead declare the value as a default, as in the
 registration request above. Its token requests then carry no
 <code>client_capabilities</code> parameter and receive the default (<a href="#precedence" class="auto internal xref">Section 6.4</a>), so
-the authorization server may defer them. An instance that cannot process a
-deferred response overrides the default with <code>none</code>, as in the retraction
-example above. Its token requests are then never deferred: each receives a
-token response, as in the previous figure, or an error.<a href="#appendix-A.1-6" class="pilcrow">¶</a></p>
+the authorization server may defer them, and they carry DPoP proofs for the
+same reason. An instance that cannot process a deferred response overrides the
+default with <code>none</code>, as in the retraction example above. Its token requests are
+then never deferred: each receives a token response or an error.<a href="#appendix-A.1-6" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -3041,22 +3054,28 @@ motivated this work would use the mechanism.<a href="#appendix-B-1" class="pilcr
 <code>accept-deferred-response</code>, and <code>deferred_interactive</code> would become a second
 value that a client sends together with it. The authorization server still
 defers only when <code>accept-deferred-response</code> is in the token request's
-effective set (<a href="#signal-scope" class="auto internal xref">Section 6.5</a>). The pre-token hint of <span>[<a href="#DTR" class="cite xref">DTR</a>]</span> becomes that
-value in the effective set of the preceding request; where that request goes
-to an endpoint other than the authorization or pushed authorization request
+effective set (<a href="#signal-scope" class="auto internal xref">Section 6.5</a>). The pre-token hint of <span>[<a href="#DTR" class="cite xref">DTR</a>]</span> becomes the
+value in the preceding request's effective set when that set comes from its
+<code>client_capabilities</code> parameter (<a href="#precedence" class="auto internal xref">Section 6.4</a>); a metadata default is not a
+hint, because the client did not send it. Where that request goes to an
+endpoint other than the authorization or pushed authorization request
 endpoint, such as the device authorization endpoint, <span>[<a href="#DTR" class="cite xref">DTR</a>]</span> would define the
-request parameter there (<a href="#param" class="auto internal xref">Section 6.1</a>). The authorization server can act on the
+request parameter there (<a href="#param" class="auto internal xref">Section 6.1</a>). The authorization server can act on a
 hint for the originating grant as Section 5.2 of <span>[<a href="#DTR" class="cite xref">DTR</a>]</span> describes, provided
-it decides the assurance the grant requires without it (<a href="#selection" class="auto internal xref">Section 7.1</a>) and
-relaxes no consent requirement (CAP-2); the hint does not by itself permit a
-deferred token response. Adoption drops the rule in Section 5.2 of <span>[<a href="#DTR" class="cite xref">DTR</a>]</span>
-that a token request omitting <code>deferred</code> after a hint is rejected with
-<code>invalid_request</code>. A request-level signal applies only to that request
-(<a href="#signal-scope" class="auto internal xref">Section 6.5</a>), and CAP-1 bars a capability from enabling stricter
-validation of the client's own requests (<a href="#invariants" class="auto internal xref">Section 5</a>). A token request
-without the value after a hint is therefore answered without deferral,
-synchronously or with an error under the grant's rules (Section 5.3 of
-<span>[<a href="#DTR" class="cite xref">DTR</a>]</span>). The proposed
+the assurance the grant requires is decided without the hint (<a href="#selection" class="auto internal xref">Section 7.1</a>)
+and no consent requirement is relaxed (CAP-2). The rule in Section 5.2 of
+<span>[<a href="#DTR" class="cite xref">DTR</a>]</span> that a token request omitting <code>deferred</code> after a hint is rejected
+with <code>invalid_request</code> carries over, whether or not the server acted on the
+hint: a token request whose effective set lacks the value after a hint,
+including one that sends <code>none</code>, is rejected. That is an error the extension
+defines (<a href="#server-behavior" class="auto internal xref">Section 7</a>), and a consequence of the earlier request rather
+than a capability carried forward: the token request is deferred only if its
+own effective set contains the value (<a href="#signal-scope" class="auto internal xref">Section 6.5</a>). Nor is it a security
+check, which CAP-1 bars. If the hint is stripped, the check goes with it, but
+the token request is still handled under its own effective set and the
+absent-signal behavior, so no protection is lost. Retracting the value at the
+token endpoint rules out deferral but does not guarantee success. The
+proposed
 single-purpose registry is subsumed by <a href="#iana-registry" class="auto internal xref">Section 12.1</a>, and the
 <code>deferred_token_response_supported</code> authorization server metadata Boolean
 by <code>client_capabilities_supported</code> containing the value. Either suffices to
