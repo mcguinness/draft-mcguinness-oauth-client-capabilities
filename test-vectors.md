@@ -137,8 +137,10 @@ does not change the kind.
 An invalid field is ignored and yields no capabilities. An otherwise-valid
 document or registration request is not rejected because of it. The one
 exception is a field that exceeds the server's size limit in a registration
-request; a Client ID Metadata Document is never rejected for it ("Client
-Metadata Declaration", "Denial of Service").
+request. A Client ID Metadata Document is not rejected for an oversized field,
+but it can still be rejected when the whole document exceeds the server's
+retrieval or parsing limits ("Client Metadata Declaration", "Denial of
+Service").
 
 | Metadata value | Default set | Rule |
 |---|---|---|
@@ -152,7 +154,8 @@ Metadata Declaration", "Denial of Service").
 | `"b"` | (empty) | Invalid: not an array |
 | `"a"` 64 times, without whitespace: 257 octets | a | Within the size every server admits |
 | `"a"` 65 times, without whitespace: 261 octets | a; or, where the server's limit is 64 members, (empty) or the registration request is rejected | Members are counted before duplicates are removed ("Denial of Service") |
-| The same array in a Client ID Metadata Document | a; or, where the server's limit is 64 members, (empty) | The document is not rejected ("Denial of Service") |
+| The same array in a Client ID Metadata Document | a; or, where the server's limit is 64 members, (empty) | The document is not rejected for the field ("Denial of Service") |
+| A 4,096-octet array in a Client ID Metadata Document that is over 5 KB in all | None, where the server stops reading at 5 KB as CIMD Section 10.11 recommends: the document is rejected | Whole-document limits still apply, even when the field accounts for most of the size |
 *Client metadata test vectors*
 
 ## Discovery
