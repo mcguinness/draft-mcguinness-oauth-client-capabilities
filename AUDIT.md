@@ -216,9 +216,13 @@ difference decides whether the operation completes at all.
 It passes the other filters, which is why it is a candidate and not a near miss.
 CAP-1 holds, since absence means the server picks another qualifying path or
 refuses, and nothing is weakened. CAP-2 buys nothing. And discovery-first cannot
-rescue it, because whether to demand a stronger authentication event is a
-per-request risk decision rather than a static posture, the same reason discovery
-could not rescue the DPoP nonce.
+rescue it. A per-request risk decision is not the obstacle: a server could
+advertise that it may challenge and require clients to process a challenge when
+one arrives, as ABCA does for challenges it supplies in any response (Section 6
+of [ABCA]). The obstacle is the installed base. RFC 9470 is deployed and makes
+relaying `acr_values` only a SHOULD (Section 4), so a new advertisement would
+not tell the resource server which existing clients do it. The retry after a
+DPoP `use_dpop_nonce` error is in the same position.
 
 Note the carrier consequence. A protected resource does not hold client metadata,
 so selection at a resource server can only read the HTTP field. A client that
@@ -357,12 +361,14 @@ itself, because it bounds the registry:
 A capability is what remains when the client-side behavior cannot be made
 mandatory, because it is genuinely optional for the client on grounds of
 platform, cost, or deployment shape, and the server therefore cannot discover
-conformance. ABCA could make its challenge mandatory because fetching one is
-cheap and universally implementable. RFC 9449 could not take the same route for
-the retry after a `use_dpop_nonce` error, because whether to demand a nonce is a
-per-request risk decision rather than a static posture, and advertising it in
-metadata would not describe the behavior. That is why ABCA could close its gap
-by discovery and RFC 9449 cannot.
+conformance. ABCA, still a draft, could write client obligations into the
+specification: at -10, retrieving a challenge from the advertised endpoint was a
+MUST, and at -12 using a challenge the client holds still is. That the server
+decides per request was no obstacle: ABCA's challenges also arrive dynamically,
+in errors and in other responses (Section 6 of [ABCA]). RFC 9449 cannot now
+take the same route for the retry after a `use_dpop_nonce` error, because
+deployed clients were never required to retry ("will typically retry"), and a
+new advertisement would not tell a server which of them do.
 
 What remains of the DPoP nonce splits three ways. Enforcing a nonce stays
 outside this mechanism: a removable signal cannot gate it (CAP-1) or buy a
