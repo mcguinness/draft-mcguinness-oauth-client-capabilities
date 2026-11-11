@@ -4,8 +4,8 @@
 
 Web Authorization Protocol                                 K. McGuinness
 Internet-Draft                                               Independent
-Intended status: Standards Track                        10 November 2026
-Expires: 14 May 2027
+Intended status: Standards Track                        11 November 2026
+Expires: 15 May 2027
 
 
                      OAuth 2.0 Client Capabilities
@@ -46,7 +46,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 14 May 2027.
+   This Internet-Draft will expire on 15 May 2027.
 
 Copyright Notice
 
@@ -150,7 +150,12 @@ Table of Contents
    vocabulary is the minimum that covers OAuth's topology.
 
    The extensions in Appendix B need only direct HTTP requests, at the
-   token endpoint and at protected resources.  The request parameter's
+   token endpoint and at protected resources.  Even at the token
+   endpoint, the request parameter is the carrier rather than the field:
+   OAuth endpoints are extended through registered request parameters,
+   as [DTR] already does, and one carrier at each endpoint where the
+   parameter is defined lets a request override a client metadata
+   default without combining two signals.  The request parameter's
    coverage of the authorization endpoint anticipates extensions whose
    behavior changes the authorization response; the pushed authorization
    request and Request Object examples (Appendix A) illustrate the
@@ -183,13 +188,14 @@ Table of Contents
    response (Appendix B).  The document continues to declare only what
    every instance can process.  The updated release sends its complete
    set, including the illustrative accept-deferred-response, to one
-   authorization server, since a request set replaces the metadata
-   default rather than adding to it (Section 6.4).  It sends other
-   authorization servers nothing new, and older releases are unaffected.
-   Stopping is equally local while the value stays out of the document.
+   authorization server, since a request-level signal replaces the
+   metadata default rather than adding to it (Section 6.4).  It sends
+   other authorization servers nothing new, and older releases are
+   unaffected.  While the document does not declare the value, the
+   release enables or stops it per request and per authorization server.
    Once the document declares it, an instance withdraws it only by
-   sending a set without it, or none.  Either way the client publishes
-   one document for every authorization server.
+   sending a set without it, or none.  In both cases one document serves
+   every authorization server.
 
    This works only for optional behavior.  A metadata field that
    requires a behavior applies at every authorization server that
@@ -240,9 +246,19 @@ Table of Contents
    Signal:  To convey capability values to a server through one of the
       carriers defined in Section 6; as a noun, the values so conveyed.
 
+   Recognize:  A recipient recognizes a capability value when it
+      implements what the value names: the server behavior, or, for a
+      client reading a server's list, the client processing.  The
+      reserved token none names nothing and is never recognized.
+
    Effective capability set:  The capability set that applies to a
       request after the carrier and precedence rules in Section 6 have
       been applied.  Also called the effective set.
+
+   Request-level signal:  The signal carried on the request itself: the
+      request parameter on an OAuth request, or the HTTP field on a
+      protected resource request (Section 6.4).  Client metadata
+      supplies a default, not a request-level signal.
 
    Out-of-band knowledge:  Knowledge, where an extension defines it,
       that a protected resource has of a client's capabilities other
@@ -259,16 +275,14 @@ Table of Contents
 
    Three carriers convey a set, chosen by what the request can hold:
 
-   *  The client_capabilities request parameter, on requests a client
-      makes to an authorization server (Section 6.1).
+   *  The client_capabilities request parameter, on OAuth requests such
+      as authorization and token requests (Section 6.1).
 
-   *  The OAuth-Client-Capabilities HTTP field, on requests that carry
-      no OAuth parameters, such as protected resource requests
-      (Section 6.2).
+   *  The OAuth-Client-Capabilities HTTP field, on protected resource
+      requests (Section 6.2).
 
    *  A client_capabilities member in client metadata, supplying a
-      default when a request to an authorization server carries no
-      signal (Section 6.3).
+      default when an OAuth request carries no signal (Section 6.3).
 
    Whichever carrier applies, the result is the request's effective
    capability set: the values a server may act upon for that request.  A
@@ -325,9 +339,9 @@ Table of Contents
 
    A capability value names a specific client behavior that a server may
    exercise after receiving the value, not a document. accept-deferred-
-   response is a capability; draft-gerber-oauth-deferred-token-response
-   is not.  A specification MAY register more than one value where a
-   client can usefully implement part of it.
+   response is a capability; draft-ietf-oauth-deferred-token-response is
+   not.  A specification MAY register more than one value where a client
+   can usefully implement part of it.
 
    A new revision of an extension whose client-side processing differs
    registers a new value rather than reusing the old one.  Registering
@@ -342,8 +356,12 @@ Table of Contents
    substitute in the interim, because two implementations can give one
    value different meanings (Section 10.4).  Unregistered values
    therefore SHOULD be confined to deployments whose parties have agreed
-   on their meaning out of band, and early allocation SHOULD be sought
-   once deployment becomes interoperable, as [RFC7120] describes.
+   on their meaning out of band, and registration SHOULD be sought once
+   deployment becomes interoperable.  The registry's Specification
+   Required policy (Section 12.1) allows a value to be registered once a
+   stable specification documents it; for an IETF-stream specification
+   that will be published as an RFC, early allocation [RFC7120] is also
+   available.
 
    A revision number is a document reference, so a value SHOULD NOT
    carry one: it means nothing once the draft is published, and a run of
@@ -385,7 +403,8 @@ Table of Contents
    none MUST NOT appear together with any capability value.  It is
    registered only to reserve the token (Section 12.1) and enables no
    behavior, so a recipient acts on it as on a value it does not
-   recognize (Section 4.1).
+   recognize (Section 4.1).  Its presence never makes a request
+   parameter, field, client metadata, or discovery value invalid.
 
 5.  Capability Invariants
 
@@ -417,7 +436,8 @@ Table of Contents
    CAP-3:  A server MUST NOT rely on a capability signal being truthful.
       The security properties of the enabled behavior MUST hold even
       when the client does not implement the capability, and when a
-      party other than the client asserts it.  A capability MUST NOT
+      party other than the client asserts it, including one that relays
+      the enabled behavior to someone else.  A capability MUST NOT
       substitute for client authentication, proof of possession,
       protocol validation, or other evidence required by the behavior it
       enables.
@@ -461,13 +481,15 @@ Table of Contents
    authorization server uses only the parameters inside it (Section 6.3
    of [RFC9101]).  A client_capabilities value outside the Request
    Object is not used, and if the Request Object contains no such value,
-   the parameter is absent for the purposes of Section 6.4.  Inside a
-   Request Object, the value is a JSON string containing a capability-
-   list; a value of any other JSON type is invalid.  An authorization
-   request that uses a request_uri from a pushed authorization request
-   is built as defined in [RFC9101] (Section 4 of [RFC9126]), so the
-   same holds for the parameters that were pushed: a client_capabilities
-   value sent alongside the request_uri is not used.
+   the parameter is absent for the purposes of Section 6.4.  An
+   authorization request that uses a request_uri from a pushed
+   authorization request is built as defined in [RFC9101] (Section 4 of
+   [RFC9126]), so the same holds for the parameters that were pushed: a
+   client_capabilities value sent alongside the request_uri is not used.
+   Inside a Request Object, the value is a JSON string containing a
+   capability-list.  An empty string is treated as omitted, as for the
+   form-encoded parameter, and a value of any other JSON type, including
+   null, is invalid.
 
    The parameter is not defined for the client registration endpoint.  A
    client declares capabilities there using the client_capabilities
@@ -508,13 +530,12 @@ Table of Contents
    capabilities on a request that has no OAuth request parameter
    surface, such as a protected resource request.
 
-   The field asserts that the path which will process the response can
-   process the behavior.  That path may be the sender alone, or the
-   sender together with another component on whose behalf it acts: an
-   agent making a resource request may relay a challenge to a component
-   that completes it.  The sender is accountable for the assertion.
-   Because the field does not necessarily identify the OAuth client,
-   client metadata supplies no default for it (Section 6.4).
+   The field asserts that whatever processes the response can process
+   the behavior: the sender alone, or the sender together with another
+   component on whose behalf it acts, as when an agent making a resource
+   request relays a challenge to a component that completes it.  Because
+   the field does not necessarily identify the OAuth client, client
+   metadata supplies no default for it (Section 6.4).
 
    A client MUST NOT use the field on a request to an endpoint where the
    client_capabilities request parameter is defined: the authorization,
@@ -524,19 +545,11 @@ Table of Contents
    ignore the field on any request to such an endpoint.  Using only the
    parameter at these endpoints gives each request one unambiguous
    effective set, and allows Request Object or pushed-request
-   protections where those apply.  The field plays no part at other
-   authorization server endpoints either.  At the introspection
-   [RFC7662], revocation [RFC7009], and device authorization [RFC8628]
-   endpoints, an extension that needs a capability defines the request
-   parameter there (Section 6.1).  At the client registration [RFC7591]
-   and client configuration [RFC7592] endpoints, a client declares
-   capabilities in client metadata (Section 6.3).  This holds even when
-   a request to one of these endpoints is authorized with an access
-   token, as introspection, registration, and client configuration
-   requests can be.  Any other resource that an authorization server
-   hosts and that a client accesses with an access token, such as the
-   OpenID Connect UserInfo endpoint [OIDC], is a protected resource for
-   this purpose.
+   protections where those apply.  The field plays no part in any other
+   request to an authorization server either, even one authorized with
+   an access token, unless it is a protected resource request as
+   Section 6.4 defines it, such as a request to the OpenID Connect
+   UserInfo endpoint [OIDC].
 
    The field's value is a Structured Fields List (Section 3.1 of
    [RFC9651]).  Each member MUST be an Item whose bare item is a Token
@@ -562,10 +575,11 @@ Table of Contents
 
    A recipient MUST ignore parameters.
 
-   A server whose response can vary with the field MUST include OAuth-
-   Client-Capabilities in the Vary field of every such response,
-   including responses to requests that omit the field, or use Vary: *
-   (Section 12.5.5 of [RFC9110]).
+   A server MUST list OAuth-Client-Capabilities in the Vary field, or
+   send Vary: * (Section 12.5.5 of [RFC9110]), on every response whose
+   status code, header fields, or content could have differed had the
+   request carried, omitted, or changed the OAuth-Client-Capabilities
+   field.  This includes a response to a request that omits the field.
 
    An empty List is treated as an absent field (Section 6.4).
    Structured Fields serializes an empty List by omitting the field
@@ -579,7 +593,13 @@ Table of Contents
    most simply by listing the field name in Access-Control-Allow-
    Headers; a * value there covers the field only when the request's
    credentials mode is not include.  Otherwise the browser does not send
-   the request, and ignoring unrecognized values cannot help.
+   the request, and ignoring unrecognized values cannot help.  A
+   resource that advertises client_capabilities_supported (Section 8)
+   and serves browser-based clients therefore allows the field.  A
+   browser-based client SHOULD NOT send the field on a cross-origin
+   request unless it knows that the protected resource allows the field,
+   for example because the resource advertises
+   client_capabilities_supported.
 
 6.3.  Client Metadata Declaration
 
@@ -618,28 +638,52 @@ Table of Contents
 
 6.4.  Precedence
 
-   An OAuth request is a request to an authorization server endpoint
-   that Section 6.2 lists, even when it is authorized with an access
-   token.  A protected resource request is any other request to a
-   protected resource, including one that an authorization server hosts,
-   such as UserInfo.  The effective capability set of a request is
-   determined as follows:
+   The effective capability set depends on the kind of request:
 
-   1.  If the request carries a request-level signal, its value is the
-       effective set.  On an OAuth request, that signal is the
-       client_capabilities request parameter; a value that is invalid
+   OAuth request:  A request to the authorization, pushed authorization
+      request, or token endpoint, or to another endpoint where an
+      extension defines the request parameter.  Its request-level signal
+      is the client_capabilities parameter (Section 6.1), and its
+      default is client metadata (Section 6.3).
+
+   Protected resource request:  A request with which a client accesses
+      data that a protected resource serves, including a resource that
+      an authorization server hosts, such as UserInfo.  Its request-
+      level signal is the OAuth-Client-Capabilities field (Section 6.2),
+      and its default is any out-of-band knowledge an extension defines.
+
+   Other authorization server requests:  Requests to any other
+      authorization server endpoint, at which a client or another party
+      performs an OAuth operation, such as obtaining, inspecting, or
+      revoking a grant or token, or managing a registration.  Examples
+      are the introspection [RFC7662], revocation [RFC7009], device
+      authorization [RFC8628], client registration [RFC7591], and client
+      configuration [RFC7592] endpoints.  A request to such an endpoint
+      is of this kind even when it is authorized with an access token,
+      and even if the endpoint's own specification calls it a protected
+      resource.  These requests have no effective set.  At the client
+      registration and client configuration endpoints, a client declares
+      capabilities in client metadata instead (Section 6.3).  An
+      extension that needs a capability at another such endpoint defines
+      the request parameter there, which makes requests to it OAuth
+      requests.
+
+   For an OAuth request or a protected resource request, the effective
+   capability set is determined as follows:
+
+   1.  If the request carries its request-level signal, the signal's
+       value is the effective set.  A request parameter that is invalid
        (Section 6.1) or exceeds a limit (Section 10.3) is still present,
-       and its effective set is empty.  On a protected resource request,
-       it is a valid OAuth-Client-Capabilities field with at least one
-       member, even if the server recognizes no value in it; an absent
-       field, an empty List, and an invalid field are treated alike, as
-       no signal.
+       and the effective set is then empty.  A field counts only if it
+       is valid and has at least one member, even if the server
+       recognizes no value in it; an absent field, an empty List, and an
+       invalid field are treated alike, as no signal.
 
-   2.  Otherwise, the default is the effective set: on an OAuth request,
-       the client_capabilities value from the client metadata that the
-       authorization server considers authoritative for that client, and
-       on a protected resource request, any out-of-band knowledge an
-       extension defines.
+   2.  Otherwise, the default is the effective set.  For an OAuth
+       request, it is the client_capabilities value from the client
+       metadata that the authorization server considers authoritative
+       for the client making the request.  Client metadata is never the
+       default for a protected resource request.
 
    3.  If neither is present, the effective set is empty.
 
@@ -653,17 +697,23 @@ Table of Contents
 
 6.5.  Scope of a Signal
 
-   A request signal applies only to that request, not to later requests
-   in the grant.  Client metadata supplies a default for each request as
-   described in Section 6.4; it does not make a prior request signal
-   persist.  A server MUST NOT promote a request-level capability set to
-   durable client metadata.
+   A request-level signal applies only to that request, not to later
+   requests in the grant.  Client metadata supplies a default for each
+   request as described in Section 6.4; it does not make a prior
+   request-level signal persist.  A server MUST NOT promote a request-
+   level capability set to durable client metadata or to out-of-band
+   knowledge.
 
    A capability in a pushed authorization request applies to the
    authorization request represented by the resulting request_uri, and
    nothing else.  A capability governing token endpoint behavior MUST be
-   in the effective set for the token request; the authorization server
-   MUST NOT infer it from an earlier request in the grant.
+   in the effective set for the token request that elicits the behavior;
+   the authorization server MUST NOT infer it from an earlier request in
+   the grant.  Each request in a sequence that an extension defines,
+   such as a poll after a deferred response or a retry after a
+   challenge, has its own effective set.  The extension states whether a
+   follow-on request has to carry the value or continues the behavior
+   that the originating request elicited (Section 9).
 
 7.  Server Behavior
 
@@ -716,14 +766,16 @@ Table of Contents
    in its entirety.
 
    A client that holds a server's client_capabilities_supported SHOULD
-   signal only values that appear in it.  This does not apply to none
-   (Section 4.3), which a server does not list: if filtering leaves no
-   value and the client needs to override a metadata default or out-of-
-   band knowledge, it sends none.  A client that does not hold the list
-   MAY signal values without retrieving it first; a server that does not
-   recognize a value ignores it.  Advertising recognized values lets a
-   client that holds the list bound request size and fingerprinting
-   exposure, following the pattern of Client Hints [RFC8942].
+   include in a request-level signal to that server only values that
+   appear in it.  This does not apply to none (Section 4.3), which a
+   server does not list: if filtering leaves no value and the client
+   needs to override a metadata default or out-of-band knowledge, it
+   sends none.  A client that does not hold the list MAY signal values
+   without retrieving it first, except as Section 6.2 limits for
+   browser-based clients; a server that does not recognize a value
+   ignores it.  Advertising recognized values lets a client that holds
+   the list bound request size and fingerprinting exposure, following
+   the pattern of Client Hints [RFC8942].
 
    Absence of client_capabilities_supported does not indicate that the
    server fails to support this specification.
@@ -756,7 +808,7 @@ Table of Contents
 
    Additional points of discipline:
 
-   *  Register a behavior, not a specification.  See Section 4.
+   *  Register a behavior, not a specification.  See Section 4.2.
 
    *  Prefer server-side discovery where it works.  If the client-side
       behavior can be specified as a requirement conditioned on
@@ -766,7 +818,12 @@ Table of Contents
       the server cannot learn whether the client implements it.
 
    *  State, in the registration, the carriers and endpoints at which
-      the value is meaningful.
+      the value is meaningful, and which follow-on requests, such as
+      polls or retries, carry it (Section 6.5).
+
+   *  If the extension defines out-of-band knowledge, state how a client
+      learns that it applies, so that the client knows when to send
+      none.
 
    Because capability signals may be removed by an adversary, an
    extension MUST define a safe absent-signal fallback.  If the enabled
@@ -776,10 +833,12 @@ Table of Contents
    behavior has not satisfied CAP-1, whatever the value is named.  The
    registration records the fallback (Section 12.1).
 
-   Acting on a falsely asserted capability can consume server resources
-   (Section 10.3).  An extension specification MUST analyze this cost
-   and define any necessary rate-limiting, state-allocation, or replay
-   protections.
+   Acting on a falsely asserted capability can consume server,
+   downstream, and human resources, such as pending state, approval
+   prompts, and notifications to users (Section 10.3).  An extension
+   specification MUST analyze this cost and define any necessary rate-
+   limiting, state-allocation, or replay protections, such as limits on
+   outstanding state per client and per grant.
 
    A capability set contributes to fingerprinting (Section 11).
    Specifications defining capabilities whose availability depends on
@@ -795,7 +854,8 @@ Table of Contents
    of the issuer; gate it on a capability instead.  [RFC9207]
    illustrates the trade-off: coupling the advertisement to a server-
    wide delivery commitment allows a client to enforce that iss is
-   present, but the feature cannot be rolled out per client.
+   present, but the feature cannot be rolled out per client.  A
+   capability could not carry that commitment; see the next paragraph.
 
    This specification provides no delivery guarantee, and an extension
    MUST NOT rely on a capability signal or on
@@ -896,6 +956,10 @@ Table of Contents
 
                   Table 1: Octets counted toward a limit
 
+   Decoding never lengthens a value, so a recipient that measures
+   decoded octets admits at least every signal that this floor requires
+   it to admit; it still applies a finite limit to the encoded length.
+
    A signal that exceeds a limit MUST be treated as invalid: a request
    parameter then signals the empty set (Section 6.1), a field is
    treated as absent (Section 6.2), and a client metadata field is
@@ -906,10 +970,10 @@ Table of Contents
    endpoint [RFC7591], while a protected resource can use an
    application-specific response.
 
-   Acting on a falsely asserted capability can also consume server
-   resources; each extension analyzes this cost (Section 9).  A
-   capability signal does not authorize the client to consume unbounded
-   work.
+   Acting on a falsely asserted capability can also consume server,
+   downstream, and human resources; each extension analyzes this cost
+   (Section 9).  A capability signal does not authorize the client to
+   consume unbounded work.
 
 10.4.  Unregistered Values
 
@@ -922,7 +986,8 @@ Table of Contents
    implementation meets CAP-1 through CAP-3 on its own, the result is a
    failed exchange or wasted work, not weakened security.  Section 4.2
    recommends confining unregistered values to deployments whose parties
-   have agreed on their meaning, and seeking early allocation.
+   have agreed on their meaning, and seeking registration once
+   deployment becomes interoperable.
 
 11.  Privacy Considerations
 
@@ -932,14 +997,15 @@ Table of Contents
    document it is visible to anyone.  The marginal disclosure to an
    authorization server is smaller, since it already receives a
    client_id that often identifies the software, but a capability set
-   can still add information.
+   can still add information.  A set that changes during a staged
+   rollout (Section 1.2) can also identify a release or rollout cohort.
 
    Clients that consider their capability set sensitive SHOULD use
    [RFC9126] or an encrypted Request Object as defined in [RFC9101],
    SHOULD, when they hold the server's client_capabilities_supported,
-   restrict signaled values to those it lists, and SHOULD NOT publish
-   the set in public client metadata.  A signed but unencrypted Request
-   Object provides integrity, not confidentiality.
+   restrict request-level signals to values it lists, and SHOULD NOT
+   publish the set in public client metadata.  A signed but unencrypted
+   Request Object provides integrity, not confidentiality.
 
    Capability values MUST NOT encode information about an end user or a
    specific device.  Extensions assess the fingerprinting effect of
@@ -995,6 +1061,9 @@ Table of Contents
 
    *  confirm that the specification defines the optional behavior
       enabled and identifies every applicable carrier and endpoint;
+
+   *  confirm that the value encodes no information about an end user or
+      a specific device (Section 11);
 
    *  consider the security, privacy, interoperability, and operational
       effects of false assertion and signal removal; and
@@ -1163,25 +1232,34 @@ Table of Contents
 
 13.2.  Informative References
 
-   [ABCA]     "OAuth 2.0 Attestation-Based Client Authentication", n.d.,
-              <https://datatracker.ietf.org/doc/draft-ietf-oauth-
-              attestation-based-client-auth>.
+   [ABCA]     Looker, T., Bastian, P., and C. Bormann, "OAuth 2.0
+              Attestation-Based Client Authentication", Work in
+              Progress, Internet-Draft, draft-ietf-oauth-attestation-
+              based-client-auth-12, 12 October 2026,
+              <https://datatracker.ietf.org/doc/html/draft-ietf-oauth-
+              attestation-based-client-auth-12>.
 
-   [CIMD]     "OAuth Client ID Metadata Document", n.d.,
-              <https://datatracker.ietf.org/doc/draft-ietf-oauth-client-
-              id-metadata-document>.
+   [CIMD]     Parecki, A. and E. Smith, "OAuth Client ID Metadata
+              Document", Work in Progress, Internet-Draft, draft-ietf-
+              oauth-client-id-metadata-document-03, 2 November 2026,
+              <https://datatracker.ietf.org/doc/html/draft-ietf-oauth-
+              client-id-metadata-document-03>.
 
-   [DTR]      "Deferred Token Response", n.d.,
-              <https://datatracker.ietf.org/doc/draft-gerber-oauth-
-              deferred-token-response>.
+   [DTR]      de Oliveira Niero, G. and D. Liu, "Deferred Token
+              Response", Work in Progress, Internet-Draft, draft-ietf-
+              oauth-deferred-token-response-01, 31 October 2026,
+              <https://datatracker.ietf.org/doc/html/draft-ietf-oauth-
+              deferred-token-response-01>.
 
    [FETCH]    "Fetch Living Standard", n.d.,
               <https://fetch.spec.whatwg.org/>.
 
    [FIRST-PARTY-APPS]
-              "OAuth 2.0 for First-Party Applications", n.d.,
-              <https://datatracker.ietf.org/doc/draft-ietf-oauth-first-
-              party-apps>.
+              Parecki, A., Fletcher, G., and P. Kasselman, "OAuth 2.0
+              for First-Party Applications", Work in Progress, Internet-
+              Draft, draft-ietf-oauth-first-party-apps-04, 1 July 2026,
+              <https://datatracker.ietf.org/doc/html/draft-ietf-oauth-
+              first-party-apps-04>.
 
    [IANA-OAUTH]
               "OAuth Parameters", n.d.,
@@ -1202,9 +1280,12 @@ Table of Contents
               <https://openid.net/specs/openid-connect-core-1_0.html>.
 
    [RESOURCE-TOKEN-RESP]
-              "Resource Token Response Parameter", n.d.,
-              <https://datatracker.ietf.org/doc/draft-mcguinness-oauth-
-              resource-token-resp>.
+              McGuinness, K., Hanson, J., and F. Skokan, "OAuth 2.0
+              Resource Parameter in Access Token Response", Work in
+              Progress, Internet-Draft, draft-mcguinness-oauth-resource-
+              token-resp-04, 25 October 2026,
+              <https://datatracker.ietf.org/doc/html/draft-mcguinness-
+              oauth-resource-token-resp-04>.
 
    [RFC3261]  Rosenberg, J., Schulzrinne, H., Camarillo, G., Johnston,
               A., Peterson, J., Sparks, R., Handley, M., and E.
@@ -1268,9 +1349,12 @@ Table of Contents
               <https://www.rfc-editor.org/rfc/rfc9700>.
 
    [TXN-CHALLENGE]
-              "Transaction Authorization Challenge", n.d.,
-              <https://datatracker.ietf.org/doc/draft-rosomakho-oauth-
-              txn-challenge>.
+              Rosomakho, Y., Campbell, B., McGuinness, K., and P.
+              Kasselman, "OAuth Transaction Authorization Challenge",
+              Work in Progress, Internet-Draft, draft-rosomakho-oauth-
+              txn-challenge-01, 2 November 2026,
+              <https://datatracker.ietf.org/doc/html/draft-rosomakho-
+              oauth-txn-challenge-01>.
 
 Appendix A.  Examples
 
@@ -1281,8 +1365,9 @@ Appendix A.  Examples
 
    The following example shows a pushed authorization request carrying
    the parameter, which keeps the value off the authorization URI.  The
-   value applies only to that authorization request (Section 6.5); the
-   example illustrates the carrier:
+   value applies only to that authorization request (Section 6.5),
+   where, under the adoption in Appendix B, it would be a pre-token
+   hint:
 
    POST /par HTTP/1.1
    Host: as.example.com
@@ -1313,11 +1398,13 @@ Appendix A.  Examples
            Figure 5: Capability carried in Request Object claims
 
    The following example shows the same capability on the token request;
-   the earlier signal does not carry over (Section 6.5):
+   the earlier signal does not carry over (Section 6.5).  The DPoP proof
+   [RFC9449] is explained in Appendix A.1:
 
    POST /token HTTP/1.1
    Host: as.example.com
    Content-Type: application/x-www-form-urlencoded
+   DPoP: eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7...
 
    grant_type=authorization_code&code=SplxlOB...
    &client_id=https%3A%2F%2Fapp.example%2Fclient
@@ -1392,11 +1479,18 @@ Appendix A.  Examples
 
    Absent-Signal Behavior:  The authorization server does not defer.  It
       responds synchronously only if it can complete every check it
-      requires without deferral, and otherwise returns an error.
+      requires without deferral, and otherwise returns an error.  If an
+      earlier request in the grant carried the value as a pre-token
+      hint, it instead rejects the token request with invalid_request
+      (Appendix B).
 
    Carriers:  request parameter, client metadata
 
-   Endpoints:  token endpoint
+   Endpoints:  token endpoint, on a request that can be deferred but not
+      on polls; and, as a pre-token hint carried only in the request
+      parameter, any endpoint whose request precedes the token request
+      in the grant, such as the authorization or pushed authorization
+      request endpoint (Appendix B)
 
    Change Controller:  The party responsible for the registration
 
@@ -1414,9 +1508,12 @@ A.1.  Worked Adoption
    client_capabilities_supported, as in the authorization server
    metadata excerpt above.  A client release that can process a deferred
    response signals the value explicitly on its token request, as in the
-   token request example above.  The authorization server elects to
+   authorization code token request example above that signals it.  The
+   client is public, so that request also carries a DPoP proof
+   [RFC9449], which Section 11.1 of [DTR] requires on a token request
+   that yields a deferred response.  The authorization server elects to
    defer and, in place of a token response, returns the deferred
-   response defined in Section 5.4 of [DTR]:
+   response defined in Section 6.4 of [DTR]:
 
    HTTP/1.1 400 Bad Request
    Content-Type: application/json
@@ -1424,20 +1521,27 @@ A.1.  Worked Adoption
 
    {
      "error": "authorization_pending",
-     "deferral_code": "8d67dc78-7faa-4d41-aabd-67707b374255",
+     "deferral_code": "TfZUlGEqTJeW7oNlcxnXs2kECOk",
      "expires_in": 10800,
      "interval": 60
    }
 
    Figure 11: Deferred response to a request that signals the capability
 
-   The client then polls as [DTR] describes.  A request whose effective
-   set does not contain the value is never deferred: the authorization
-   server completes it synchronously, or returns an error under the
-   grant's rules (Section 4.3 of [DTR]).  Omitting the value rules out
-   deferral, not failure.  The following response to the same token
-   request without the value assumes that the authorization server can
-   complete every check it requires without deferral:
+   The client then polls as [DTR] describes.  Each poll carries a DPoP
+   proof signed by the key that signed the token request's proof, and
+   the access token eventually issued is bound to that key.  The polls
+   continue the deferral that the original request elicited; a
+   registration of the value states whether they also carry it
+   (Section 6.5).  A token request whose effective set does not contain
+   the value never elicits a deferral: the authorization server
+   completes it synchronously, or returns an error under the grant's
+   rules (Section 5.3 of [DTR]), which is invalid_request after a pre-
+   token hint (Appendix B).  Omitting the value rules out deferral, not
+   failure.  The following response to the same token request without
+   the value assumes that no pre-token hint preceded it and that the
+   authorization server can complete every check it requires without
+   deferral:
 
    HTTP/1.1 200 OK
    Content-Type: application/json
@@ -1446,7 +1550,7 @@ A.1.  Worked Adoption
 
    {
      "access_token": "2YotnFZFEjr1zCsicMWpAA",
-     "token_type": "Bearer",
+     "token_type": "DPoP",
      "expires_in": 3600
    }
 
@@ -1455,11 +1559,11 @@ A.1.  Worked Adoption
    A registered client can instead declare the value as a default, as in
    the registration request above.  Its token requests then carry no
    client_capabilities parameter and receive the default (Section 6.4),
-   so the authorization server may defer them.  An instance that cannot
-   process a deferred response overrides the default with none, as in
-   the retraction example above.  Its token requests are then never
-   deferred: each receives a token response, as in the previous figure,
-   or an error.
+   so the authorization server may defer them, and they carry DPoP
+   proofs for the same reason.  An instance that cannot process a
+   deferred response overrides the default with none, as in the
+   retraction example above.  Its token requests are then never
+   deferred: each receives a token response or an error.
 
 Appendix B.  Applying This Specification to Existing Drafts
 
@@ -1467,12 +1571,36 @@ Appendix B.  Applying This Specification to Existing Drafts
    that motivated this work would use the mechanism.
 
    Deferred Token Response:  completion_mode=deferred becomes
-      client_capabilities containing accept-deferred-response.  The
-      authorization server still defers only when the value is in the
-      request's effective set.  Section 6.5 requires the value in the
-      token request's effective set; a signal at an earlier endpoint has
-      no effect on the token response.  The proposed single-purpose
-      registry is subsumed by Section 12.1, and the
+      client_capabilities containing accept-deferred-response, and
+      deferred_interactive would become a second value that a client
+      sends together with it.  The authorization server still defers
+      only when accept-deferred-response is in the token request's
+      effective set (Section 6.5).  The pre-token hint of [DTR] becomes
+      the value in the preceding request's effective set when that set
+      comes from its client_capabilities parameter (Section 6.4); a
+      metadata default is not a hint, because the client did not send
+      it.  Where that request goes to an endpoint other than the
+      authorization or pushed authorization request endpoint, such as
+      the device authorization endpoint, [DTR] would define the request
+      parameter there (Section 6.1).  The authorization server can act
+      on a hint for the originating grant as Section 5.2 of [DTR]
+      describes, provided the assurance the grant requires is decided
+      without the hint (Section 7.1) and no consent requirement is
+      relaxed (CAP-2).  The rule in Section 5.2 of [DTR] that a token
+      request omitting deferred after a hint is rejected with
+      invalid_request carries over, whether or not the server acted on
+      the hint: a token request whose effective set lacks the value
+      after a hint, including one that sends none, is rejected.  That is
+      an error the extension defines (Section 7), and a consequence of
+      the earlier request rather than a capability carried forward: the
+      token request is deferred only if its own effective set contains
+      the value (Section 6.5).  Nor is it a security check, which CAP-1
+      bars.  If the hint is stripped, the check goes with it, but the
+      token request is still handled under its own effective set and the
+      absent-signal behavior, so no protection is lost.  Retracting the
+      value at the token endpoint rules out deferral but does not
+      guarantee success.  The proposed single-purpose registry is
+      subsumed by Section 12.1, and the
       deferred_token_response_supported authorization server metadata
       Boolean by client_capabilities_supported containing the value.
       Either suffices to show that a server recognizes the capability,
@@ -1637,10 +1765,11 @@ C.6.  Trade-offs
    requires no shared vocabulary; this registry requires naming
    discipline and agreement on CAP-1 through CAP-3.
 
-   A request set replaces the metadata default rather than adding to it
-   (Section 6.4).  A client that adds one value on a request repeats
-   every default it still wants; in exchange, a less-capable instance
-   can retract a default without a per-value removal syntax.
+   A request-level signal replaces the metadata default rather than
+   adding to it (Section 6.4).  A client that adds one value on a
+   request repeats every default it still wants; in exchange, a less-
+   capable instance can retract a default without a per-value removal
+   syntax.
 
    The current extension count is small.  The registry anticipates
    continued growth and is easier to establish before more incompatible
