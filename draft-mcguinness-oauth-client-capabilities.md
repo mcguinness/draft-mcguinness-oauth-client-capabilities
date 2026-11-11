@@ -1092,8 +1092,8 @@ the form-encoded request bodies are for display only.
 
 The following example shows a pushed authorization request carrying the
 parameter, which keeps the value off the authorization URI. The value applies
-only to that authorization request ({{signal-scope}}); the example illustrates
-the carrier:
+only to that authorization request ({{signal-scope}}), where, under the
+adoption in {{existing-drafts}}, it would be a pre-token hint:
 
 ~~~ http-message
 POST /par HTTP/1.1
@@ -1213,13 +1213,18 @@ Status:
 Absent-Signal Behavior:
 : The authorization server does not defer. It responds synchronously only if
   it can complete every check it requires without deferral, and otherwise
-  returns an error.
+  returns an error. If an earlier request in the grant carried the value as a
+  pre-token hint, it instead rejects the token request with `invalid_request`
+  ({{existing-drafts}}).
 
 Carriers:
 : request parameter, client metadata
 
 Endpoints:
-: token endpoint
+: token endpoint, on a request that can be deferred but not on polls; and, as
+  a pre-token hint carried only in the request parameter, any endpoint whose
+  request precedes the token request in the grant, such as the authorization
+  or pushed authorization request endpoint ({{existing-drafts}})
 
 Change Controller:
 : The party responsible for the registration
