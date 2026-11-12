@@ -386,8 +386,8 @@ covers a client that considers its capability set sensitive.
 ## The `OAuth-Client-Capabilities` HTTP Field {#field}
 
 The `OAuth-Client-Capabilities` HTTP field allows a client to signal
-capabilities on a request that has no OAuth request parameter surface, such as
-a protected resource request.
+capabilities on a request that has no OAuth request parameters, such as a
+protected resource request.
 
 The field asserts that whatever processes the response can process the
 behavior: the sender alone, or the sender together with another component on
@@ -668,16 +668,16 @@ The array MUST NOT contain `none`. If the value is not an array, or any element
 is not a string or does not conform to the `capability` production, the value
 of this member is invalid and MUST be ignored in its entirety.
 
-A client that holds a server's `client_capabilities_supported` SHOULD include
-in a request-level signal to that server only values that appear in it. This
-does not apply to `none` ({{none-value}}),
-which a server does not list: if filtering leaves no value and the client
-needs to override a metadata default or out-of-band knowledge, it sends `none`.
-A client that does not hold the list MAY signal values without retrieving it
-first, except as {{field}} limits for browser-based clients; a server that does
-not recognize a value ignores it. Advertising
-recognized values lets a client that holds the list bound request size and
-fingerprinting exposure, following the pattern of Client Hints {{RFC8942}}.
+A client that has a server's `client_capabilities_supported` SHOULD include in
+a request-level signal to that server only values that appear in it. This does
+not apply to `none` ({{none-value}}), which a server does not list: if
+filtering leaves no value and the client needs to override a metadata default
+or out-of-band knowledge, it sends `none`. A client that does not have the list
+MAY signal values without retrieving it first, except as {{field}} limits for
+browser-based clients; a server that does not recognize a value ignores it.
+Advertising recognized values lets a client that has the list bound request
+size and fingerprinting exposure, following the pattern of Client Hints
+{{RFC8942}}.
 
 Absence of `client_capabilities_supported` does not indicate that the server
 fails to support this specification.
@@ -883,7 +883,7 @@ and seeking registration once deployment becomes interoperable.
 
 # Privacy Considerations {#privacy-considerations}
 
-A capability set discriminates over the client population and contributes to
+A capability set can help distinguish clients and so contributes to
 fingerprinting. On the front channel it is visible to the user agent, and in a
 publicly retrievable client metadata document it is visible to anyone. The
 marginal disclosure to an authorization server is smaller, since it already
@@ -892,11 +892,10 @@ can still add information. A set that changes during a staged rollout
 ({{staged-rollout}}) can also identify a release or rollout cohort.
 
 Clients that consider their capability set sensitive SHOULD use {{RFC9126}} or
-an encrypted Request Object as defined in {{RFC9101}}, SHOULD, when they hold
+an encrypted Request Object as defined in {{RFC9101}}, SHOULD, when they have
 the server's `client_capabilities_supported`, restrict request-level signals to
 values it lists, and SHOULD NOT publish the set in public client metadata. A
-signed
-but unencrypted Request Object provides integrity, not confidentiality.
+signed but unencrypted Request Object provides integrity, not confidentiality.
 
 Capability values MUST NOT encode information about an end user or a specific
 device. Extensions assess the fingerprinting effect of capabilities whose
