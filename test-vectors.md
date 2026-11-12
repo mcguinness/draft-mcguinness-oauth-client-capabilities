@@ -7,7 +7,7 @@ the rule where it is not obvious. The values `a`, `b` and `c` are placeholders
 that the server recognizes; `x` and `B` are values it does not recognize.
 `none` is never recognized, so a set containing only `none` is shown as
 (empty).
-Signals are within the size limits in "Denial of Service" unless a row says
+Signals are within the size limits in "Limits" unless a row says
 otherwise.
 
 ## Request Parameter
@@ -28,7 +28,7 @@ form decoding.
 | `b` and `c` two spaces apart | (empty) | Invalid: repeated spaces |
 | `*b` | (empty) | Invalid: does not start with a letter |
 | 64 members, within 4096 octets | all 64 | Within the size every server admits |
-| A list over the server's limit | (empty), or the request is rejected | "Denial of Service" |
+| A list over the server's limit | (empty), or the request is rejected | "Limits" |
 *Request parameter test vectors*
 
 The same metadata default, with the form-encoded request shown before decoding:
@@ -53,7 +53,7 @@ With a Request Object, and the same metadata default:
 | `"client_capabilities": "none"` | (absent) | (empty): retracts the default |
 | `"client_capabilities": "\u0062 \u0063"` | (absent) | b, c: escapes are decoded before the value is parsed |
 | One value of 1,000 `a` characters, unescaped: 1,002 octets | (absent) | That value, not recognized |
-| The same value as 1,000 `\u0061` escapes: 6,002 octets | (absent) | (empty), or the request is rejected, where the server's limit is 4096 octets: the serialized escapes are counted ("Denial of Service") |
+| The same value as 1,000 `\u0061` escapes: 6,002 octets | (absent) | (empty), or the request is rejected, where the server's limit is 4096 octets: the serialized escapes are counted ("Limits") |
 | (absent) | `client_capabilities=b` | a: the outside value is not used |
 *Request Object test vectors*
 
@@ -109,7 +109,7 @@ When the server knows out of band that the client supports `a`:
 | `none, b` | b | A valid field replaces out-of-band knowledge; `none` is not recognized |
 | `none, "b"` | a | Invalid, so treated as absent |
 | `none` repeated until the value exceeds the server's limit | a, or the request is rejected | Over the limit, so invalid |
-| A list over the server's limit | a, or the request is rejected | Treated as invalid ("Denial of Service") |
+| A list over the server's limit | a, or the request is rejected | Treated as invalid ("Limits") |
 *HTTP field test vectors with out-of-band knowledge*
 
 ## Request Classification
@@ -139,8 +139,7 @@ document or registration request is not rejected because of it. The one
 exception is a field that exceeds the server's size limit in a registration
 request. A Client ID Metadata Document is not rejected for an oversized field,
 but it can still be rejected when the whole document exceeds the server's
-retrieval or parsing limits ("Client Metadata Declaration", "Denial of
-Service").
+retrieval or parsing limits ("Client Metadata Declaration", "Limits").
 
 | Metadata value | Default set | Rule |
 |---|---|---|
@@ -153,8 +152,8 @@ Service").
 | `["b", 1]` | (empty) | Invalid: an element is not a string |
 | `"b"` | (empty) | Invalid: not an array |
 | `"a"` 64 times, without whitespace: 257 octets | a | Within the size every server admits |
-| `"a"` 65 times, without whitespace: 261 octets | a; or, where the server's limit is 64 members, (empty) or the registration request is rejected | Members are counted before duplicates are removed ("Denial of Service") |
-| The same array in a Client ID Metadata Document | a; or, where the server's limit is 64 members, (empty) | The document is not rejected for the field ("Denial of Service") |
+| `"a"` 65 times, without whitespace: 261 octets | a; or, where the server's limit is 64 members, (empty) or the registration request is rejected | Members are counted before duplicates are removed ("Limits") |
+| The same array in a Client ID Metadata Document | a; or, where the server's limit is 64 members, (empty) | The document is not rejected for the field ("Limits") |
 | A 4,096-octet array in a Client ID Metadata Document that is over 5 KB in all | None, where the server stops reading at 5 KB as CIMD Section 10.11 recommends: the document is rejected | Whole-document limits still apply, even when the field accounts for most of the size |
 *Client metadata test vectors*
 
