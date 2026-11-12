@@ -51,7 +51,6 @@ informative:
   RFC9449:
   RFC9635:
   RFC9700:
-  RESOURCE-TOKEN-RESP: I-D.mcguinness-oauth-resource-token-resp
   OAUTH21-VERSIONS:
     target: https://github.com/oauth-wg/oauth-v2-1/issues/120
     title: "How can an AS support both 2.0 and 2.1 clients concurrently"
@@ -59,7 +58,6 @@ informative:
   DTR: I-D.ietf-oauth-deferred-token-response
   TXN-CHALLENGE: I-D.rosomakho-oauth-txn-challenge
   CIMD: I-D.ietf-oauth-client-id-metadata-document
-  FIRST-PARTY-APPS: I-D.ietf-oauth-first-party-apps
   ABCA: I-D.ietf-oauth-attestation-based-client-auth
   IANA-OAUTH:
     target: https://www.iana.org/assignments/oauth-parameters/
@@ -1441,27 +1439,19 @@ optional behavior without weakening a security check.
 
 Similar-looking behaviors do not necessarily qualify. A signal cannot gate DPoP
 nonce enforcement {{RFC9449}}, because removing it would weaken replay
-protection, and CAP-2 prevents using it to justify longer-lived tokens.
-Offering the `use_dpop_nonce` challenge is a different question: where server
-policy already requires a nonce and the absent-signal behavior is refusal, the
-choice between challenging and refusing is a selection ({{selection}}) and
-could qualify. Whether it warrants a value is a separate matter, since
-{{Section 8.2 of RFC9449}} already requires a client to use a nonce supplied in
-a successful token response.
+protection. Offering the `use_dpop_nonce` challenge is a different question:
+where server policy already requires a nonce and the absent-signal behavior is
+refusal, the choice between challenging and refusing is a selection
+({{selection}}) and could qualify. Whether it warrants a value is a separate
+matter, since {{Section 8.2 of RFC9449}} already requires a client to use a
+nonce supplied in a successful token response.
 
-The `redirect_to_web` fallback in {{FIRST-PARTY-APPS}} qualifies only if
-defined as optional server behavior with a safe absent-signal outcome. If
-server metadata can instead make the client behavior conditional, discovery is
-preferable.
-
-Adding a parameter to a response is almost never a capability. Sections
-4.1.2 and 5.1 of {{RFC6749}} already require clients to ignore unrecognized
+Adding a parameter to a response is almost never a capability. Sections 4.1.2
+and 5.1 of {{RFC6749}} already require clients to ignore unrecognized
 authorization response parameters and unrecognized token response members, so
-delivery is safe for any conforming client and needs no gate.
-{{RESOURCE-TOKEN-RESP}} is a case of this kind: it returns a `resource`
-parameter so a client can confirm which resource its token is valid for, and
-what it needs is a way for clients to learn that a server implements it. That
-is server metadata, not a client capability.
+delivery is safe for any conforming client and needs no gate. What such an
+extension needs is a way for clients to learn that a server implements it,
+which is server metadata, not a client capability.
 
 On gating grounds the criterion also rejects client authentication methods,
 endpoint selection, client-initiated parameters, and behavior a specification
