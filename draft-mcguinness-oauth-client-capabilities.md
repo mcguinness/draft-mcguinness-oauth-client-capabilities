@@ -109,6 +109,30 @@ band.
 
 The requirements are structurally identical. The carriers are not.
 
+## Overview {#overview}
+
+A client tells a server what optional behavior it can process by signaling
+capability values. A capability value is a short token drawn from a single
+registry ({{iana-registry}}) shared by every extension.
+
+Three carriers convey a set, chosen by what the request can hold:
+
+- The `client_capabilities` request parameter, on OAuth requests such as
+  authorization and token requests ({{param}}).
+- The `OAuth-Client-Capabilities` HTTP field, on protected resource requests
+  ({{field}}).
+- A `client_capabilities` member in client metadata, supplying a default when an
+  OAuth request carries no signal ({{metadata}}).
+
+Whichever carrier applies, the result is the request's effective capability
+set: the values a server may act upon for that request. A request-level signal
+replaces any metadata default rather than adding to it ({{precedence}}).
+
+A server advertises the values it recognizes in its own metadata
+({{discovery}}). Signaling never obliges a server to act. Under the invariants
+in {{invariants}}, which every registered value has to meet, a signal that is
+absent, removed, added, or untrue leaves the protocol no less secure.
+
 ## The Carrier Asymmetry {#asymmetry}
 
 Neither carrier can perform the other's function. An HTTP field works for
@@ -150,25 +174,8 @@ A published document is also shared. It applies to every instance using the
 URL, and a change to it reaches each authorization server only as that server
 refreshes its cached copy, on a schedule the publisher cannot target {{CIMD}}.
 A change therefore cannot be staged one authorization server or one release at
-a time, and rolling it back waits out the same caches.
-
-Capabilities let a client stage optional behavior without changing the
-document. Suppose an updated release can accept a deferred token response
-({{existing-drafts}}). The document continues to declare only what every
-instance can process. The updated release sends its complete set, including the
-illustrative `accept-deferred-response`, to one authorization server, since a
-request-level signal replaces the metadata default rather than adding to it
-({{precedence}}). It sends other authorization servers nothing new, and older
-releases are unaffected. While the document does not declare the value, the
-release enables or stops it per request and per authorization server. Once the
-document declares it, an instance withdraws it only by sending a set without
-it, or `none`. In both cases one document serves every authorization server.
-
-This works only for optional behavior. A metadata field that requires a
-behavior applies at every authorization server that supports it: once
-`dpop_bound_access_tokens` is true, such a server rejects token requests
-without DPoP {{RFC9449}}. Such a field cannot be a capability ({{invariants}}),
-and staging a change to it remains a problem for client metadata itself.
+a time, and rolling it back waits out the same caches. A request-level signal
+avoids both ({{staged-rollout}}).
 
 Per-extension signals accumulate in both directions. Each front-channel
 capability can enlarge an authorization URI visible to the user agent. Each
@@ -189,13 +196,13 @@ behalf.
 Two uses are out of scope. Capability values do not carry deployment-local
 feature flags or rollout cohort membership, whoever assigns it, because neither
 describes what a client can process. A client may use its own cohorts to decide
-which values to signal, which is how it stages adoption ({{open-world}}); the
-cohort itself is not signaled. Nor do capability values signal conformance to a
-requirement, in either direction. A claim of conformance cannot be verified and
-can be omitted by anyone who would violate the requirement, so enforcement keys
-on the client's identity rather than the claim. A claim of non-conformance
-cannot be sent by the clients that need it, which generally cannot be updated
-to send anything.
+which values to signal, which is how it stages adoption ({{staged-rollout}});
+the cohort itself is not signaled. Nor do capability values signal conformance
+to a requirement, in either direction. A claim of conformance cannot be
+verified and can be omitted by anyone who would violate the requirement, so
+enforcement keys on the client's identity rather than the claim. A claim of
+non-conformance cannot be sent by the clients that need it, which generally
+cannot be updated to send anything.
 
 # Conventions and Definitions {#terms}
 
@@ -229,30 +236,6 @@ Out-of-band knowledge:
   client's capabilities other than from a signal on the request.
 
 Terms not otherwise defined are used as in {{RFC6749}} and {{RFC9110}}.
-
-# Overview {#overview}
-
-A client tells a server what optional behavior it can process by signaling
-capability values. A capability value is a short token drawn from a single
-registry ({{iana-registry}}) shared by every extension.
-
-Three carriers convey a set, chosen by what the request can hold:
-
-- The `client_capabilities` request parameter, on OAuth requests such as
-  authorization and token requests ({{param}}).
-- The `OAuth-Client-Capabilities` HTTP field, on protected resource requests
-  ({{field}}).
-- A `client_capabilities` member in client metadata, supplying a default when an
-  OAuth request carries no signal ({{metadata}}).
-
-Whichever carrier applies, the result is the request's effective capability
-set: the values a server may act upon for that request. A request-level signal
-replaces any metadata default rather than adding to it ({{precedence}}).
-
-A server advertises the values it recognizes in its own metadata
-({{discovery}}). Signaling never obliges a server to act. Under the invariants
-in {{invariants}}, which every registered value has to meet, a signal that is
-absent, removed, added, or untrue leaves the protocol no less secure.
 
 # Capability Values {#values}
 
@@ -900,7 +883,7 @@ publicly retrievable client metadata document it is visible to anyone. The
 marginal disclosure to an authorization server is smaller, since it already
 receives a `client_id` that often identifies the software, but a capability set
 can still add information. A set that changes during a staged rollout
-({{open-world}}) can also identify a release or rollout cohort.
+({{staged-rollout}}) can also identify a release or rollout cohort.
 
 Clients that consider their capability set sensitive SHOULD use {{RFC9126}} or
 an encrypted Request Object as defined in {{RFC9101}}, SHOULD, when they hold
@@ -1225,6 +1208,27 @@ grant_type=authorization_code&code=SplxlOB...
 Its token requests are then never deferred: each receives a token response or
 an error.
 
+## Staged Rollout {#staged-rollout}
+
+A client identified by a published metadata document {{CIMD}} can stage
+optional behavior without changing the document. Suppose an updated release can
+accept a deferred token response ({{worked-adoption}}). The document continues
+to declare only what every instance can process. The updated release sends its
+complete set, including the illustrative `accept-deferred-response`, to one
+authorization server, since a request-level signal replaces the metadata
+default rather than adding to it ({{precedence}}). It sends other authorization
+servers nothing new, and older releases are unaffected. While the document does
+not declare the value, the release enables or stops it per request and per
+authorization server. Once the document declares it, an instance withdraws it
+only by sending a set without it, or `none`. In both cases one document serves
+every authorization server.
+
+This works only for optional behavior. A metadata field that requires a
+behavior applies at every authorization server that supports it: once
+`dpop_bound_access_tokens` is true, such a server rejects token requests
+without DPoP {{RFC9449}}. Such a field cannot be a capability ({{invariants}}),
+and staging a change to it remains a problem for client metadata itself.
+
 ## Pushed Authorization Request {#example-par}
 
 A pushed authorization request carries the parameter in its body, which keeps
@@ -1410,7 +1414,7 @@ parameter is needed in any case. As an HTTP field, it cannot cross the redirect
 at the authorization endpoint ({{asymmetry}}), cannot be carried in a Request
 Object, does not travel with the authorization request that a pushed
 authorization request represents, and has no client metadata form to supply
-defaults ({{open-world}}).
+defaults ({{metadata}}).
 
 For the HTTP carrier alone, a single registered preference listing capability
 values, such as `Prefer: oauth-client-capabilities="txn-challenge"`, could
