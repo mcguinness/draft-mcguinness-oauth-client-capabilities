@@ -87,8 +87,9 @@ with each capability and the behavior when that capability is absent.
 
 Some OAuth 2.0 {{RFC6749}} extensions change what a client receives in response
 to an otherwise ordinary request, and a client that cannot process the new
-response fails. Such an extension has its server use the new behavior only for
-a client that has signaled that it can process it, and defines its own signal.
+response fails. Such an extension has its server use the new behavior only when
+it knows the client can process it, and defines its own signal for the client
+to say so.
 Under {{DTR}}, an authorization server defers a token response only when the
 `completion_mode` request parameter includes `deferred`; under
 {{TXN-CHALLENGE}}, a protected resource returns a transaction authorization
