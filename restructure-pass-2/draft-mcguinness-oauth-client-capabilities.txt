@@ -1657,8 +1657,8 @@ B.1.2.  Pre-Token Hint
    security check, which CAP-1 bars.  If the hint is stripped, the check
    goes with it, but the token request is still handled under its own
    effective set and the absent-signal behavior, so no protection is
-   lost.  Leaving the value out of the token request rules out deferral
-   but does not guarantee success.
+   lost.  Leaving the value out of the token request's effective
+   capability set rules out deferral but does not guarantee success.
 
 B.1.3.  Discovery and Registry
 
@@ -1754,9 +1754,8 @@ C.3.  Applying the Admission Criterion
    Sections 4.1.2 and 5.1 of [RFC6749] already require clients to ignore
    unrecognized authorization response parameters and unrecognized token
    response members, so delivery is safe for any conforming client and
-   needs no gate.  What such an extension needs is a way for clients to
-   learn that a server implements it, which is server metadata, not a
-   client capability.
+   needs no gate.  If clients need to discover support in advance, the
+   extension can define server metadata.
 
    On gating grounds the criterion also rejects client authentication
    methods, endpoint selection, client-initiated parameters, and

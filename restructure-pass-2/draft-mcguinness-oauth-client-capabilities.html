@@ -3240,8 +3240,8 @@ deferred only if its own effective set contains the value (<a href="#signal-scop
 Nor is it a security check, which CAP-1 bars. If the hint is stripped, the
 check goes with it, but the token request is still handled under its own
 effective set and the absent-signal behavior, so no protection is lost. Leaving
-the value out of the token request rules out deferral but does not guarantee
-success.<a href="#appendix-B.1.2-2" class="pilcrow">¶</a></p>
+the value out of the token request's effective capability set rules out
+deferral but does not guarantee success.<a href="#appendix-B.1.2-2" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="discovery-and-registry">
@@ -3348,9 +3348,8 @@ nonce supplied in a successful token response.<a href="#appendix-C.3-2" class="p
 <p id="appendix-C.3-3">Adding a parameter to a response is almost never a capability. Sections 4.1.2
 and 5.1 of <span>[<a href="#RFC6749" class="cite xref">RFC6749</a>]</span> already require clients to ignore unrecognized
 authorization response parameters and unrecognized token response members, so
-delivery is safe for any conforming client and needs no gate. What such an
-extension needs is a way for clients to learn that a server implements it,
-which is server metadata, not a client capability.<a href="#appendix-C.3-3" class="pilcrow">¶</a></p>
+delivery is safe for any conforming client and needs no gate. If clients need
+to discover support in advance, the extension can define server metadata.<a href="#appendix-C.3-3" class="pilcrow">¶</a></p>
 <p id="appendix-C.3-4">On gating grounds the criterion also rejects client authentication methods,
 endpoint selection, client-initiated parameters, and behavior a specification
 makes mandatory to implement.<a href="#appendix-C.3-4" class="pilcrow">¶</a></p>
