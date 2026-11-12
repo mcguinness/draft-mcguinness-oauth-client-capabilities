@@ -697,16 +697,11 @@ otherwise select one the client cannot complete ({{selection}}). The second
 requires that the signal can change whether the operation completes, not merely
 make an already-workable path more convenient.
 
-One heuristic identifies most misclassifications:
-
-> If an implementer would want the value to be attested, it is not a
-> capability.
-
-A property that must be trustworthy to be useful is an assurance, and belongs
-in client attestation {{ABCA}}, a software statement {{RFC7591}}, or an
-equivalent signed structure. A capability is an assertion, not an assurance; an
-extension that needs to bind it to a key or trust it in a policy decision has
-misclassified it.
+A property whose usefulness depends on its truth being established is an
+assurance, not a capability, and belongs in client attestation {{ABCA}}, a
+software statement {{RFC7591}}, or an equivalent signed structure. A capability
+is an assertion; an extension that needs to bind it to a key or trust it in a
+policy decision has misclassified it.
 
 Prefer server-side discovery where it works. If the client-side behavior can be
 specified as a requirement conditioned on something the server advertises in
