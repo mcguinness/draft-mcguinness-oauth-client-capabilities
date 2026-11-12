@@ -87,116 +87,82 @@ with each capability and the behavior when that capability is absent.
 
 # Introduction {#intro}
 
-A growing number of OAuth 2.0 {{RFC6749}} extensions share one normative shape:
-
-> The server MUST NOT do X unless the client has signaled that it can process X.
-
-These extensions change what a client receives in response to an otherwise
-ordinary request, and a client that cannot process the new response fails.
-
-Two current extensions illustrate the pattern, and disagree on how to carry it.
-{{DTR}} requires an authorization server not to defer a response unless the
-`completion_mode` request parameter includes `deferred`. {{TXN-CHALLENGE}}
-requires a protected resource not to return a transaction authorization
-challenge unless `Accept-Txn-Challenge` is true or support is known out of
+Some OAuth 2.0 {{RFC6749}} extensions change what a client receives in response
+to an otherwise ordinary request, and a client that cannot process the new
+response fails. Such an extension has its server use the new behavior only for
+a client that has signaled that it can process it, and defines its own signal.
+Under {{DTR}}, an authorization server defers a token response only when the
+`completion_mode` request parameter includes `deferred`; under
+{{TXN-CHALLENGE}}, a protected resource returns a transaction authorization
+challenge only when `Accept-Txn-Challenge` is true or support is known out of
 band.
 
-The requirements are structurally identical. The carriers are not.
+This document defines one vocabulary that such extensions can share, instead of
+each defining its own parameter or field, registrations, and metadata. A client
+signals capability values, short tokens drawn from a single registry
+({{iana-registry}}), in one of three carriers:
 
-## Overview {#overview}
+- the `client_capabilities` request parameter, on authorization, pushed
+  authorization, and token requests, and at other endpoints where an extension
+  defines it ({{param}});
+- the `OAuth-Client-Capabilities` HTTP field, on protected resource requests
+  ({{field}}); and
+- a `client_capabilities` client metadata field, which supplies a default when
+  a request that can carry the parameter does not ({{metadata}}).
 
-A client tells a server what optional behavior it can process by signaling
-capability values. A capability value is a short token drawn from a single
-registry ({{iana-registry}}) shared by every extension.
-
-Three carriers convey a set, chosen by what the request can hold:
-
-- The `client_capabilities` request parameter, on OAuth requests such as
-  authorization and token requests ({{param}}).
-- The `OAuth-Client-Capabilities` HTTP field, on protected resource requests
-  ({{field}}).
-- A `client_capabilities` member in client metadata, supplying a default when an
-  OAuth request carries no signal ({{metadata}}).
-
-Whichever carrier applies, the result is the request's effective capability
-set: the values a server may act upon for that request. A request-level signal
-replaces any metadata default rather than adding to it ({{precedence}}).
-
-A server advertises the values it recognizes in its own metadata
-({{discovery}}). Signaling never obliges a server to act. Under the invariants
-in {{invariants}}, which every registered value has to meet, a signal that is
+The values a server may act on for a request form the request's effective
+capability set ({{precedence}}); a signal on the request replaces any default
+rather than adding to it. A server can advertise the values it recognizes
+({{discovery}}) and is never obliged to act on one. Under the invariants in
+{{invariants}}, which every registered value has to meet, a signal that is
 absent, removed, added, or untrue leaves the protocol no less secure.
 
-## The Carrier Asymmetry {#asymmetry}
+## Two Request Carriers {#asymmetry}
 
-Neither carrier can perform the other's function. An HTTP field works for
-{{TXN-CHALLENGE}} because the protected resource request is made directly over
-HTTP, but that request has no OAuth parameter surface. At the authorization
-endpoint, the client constructs a URI for a user agent, which issues the HTTP
-request with its own fields; a client-originated field cannot cross that
-redirect boundary.
-
-A general mechanism cannot be an HTTP field alone, and cannot be a request
-parameter alone. Two request carriers over one shared vocabulary is the minimum
+Neither request carrier can do the other's job. At the authorization endpoint,
+the client constructs a URI for a user agent, which sends the HTTP request with
+its own fields, so a field the client sets cannot cross that redirect. A
+protected resource request is made directly over HTTP but has no OAuth request
+parameters. Two request carriers over one vocabulary is therefore the minimum
 that covers OAuth's topology.
 
-The extensions in {{existing-drafts}} need only direct HTTP requests, at the
-token endpoint and at protected resources. Even at the token endpoint, the
-request parameter is the carrier rather than the field: OAuth endpoints are
-extended through registered request parameters, as {{DTR}} already does, and
-one carrier at each endpoint where the parameter is defined lets a request
-override a client metadata default without combining two signals. The request
-parameter's coverage of the authorization endpoint anticipates extensions whose
-behavior changes the authorization response; the pushed authorization request
-and Request Object examples ({{examples}}) illustrate the carrier.
+At the token endpoint, which the client calls directly, the parameter is still
+the carrier: OAuth endpoints are extended through registered request
+parameters, as {{DTR}} does, and one carrier at each endpoint lets a request
+override a client metadata default without combining two signals. The
+extensions in {{existing-drafts}} use the parameter at the authorization
+endpoint only for the optional pre-token hint of {{DTR}} ({{apply-dtr}}); the
+parameter's use there anticipates extensions that change the authorization
+response.
 
-## Open-World Deployment {#open-world}
+## Clients Without Prior Registration {#open-world}
 
-Classic OAuth establishes client behavior at registration. Metadata fields such
-as `grant_types`, `response_types`, `token_endpoint_auth_method`,
-`dpop_bound_access_tokens` {{RFC9449}}, and
-`require_pushed_authorization_requests` {{RFC9126}} provide a static
-declaration {{RFC7591}}.
-
-Deployments that identify clients by a published metadata document {{CIMD}},
-operate autonomous software instances, or otherwise pair previously unknown
-clients and authorization servers have no registration handshake. The first
-request must carry the relevant capability or the server must discover it from
-client-published metadata.
-
-A published document is also shared. It applies to every instance using the
-URL, and a change to it reaches each authorization server only as that server
-refreshes its cached copy, on a schedule the publisher cannot target {{CIMD}}.
-A change therefore cannot be staged one authorization server or one release at
-a time, and rolling it back waits out the same caches. A request-level signal
-avoids both ({{staged-rollout}}).
-
-Per-extension signals accumulate in both directions. Each front-channel
-capability can enlarge an authorization URI visible to the user agent. Each
-resource capability adds a field to protected resource requests. A
-per-extension signal also needs its own registrations and metadata. A shared
-vocabulary incurs those costs once across both sides of the asymmetry in
-{{asymmetry}}.
+Classic OAuth establishes client behavior at registration {{RFC7591}}. A client
+identified by a published metadata document {{CIMD}}, like other clients
+unknown to an authorization server in advance, has no registration step: its
+request carries the capability, or the server learns it from metadata the
+client publishes. Such a document applies to every instance that uses the URL,
+and a change reaches each authorization server only as that server refreshes
+its cached copy. A change therefore cannot be staged one release or one
+authorization server at a time, and rolling it back waits out the same caches;
+a signal on the request avoids both ({{staged-rollout}}).
 
 ## Scope {#scope}
 
 This specification defines carriers and a vocabulary, and reserves the `none`
-sentinel ({{none-value}}). It does not define any capability values, change any
-existing parameter, or require existing extensions to migrate. The extensions
-in {{existing-drafts}} are the intended first adopters; this specification
-proposes the mechanism for their use rather than registering values on their
-behalf.
+sentinel ({{none-value}}). It defines no capability values, changes no existing
+parameter, and does not require existing extensions to migrate;
+{{existing-drafts}} describes how the intended first adopters would use it.
 
 Two uses are out of scope. Capability values do not carry deployment-local
 feature flags or rollout cohort membership, whoever assigns it, because neither
-describes what a client can process. A client may use its own cohorts to decide
-which values to signal, which is how it stages adoption ({{staged-rollout}});
-the cohort itself is not signaled. Nor do capability values signal conformance
-to a requirement, in either direction. A claim of conformance cannot be
-verified and can be omitted by anyone who would violate the requirement, so
-enforcement keys on the client's identity rather than the claim. A claim of
-non-conformance cannot be sent by the clients that need it, which generally
-cannot be updated to send anything.
+describes what a client can process; a client may still use its own cohorts to
+decide which values to signal ({{staged-rollout}}). Nor do capability values
+signal conformance to a requirement. A claim of conformance cannot be verified
+and can be omitted by anyone who would violate the requirement, so enforcement
+keys on the client's identity rather than the claim; a claim of non-conformance
+cannot be sent by the clients that need it, which generally cannot be updated
+to send anything.
 
 # Conventions and Definitions {#terms}
 
