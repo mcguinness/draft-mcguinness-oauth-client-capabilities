@@ -122,9 +122,9 @@ fallback.** It says a protected resource "MUST NOT return a transaction
 authorization challenge unless" the capability is signaled, but not what the
 resource does instead. Denying the operation is the obviously safe reading and
 almost certainly the intent, but the draft leaves it unwritten. Under the
-draft's Guidance for Extension Specifications, an extension must define a safe
-absent-signal fallback, so this is exactly the gap the requirement is meant to
-catch.
+draft's Requirements for Extension Specifications, an extension must define a
+safe absent-signal fallback, so this is exactly the gap the requirement is
+meant to catch.
 
 ## Tier 2: needs no gating signal, and why
 
@@ -177,9 +177,9 @@ leaves the selection question open. Step-up is where that matters; see
   Section 4.1.2, and on a delivery guarantee the mechanism does not provide,
   since a server retains discretion over whether to exercise optional behavior.
   What survives is a design lesson for extension authors, now in the draft's
-  Guidance for Extension Specifications: coupling a client-affecting behavior
-  to a per-issuer metadata flag that clients must key on forecloses incremental
-  rollout.
+  Requirements for Extension Specifications: coupling a client-affecting
+  behavior to a per-issuer metadata flag that clients must key on forecloses
+  incremental rollout.
 - **Endpoint selection is already the signal.** Device authorization
   (RFC 8628), pushed authorization requests (RFC 9126), the authorization
   challenge endpoint, token exchange (RFC 8693). Calling the endpoint is proof
@@ -537,7 +537,7 @@ question while there is still a designated expert reading the answer.
 
 Three findings, in descending order of consequence.
 
-1. **The fallback framing in Guidance for Extension Specifications is
+1. **The fallback framing in Requirements for Extension Specifications is
    load-bearing, not editorial.** Stating the invariant as "the behavior
    enabled MUST NOT be necessary to enforce a security property" would have
    excluded the transaction challenge, which is a sound candidate; stating it
