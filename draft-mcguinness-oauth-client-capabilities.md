@@ -257,43 +257,41 @@ A server cannot verify that a client implements what it signals, and a party
 other than the client can add, remove, or send a signal
 ({{unverified-signals}}). The following three constraints keep that from
 weakening security. They are normative and apply to every registered capability
-value and to every use of the carriers in {{carriers}}.
+value and to every use of the carriers in {{carriers}}. These invariants also
+serve as the admission criterion for the registry; see {{eligibility}}.
 
-CAP-1: Security requirements are independent of capability signals
-: A capability MUST only enable optional server behavior. Removing a capability
-  value from the effective capability set MUST NOT cause a server to apply
-  weaker client authentication, weaker sender constraining, weaker user
-  authentication, or a more permissive policy than it would have applied had
-  the value never been defined.
+## CAP-1: Security Requirements Are Independent of Capability Signals {#cap-1}
 
-  Adding a capability value MUST NOT lower the assurance a server requires, or
-  lead it to accept weaker client authentication, sender constraining, or user
-  authentication than that assurance demands. Among paths that meet that
-  assurance, a value can affect which one the server takes ({{selection}}).
+A capability MUST only enable optional server behavior. Removing a capability
+value from the effective capability set MUST NOT cause a server to apply weaker
+client authentication, weaker sender constraining, weaker user authentication,
+or a more permissive policy than it would have applied had the value never been
+defined.
 
-  A capability MUST NOT enable a security check that the server would otherwise
-  skip, including stricter validation of the client's own requests, because
-  removing the value would remove the check. Absence MUST be safe.
+Adding a capability value MUST NOT lower the assurance a server requires, or
+lead it to accept weaker client authentication, sender constraining, or user
+authentication than that assurance demands. Among paths that meet that
+assurance, a value can affect which one the server takes ({{selection}}).
 
-CAP-2: Capability signals do not authorize
-: A capability MUST NOT establish what a client is permitted to obtain or be
-  accepted as evidence in an authorization decision. A capability describes
-  what a client is able to process. Servers MUST NOT grant scope, relax consent
-  requirements, or extend token lifetimes on the basis of a signaled
-  capability.
+A capability MUST NOT enable a security check that the server would otherwise
+skip, including stricter validation of the client's own requests, because
+removing the value would remove the check. Absence MUST be safe.
 
-CAP-3: Servers do not rely on capability signals being true
-: A server MUST NOT rely on a capability signal being truthful. The security
-  properties of the enabled behavior MUST hold even when the client does not
-  implement the capability, and when a party other than the client asserts it,
-  including one that relays the enabled behavior to someone else.
-  A capability MUST NOT substitute for client authentication, proof of
-  possession, protocol validation, or other evidence required by the behavior
-  it enables.
-{: newline="true"}
+## CAP-2: Capability Signals Do Not Authorize {#cap-2}
 
-These invariants also serve as the admission criterion for the registry; see
-{{eligibility}}.
+A capability MUST NOT establish what a client is permitted to obtain or be
+accepted as evidence in an authorization decision. A capability describes what
+a client is able to process. Servers MUST NOT grant scope, relax consent
+requirements, or extend token lifetimes on the basis of a signaled capability.
+
+## CAP-3: Servers Do Not Rely on Capability Signals Being True {#cap-3}
+
+A server MUST NOT rely on a capability signal being truthful. The security
+properties of the enabled behavior MUST hold even when the client does not
+implement the capability, and when a party other than the client asserts it,
+including one that relays the enabled behavior to someone else. A capability
+MUST NOT substitute for client authentication, proof of possession, protocol
+validation, or other evidence required by the behavior it enables.
 
 # Carriers {#carriers}
 
