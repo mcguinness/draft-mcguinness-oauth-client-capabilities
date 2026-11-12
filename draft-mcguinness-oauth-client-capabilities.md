@@ -13,7 +13,6 @@ keyword:
  - Client Capabilities
  - Extension Negotiation
  - Capability Signaling
- - Open World
 
 stand_alone: yes
 pi: [toc, sortrefs, symrefs]
