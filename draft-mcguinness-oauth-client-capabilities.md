@@ -1448,9 +1448,8 @@ nonce supplied in a successful token response.
 Adding a parameter to a response is almost never a capability. Sections 4.1.2
 and 5.1 of {{RFC6749}} already require clients to ignore unrecognized
 authorization response parameters and unrecognized token response members, so
-delivery is safe for any conforming client and needs no gate. What such an
-extension needs is a way for clients to learn that a server implements it,
-which is server metadata, not a client capability.
+delivery is safe for any conforming client and needs no gate. If clients need
+to discover support in advance, the extension can define server metadata.
 
 On gating grounds the criterion also rejects client authentication methods,
 endpoint selection, client-initiated parameters, and behavior a specification
