@@ -243,8 +243,9 @@ The token `none` is reserved and is never a capability. A client sends it as
 the complete value of the `client_capabilities` request parameter, or as the
 only member of the `OAuth-Client-Capabilities` field, to send a signal that
 contains no capability. Because a request-level signal replaces any default
-({{precedence}}), this retracts a statically declared set or, at a protected
-resource, out-of-band knowledge.
+({{precedence}}), sending `none` overrides the default for that request,
+whether that default is client metadata or, at a protected resource,
+out-of-band knowledge.
 
 `none` MUST NOT appear together with any capability value. It is registered
 only to reserve the token ({{iana-registry}}) and enables no behavior, so a
@@ -537,8 +538,9 @@ effective capability set is determined as follows:
 3. If neither is present, the effective set is empty.
 
 A request-level signal replaces the default rather than augmenting it, so that
-a less-capable instance can retract a default. To retract everything, a client
-sends `none` ({{none-value}}).
+a less-capable instance can override a default for its own requests. To
+override it without signaling any capability, a client sends `none`
+({{none-value}}).
 
 The following table summarizes the result of these steps for each form a
 request-level signal can take. {{param}}, {{field}}, and {{limits}} govern.
@@ -1207,7 +1209,7 @@ grant_type=authorization_code&code=SplxlOB...
 &code_verifier=dBjftJeZ...
 &client_capabilities=none
 ~~~
-{: title="Explicit retraction by a less-capable instance"}
+{: title="A less-capable instance overriding the default"}
 
 Its token requests are then never deferred: each receives a token response or
 an error.
@@ -1361,9 +1363,9 @@ earlier request rather than a capability carried forward: the token request is
 deferred only if its own effective set contains the value ({{signal-scope}}).
 Nor is it a security check, which CAP-1 bars. If the hint is stripped, the
 check goes with it, but the token request is still handled under its own
-effective set and the absent-signal behavior, so no protection is lost.
-Retracting the value at the token endpoint rules out deferral but does not
-guarantee success.
+effective set and the absent-signal behavior, so no protection is lost. Leaving
+the value out of the token request rules out deferral but does not guarantee
+success.
 
 ### Discovery and Registry
 
@@ -1526,8 +1528,8 @@ CAP-1 through CAP-3.
 
 A request-level signal replaces the metadata default rather than adding to it
 ({{precedence}}). A client that adds one value on a request repeats every
-default it still wants; in exchange, a less-capable instance can retract a
-default without a per-value removal syntax.
+default it still wants; in exchange, a less-capable instance can override a
+default for its own requests without a per-value removal syntax.
 
 The current extension count is small. The registry anticipates continued growth
 and is easier to establish before more incompatible carriers ship.
