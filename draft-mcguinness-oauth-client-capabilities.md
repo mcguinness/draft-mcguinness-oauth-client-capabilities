@@ -1390,30 +1390,23 @@ This appendix is informative.
 OAuth has static client declarations {{RFC7591}}, extensible server metadata
 {{RFC8414}} {{RFC9728}}, and per-extension request parameters, HTTP fields, or
 signals implied by construction, such as a DPoP proof {{RFC9449}}. Static
-metadata cannot express per-request or per-instance variation, while server
-metadata runs only server to client.
+metadata cannot vary by request or instance, and server metadata runs only from
+server to client.
 
-Capabilities also differ from existing constructs. `scope` is an
-authorization construct: its values are consented to, are often displayed to a
-user, and are carried in the resulting grant and access token, while
-capabilities are not consented to, not displayed, and by CAP-2 barred from
-affecting the grant. `grant_types` and `response_types` select protocol flows
-and constrain which requests a registered client may make, so their absence can
-cause a request to fail; a capability describes optional response processing
-and has the safe-absence property in CAP-1. Client attestation {{ABCA}}
-addresses what can be proven about the client rather than what it can do
-({{eligibility}}).
+A capability is also unlike the existing client constructs. `scope` values are
+consented to, often displayed, and carried in the grant, which CAP-2 bars a
+capability from affecting. `grant_types` and `response_types` select flows and
+constrain which requests a client may make, whereas a capability describes
+optional response processing and its absence is safe under CAP-1. Client
+attestation {{ABCA}} addresses what can be proven about a client rather than
+what it can do ({{eligibility}}).
 
-Other protocols use shared vocabularies. SIP option tags {{RFC3261}} pair
-`Supported` with `Require`; HTTP `Prefer` {{RFC7240}} registers preferences
-such as `respond-async`; and Client Hints {{RFC8942}} lets a server advertise
-what it wants sent. GNAP {{RFC9635}} has generic, registry-backed
-server-to-client discovery and anticipates "any additional capabilities
-defined by extensions of this protocol", but represents client-to-server
-capabilities per feature.
-
-The IANA "OAuth Parameters" registry group currently contains no generic client
-capability parameter, field, or registry {{IANA-OAUTH}}.
+Other protocols share one vocabulary across extensions: SIP option tags
+{{RFC3261}}, HTTP preferences {{RFC7240}}, and Client Hints {{RFC8942}}. GNAP
+{{RFC9635}} has registry-backed server-to-client discovery but represents
+client-to-server capabilities per feature. Before this specification, the IANA
+"OAuth Parameters" registry group contained no generic client capability
+parameter, field, or registry {{IANA-OAUTH}}.
 
 ## Comparison with HTTP Prefer {#why-not-prefer}
 
@@ -1424,24 +1417,20 @@ responses" ({{Section 4.1 of RFC7240}}). A registered preference could carry
 each behavior in {{existing-drafts}} on direct HTTP requests, such as token
 requests and protected resource requests.
 
-`Prefer` does not serve the rest of OAuth's topology, which is why a request
-parameter is needed in any case. As an HTTP field, it cannot cross the redirect
-at the authorization endpoint ({{asymmetry}}), cannot be carried in a Request
-Object, does not travel with the authorization request that a pushed
-authorization request represents, and has no client metadata form to supply
-defaults ({{metadata}}).
+As an HTTP field, though, `Prefer` cannot cross the redirect at the
+authorization endpoint ({{asymmetry}}), cannot be carried in a Request Object,
+does not travel with the authorization request that a pushed authorization
+request represents, and has no client metadata form ({{metadata}}). A request
+parameter is needed in any case.
 
-For the HTTP carrier alone, a single registered preference listing capability
-values, such as `Prefer: oauth-client-capabilities="txn-challenge"`, could
-draw on the registry in {{iana-registry}} and its admission criterion. A
-server whose application of a preference affects caching must, however, list
-`Prefer` in `Vary` whether or not the request carried it
-({{Section 2 of RFC7240}}), so caches would key on every preference a client
-sends rather than only on its capabilities. The list would also be a quoted
-string parsed by the `capability-list` rule in {{values}}, not a Structured
-Fields List with its own parser and error handling ({{field}}). Whether such a
-preference should replace the dedicated field is an open issue
-({{open-issues}}).
+For the HTTP carrier alone, a registered preference listing capability values,
+such as `Prefer: oauth-client-capabilities="txn-challenge"`, could use the
+registry in {{iana-registry}}. A server whose application of a preference
+affects caching must, however, list `Prefer` in `Vary` whether or not the
+request carried it ({{Section 2 of RFC7240}}), so caches would key on every
+preference a client sends rather than only on its capabilities. The list would
+also be a quoted string parsed by the `capability-list` rule in {{values}}, not
+a Structured Fields List ({{field}}).
 
 ## Applying the Admission Criterion {#admission}
 
@@ -1501,18 +1490,15 @@ the authorization server's request-processing policy, not what a client must
 process in a response, and a signal that enables a check is what CAP-1
 excludes. OAuth 2.1 leaves the choice to the authorization server's
 configuration for each client and defines no version signal
-({{Section 1.8 of OAUTH21}}).
+({{Section 1.8 of OAUTH21}}). A revision that changes what a client must
+process in a response is different: {{naming}} gives it a new capability value.
 
-A revision that changes what a client must process in a response is different:
-it is a client-side behavior, and {{naming}} gives it a new capability value.
-
-A removable version selector, sent on each request so that updated releases can
-opt in, cannot establish a security minimum for the client while requests
-without it are still accepted, because an attacker sending a request under the
-same `client_id` omits it. Protections a server attaches to credentials issued
-under such a selector, such as rotation of a refresh token family
-({{Section 4.3.1 of OAUTH21}}), can persist after a later omission. Whether to
-define such a selector belongs to the OAuth 2.1 work.
+A version selector sent on each request, so that updated releases can opt in,
+cannot establish a security minimum while requests without it are still
+accepted, because an attacker using the same `client_id` omits it. Protections
+attached to credentials issued under such a selector, such as rotation of a
+refresh token family ({{Section 4.3.1 of OAUTH21}}), can persist after a later
+omission. Whether to define such a selector belongs to the OAuth 2.1 work.
 
 ## Trade-offs {#tradeoffs}
 
@@ -1525,10 +1511,9 @@ Coordination replaces autonomy. Registering a dedicated parameter requires no
 shared vocabulary; this registry requires naming discipline and agreement on
 CAP-1 through CAP-3.
 
-A request-level signal replaces the metadata default rather than adding to it
-({{precedence}}). A client that adds one value on a request repeats every
-default it still wants; in exchange, a less-capable instance can override a
-default for its own requests without a per-value removal syntax.
+Because a request-level signal replaces the default ({{precedence}}), a client
+that adds one value on a request repeats every default it still wants; in
+exchange, no per-value removal syntax is needed.
 
 The current extension count is small. The registry anticipates continued growth
 and is easier to establish before more incompatible carriers ship.
