@@ -1101,43 +1101,31 @@ This specification registers no capability values. The
 corresponding to behaviors described in {{existing-drafts}}. Line breaks in
 the form-encoded request bodies are for display only.
 
-The following example shows a pushed authorization request carrying the
-parameter, which keeps the value off the authorization URI. The value applies
-only to that authorization request ({{signal-scope}}), where, under the
-adoption in {{existing-drafts}}, it would be a pre-token hint:
+## Worked Adoption {#worked-adoption}
 
-~~~ http-message
-POST /par HTTP/1.1
-Host: as.example.com
-Content-Type: application/x-www-form-urlencoded
+This example follows one adoption of the deferred-response behavior in
+{{existing-drafts}}, from discovery to a default declared in client metadata.
+The deferred response and the behavior when the value is absent are those
+{{DTR}} defines; this specification changes only how the client signals that it
+can process the response. No request before the token request carries the
+value, so no pre-token hint ({{existing-drafts}}) applies.
 
-response_type=code&client_id=https%3A%2F%2Fapp.example%2Fclient
-&redirect_uri=https%3A%2F%2Fapp.example%2Fcb
-&code_challenge=W6uP...&code_challenge_method=S256
-&client_capabilities=accept-deferred-response
-~~~
-{: title="Capability carried in a pushed authorization request"}
-
-The following example shows the claims of a Request Object carrying the
-parameter. The value is a JSON string, not an array ({{param}}):
+The authorization server advertises the value in its metadata {{RFC8414}}
+({{discovery}}):
 
 ~~~ json
 {
-  "iss": "https://app.example/client",
-  "aud": "https://as.example.com",
-  "response_type": "code",
-  "client_id": "https://app.example/client",
-  "redirect_uri": "https://app.example/cb",
-  "code_challenge": "W6uP...",
-  "code_challenge_method": "S256",
-  "client_capabilities": "accept-deferred-response"
+  "issuer": "https://as.example.com",
+  "token_endpoint": "https://as.example.com/token",
+  "client_capabilities_supported": ["accept-deferred-response"]
 }
 ~~~
-{: title="Capability carried in Request Object claims"}
+{: title="Authorization server metadata excerpt"}
 
-The following example shows the same capability on the token request; the
-earlier signal does not carry over ({{signal-scope}}). The DPoP proof
-{{RFC9449}} is explained in {{worked-adoption}}:
+A client release that can process a deferred response signals the value on its
+token request. The client is public, so the request also carries a DPoP proof
+{{RFC9449}}, which Section 11.1 of {{DTR}} requires on a token request that
+yields a deferred response:
 
 ~~~ http-message
 POST /token HTTP/1.1
@@ -1153,10 +1141,54 @@ grant_type=authorization_code&code=SplxlOB...
 ~~~
 {: title="Signaling at the endpoint where the behavior occurs"}
 
-The following example shows a client registration request {{RFC7591}} that
-declares a default capability set. Every instance covered by the registration
-can process the behavior or overrides the default on its requests
-({{metadata}}), as the next example shows:
+The authorization server elects to defer and, in place of a token response,
+returns the deferred response defined in Section 6.4 of {{DTR}}:
+
+~~~ http-message
+HTTP/1.1 400 Bad Request
+Content-Type: application/json
+Cache-Control: no-store
+
+{
+  "error": "authorization_pending",
+  "deferral_code": "TfZUlGEqTJeW7oNlcxnXs2kECOk",
+  "expires_in": 10800,
+  "interval": 60
+}
+~~~
+{: title="Deferred response to a request that signals the capability"}
+
+The client then polls as {{DTR}} describes. Each poll carries a DPoP proof
+signed by the key that signed the token request's proof, and the access token
+eventually issued is bound to that key. The polls continue the deferral that
+the original request elicited; a registration of the value states whether they
+also carry it ({{signal-scope}}).
+
+A token request whose effective set does not contain the value never elicits a
+deferral: the authorization server completes it synchronously, or returns an
+error under the grant's rules (Section 5.3 of {{DTR}}), which is
+`invalid_request` after a pre-token hint ({{existing-drafts}}). Omitting the
+value rules out deferral, not failure. The following response to the same token
+request without the value assumes that the authorization server can complete
+every check it requires without deferral:
+
+~~~ http-message
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: no-store
+Pragma: no-cache
+
+{
+  "access_token": "2YotnFZFEjr1zCsicMWpAA",
+  "token_type": "DPoP",
+  "expires_in": 3600
+}
+~~~
+{: title="Synchronous response when the value is absent"}
+
+A registered client can instead declare the value as a default in its client
+metadata. Every instance covered by the registration can process the behavior
+or overrides the default on its requests ({{metadata}}):
 
 ~~~ http-message
 POST /register HTTP/1.1
@@ -1171,9 +1203,11 @@ Content-Type: application/json
 ~~~
 {: title="Default capability set in a registration request"}
 
-The following example shows a registered client retracting the capability
-its metadata declares, on a request made by an instance that cannot outlive
-the request:
+The registered client's token requests then carry no `client_capabilities`
+parameter and receive the default ({{precedence}}), so the authorization server
+may defer them, and they carry DPoP proofs for the same reason. An instance
+that cannot process a deferred response overrides the default with `none` on
+its requests:
 
 ~~~ http-message
 POST /token HTTP/1.1
@@ -1188,18 +1222,52 @@ grant_type=authorization_code&code=SplxlOB...
 ~~~
 {: title="Explicit retraction by a less-capable instance"}
 
-The following examples show excerpts of authorization server metadata
-{{RFC8414}} and protected resource metadata {{RFC9728}} that advertise
-recognized values ({{discovery}}):
+Its token requests are then never deferred: each receives a token response or
+an error.
+
+## Pushed Authorization Request {#example-par}
+
+A pushed authorization request carries the parameter in its body, which keeps
+the value off the authorization URI. The value applies only to the
+authorization request that the resulting `request_uri` represents
+({{signal-scope}}), where, under the adoption in {{existing-drafts}}, it would
+be a pre-token hint:
+
+~~~ http-message
+POST /par HTTP/1.1
+Host: as.example.com
+Content-Type: application/x-www-form-urlencoded
+
+response_type=code&client_id=https%3A%2F%2Fapp.example%2Fclient
+&redirect_uri=https%3A%2F%2Fapp.example%2Fcb
+&code_challenge=W6uP...&code_challenge_method=S256
+&client_capabilities=accept-deferred-response
+~~~
+{: title="Capability carried in a pushed authorization request"}
+
+## Request Object {#example-request-object}
+
+In the claims of a Request Object, the value is a JSON string, not an array
+({{param}}):
 
 ~~~ json
 {
-  "issuer": "https://as.example.com",
-  "token_endpoint": "https://as.example.com/token",
-  "client_capabilities_supported": ["accept-deferred-response"]
+  "iss": "https://app.example/client",
+  "aud": "https://as.example.com",
+  "response_type": "code",
+  "client_id": "https://app.example/client",
+  "redirect_uri": "https://app.example/cb",
+  "code_challenge": "W6uP...",
+  "code_challenge_method": "S256",
+  "client_capabilities": "accept-deferred-response"
 }
 ~~~
-{: title="Authorization server metadata excerpt"}
+{: title="Capability carried in Request Object claims"}
+
+## Protected Resource Metadata {#example-pr-metadata}
+
+A protected resource advertises the values it recognizes in its metadata
+{{RFC9728}} ({{discovery}}):
 
 ~~~ json
 {
@@ -1209,6 +1277,8 @@ recognized values ({{discovery}}):
 }
 ~~~
 {: title="Protected resource metadata excerpt"}
+
+## Illustrative Registry Entry {#example-registration}
 
 The following is an illustrative entry for the deferred-response behavior in
 {{existing-drafts}}, filled in as {{iana-registry}} describes. It is not a
@@ -1244,72 +1314,6 @@ Change Controller:
 
 Specification Document(s):
 : {{DTR}}
-
-## Worked Adoption {#worked-adoption}
-
-This example follows one adoption of the deferred-response behavior in
-{{existing-drafts}} from discovery to retraction. The deferred response and the
-behavior when the value is absent are those {{DTR}} defines; this specification
-changes only how the client signals that it can process the response.
-
-The authorization server advertises `accept-deferred-response` in
-`client_capabilities_supported`, as in the authorization server metadata
-excerpt above. A client release that can process a deferred response signals
-the value explicitly on its token request, as in the authorization code token
-request example above that signals it. The client is public, so that request
-also carries a DPoP proof {{RFC9449}}, which Section 11.1 of {{DTR}} requires on
-a token request that yields a deferred response. The authorization server
-elects to defer and, in place of a token response, returns the deferred
-response defined in Section 6.4 of {{DTR}}:
-
-~~~ http-message
-HTTP/1.1 400 Bad Request
-Content-Type: application/json
-Cache-Control: no-store
-
-{
-  "error": "authorization_pending",
-  "deferral_code": "TfZUlGEqTJeW7oNlcxnXs2kECOk",
-  "expires_in": 10800,
-  "interval": 60
-}
-~~~
-{: title="Deferred response to a request that signals the capability"}
-
-The client then polls as {{DTR}} describes. Each poll carries a DPoP proof
-signed by the key that signed the token request's proof, and the access token
-eventually issued is bound to that key. The polls continue the deferral that
-the original request elicited; a registration of the value states whether they
-also carry it ({{signal-scope}}). A token request whose effective set does not
-contain the value never elicits a deferral: the authorization server completes
-it synchronously, or returns an error under the grant's rules (Section 5.3 of
-{{DTR}}), which is `invalid_request` after a pre-token hint
-({{existing-drafts}}). Omitting the value rules out deferral, not failure. The
-following response to the same token request without the value assumes that no
-pre-token hint preceded it and that the authorization server can complete every
-check it requires without deferral:
-
-~~~ http-message
-HTTP/1.1 200 OK
-Content-Type: application/json
-Cache-Control: no-store
-Pragma: no-cache
-
-{
-  "access_token": "2YotnFZFEjr1zCsicMWpAA",
-  "token_type": "DPoP",
-  "expires_in": 3600
-}
-~~~
-{: title="Synchronous response when the value is absent"}
-
-A registered client can instead declare the value as a default, as in the
-registration request above. Its token requests then carry no
-`client_capabilities` parameter and receive the default ({{precedence}}), so
-the authorization server may defer them, and they carry DPoP proofs for the
-same reason. An instance that cannot process a deferred response overrides the
-default with `none`, as in the retraction example above. Its token requests are
-then never deferred: each receives a token response or an error.
 
 # Applying This Specification to Existing Drafts {#existing-drafts}
 
