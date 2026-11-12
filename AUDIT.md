@@ -257,11 +257,11 @@ does not, and the existing static field is the right answer.
 
 **The boundary case.** Variation matters when a single registered client has
 heterogeneous instances, which is precisely the retraction rationale in the
-draft's Precedence section. If a deployment must retract a capability its
-published metadata declares, the request parameter exists for that. Whether any
-given tier 3 field crosses into tier 1 is a deployment question, not a
-specification question, and the draft's replacement semantics answer it without
-moving the field.
+draft's section on determining the effective capability set. If a deployment
+must retract a capability its published metadata declares, the request
+parameter exists for that. Whether any given tier 3 field crosses into tier 1
+is a deployment question, not a specification question, and the draft's
+replacement semantics answer it without moving the field.
 
 ## CIMD: no capability values, but a carrier that needs care
 

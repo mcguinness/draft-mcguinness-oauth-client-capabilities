@@ -17,7 +17,7 @@ form decoding.
 
 | Parameter value | Effective set | Rule |
 |---|---|---|
-| (omitted) | a | Metadata default, step 2 of "Precedence" |
+| (omitted) | a | Metadata default, step 2 of "Determining the Effective Capability Set" |
 | (empty value) | a | An empty value is treated as omitted |
 | `b c` | b, c | |
 | `c b b` | b, c | Order and duplicates are ignored |
@@ -118,8 +118,8 @@ Unless a row says otherwise, each request carries
 `OAuth-Client-Capabilities: b` and no `client_capabilities` parameter; the
 client's metadata declares the default `["a"]`, and no out-of-band knowledge
 applies. The kind of request decides which carrier counts and what the default
-is (the kinds of request in "Precedence"). Authorization with an access token
-does not change the kind.
+is (the kinds of request in "Determining the Effective Capability Set").
+Authorization with an access token does not change the kind.
 
 | Request | Kind | Effective set |
 |---|---|---|

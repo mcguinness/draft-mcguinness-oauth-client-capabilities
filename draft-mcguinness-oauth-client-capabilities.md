@@ -375,6 +375,17 @@ These invariants also serve as the admission criterion for the registry; see
 
 # Carriers {#carriers}
 
+The kind of request decides which carrier conveys its request-level signal and
+what applies when it carries none. The following table summarizes the kinds
+that {{precedence}} defines:
+
+| Request | Request-level signal | Default |
+|---|---|---|
+| Authorization, pushed authorization, or token request, or a request to another endpoint where an extension defines the parameter | `client_capabilities` request parameter ({{param}}) | Client metadata ({{metadata}}) |
+| Protected resource request, including one to UserInfo | `OAuth-Client-Capabilities` field ({{field}}) | Out-of-band knowledge, where an extension defines it |
+| Other authorization server request, such as introspection, revocation, registration, or client configuration, even when authorized with an access token | None | None: no effective set |
+{: title="Carrier and default by kind of request"}
+
 ## The `client_capabilities` Request Parameter {#param}
 
 client_capabilities:
@@ -555,7 +566,7 @@ publicly retrievable, applies uniformly to every deployment using the URL, and
 may be cached. Clients identified this way SHOULD treat the request parameter
 in {{param}} as the primary carrier.
 
-## Precedence {#precedence}
+## Determining the Effective Capability Set {#precedence}
 
 The effective capability set depends on the kind of request:
 
