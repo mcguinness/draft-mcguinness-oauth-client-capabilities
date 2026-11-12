@@ -617,6 +617,25 @@ A request-level signal replaces the default rather than augmenting it, so that
 a less-capable instance can retract a default. To retract everything, a client
 sends `none` ({{none-value}}).
 
+The following table summarizes the result of these steps for each form a
+request-level signal can take. {{param}}, {{field}}, and {{limits}} govern.
+"Default" means the result of step 2, or the empty set when there is none; in
+the last two rows the request carries its signal, so the default does not
+apply.
+
+| Request-level signal | Request parameter | HTTP field |
+|---|---|---|
+| Absent | Default | Default |
+| Empty | Default | Default |
+| Invalid, or over a limit | Empty set | Default |
+| Valid, with no recognized value | No recognized value | No recognized value |
+| `none` alone | No recognized value | No recognized value |
+{: title="Effective capability set by request-level signal"}
+
+The table omits three rules: a client does not send an empty parameter, a
+request that repeats the parameter is rejected ({{param}}), and a server can
+reject a request whose signal exceeds a limit ({{limits}}).
+
 A capability set in a software statement is client metadata and remains subject
 to the request-level override above; signing the statement does not turn a
 default into a per-request declaration.
