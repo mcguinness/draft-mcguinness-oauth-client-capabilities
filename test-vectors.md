@@ -160,8 +160,8 @@ retrieval or parsing limits ("Client Metadata Declaration", "Limits").
 ## Discovery
 
 An invalid `client_capabilities_supported` member is ignored in its entirety
-("Discovery"). A client that holds a valid list should signal only values in
-it, sending `none` where it needs to override a default.
+("Discovery"). A client that has a valid list should signal only values in it,
+sending `none` where it needs to override a default.
 
 | `client_capabilities_supported` | Values a client signals |
 |---|---|
