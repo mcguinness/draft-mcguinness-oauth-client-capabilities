@@ -1378,8 +1378,9 @@ with each capability and the behavior when that capability is absent.<a href="#s
       </h2>
 <p id="section-1-1">Some OAuth 2.0 <span>[<a href="#RFC6749" class="cite xref">RFC6749</a>]</span> extensions change what a client receives in response
 to an otherwise ordinary request, and a client that cannot process the new
-response fails. Such an extension has its server use the new behavior only for
-a client that has signaled that it can process it, and defines its own signal.
+response fails. Such an extension has its server use the new behavior only when
+it knows the client can process it, and defines its own signal for the client
+to say so.
 Under <span>[<a href="#DTR" class="cite xref">DTR</a>]</span>, an authorization server defers a token response only when the
 <code>completion_mode</code> request parameter includes <code>deferred</code>; under
 <span>[<a href="#TXN-CHALLENGE" class="cite xref">TXN-CHALLENGE</a>]</span>, a protected resource returns a transaction authorization
