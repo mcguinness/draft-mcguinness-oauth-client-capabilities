@@ -298,9 +298,9 @@ three of its properties cut against the client metadata field.
   overrides the default, and notes that clients whose instances differ can
   omit the field instead. For CIMD that is not an edge case; it is the default
   for any software deployed more than once, which is the population the
-  draft's Open-World Deployment section holds up as its motivation. The
-  metadata carrier is thus usually the wrong choice for precisely the clients
-  that motivate the mechanism.
+  draft's Clients Without Prior Registration section holds up as its
+  motivation. The metadata carrier is thus usually the wrong choice for
+  precisely the clients that motivate the mechanism.
 - **Stale by construction.** An authorization server "MAY cache the client
   metadata" and "SHOULD respect HTTP cache headers ... but MAY define its own
   upper and/or lower bounds on an acceptable cache lifetime as well." A client
