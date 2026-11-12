@@ -126,7 +126,7 @@ Authorization with an access token does not change the kind.
 | UserInfo request with an access token | Protected resource request | b |
 | UserInfo request with an access token and no field | Protected resource request | (empty): client metadata is never the default |
 | Request to a resource server with an access token | Protected resource request | b |
-| Token request (the client must not send the field) | OAuth request; the field is ignored | a |
+| Token request (the client must not send the field) | Request to a parameter endpoint; the field is ignored | a |
 | Introspection request authorized with a bearer token | Other; the field plays no part | No effective set, unless an extension defines the parameter there |
 | Registration request with an initial access token | Other; the field plays no part | No effective set: the request's metadata declares the default |
 | Client configuration request with a registration access token | Other; the field plays no part | No effective set: the client's metadata declares the default |

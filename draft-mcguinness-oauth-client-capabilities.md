@@ -183,13 +183,19 @@ Recognize:
   recognized.
 
 Effective capability set:
-: The capability set that applies to a request after the carrier and precedence
-  rules in {{carriers}} have been applied. Also called the effective set.
+: The capability set that applies to a request, determined as in
+  {{precedence}}. Also called the effective set.
+
+Parameter endpoint:
+: An endpoint at which the `client_capabilities` request parameter is defined:
+  the authorization, pushed authorization request, and token endpoints, and any
+  endpoint where an extension defines it ({{param}}).
 
 Request-level signal:
-: The signal carried on the request itself: the request parameter on an OAuth
-  request, or the HTTP field on a protected resource request ({{precedence}}).
-  Client metadata supplies a default, not a request-level signal.
+: The signal carried on the request itself: the request parameter on a request
+  to a parameter endpoint, or the HTTP field on a protected resource request
+  ({{precedence}}). Client metadata supplies a default, not a request-level
+  signal.
 
 Out-of-band knowledge:
 : Knowledge, where an extension defines it, that a protected resource has of a
@@ -487,7 +493,7 @@ in {{param}} as the primary carrier.
 
 The effective capability set depends on the kind of request:
 
-OAuth request:
+Request to a parameter endpoint:
 : A request to the authorization, pushed authorization request, or token
   endpoint, or to another endpoint where an extension defines the request
   parameter. Its request-level signal is the `client_capabilities` parameter
@@ -506,17 +512,16 @@ Other authorization server requests:
   revoking a grant or token, or managing a registration. Examples are the
   introspection {{RFC7662}}, revocation {{RFC7009}}, device authorization
   {{RFC8628}}, client registration {{RFC7591}}, and client configuration
-  {{RFC7592}} endpoints. A request to such an endpoint is of this kind even when
-  it is authorized with an access token, and even if the endpoint's own
+  {{RFC7592}} endpoints. A request to such an endpoint is of this kind even
+  when it is authorized with an access token, and even if the endpoint's own
   specification calls it a protected resource. These requests have no effective
-  set. At the client registration and client configuration
-  endpoints, a client declares capabilities in client metadata instead
-  ({{metadata}}). An extension that needs a capability at another such endpoint
-  defines the request parameter there, which makes requests to it OAuth
-  requests.
+  set. At the client registration and client configuration endpoints, a client
+  declares capabilities in client metadata instead ({{metadata}}). An extension
+  that needs a capability at another such endpoint defines the request
+  parameter there, which makes that endpoint a parameter endpoint.
 
-For an OAuth request or a protected resource request, the effective capability
-set is determined as follows:
+For a request to a parameter endpoint or a protected resource request, the
+effective capability set is determined as follows:
 
 1. If the request carries its request-level signal, the signal's value is the
    effective set. A request parameter that is invalid ({{param}}) or exceeds a
@@ -524,10 +529,11 @@ set is determined as follows:
    field counts only if it is valid and has at least one member, even if the
    server recognizes no value in it; an absent field, an empty List, and an
    invalid field are treated alike, as no signal.
-2. Otherwise, the default is the effective set. For an OAuth request, it is the
-   `client_capabilities` value from the client metadata that the authorization
-   server considers authoritative for the client making the request. Client
-   metadata is never the default for a protected resource request.
+2. Otherwise, the default is the effective set. For a request to a parameter
+   endpoint, it is the `client_capabilities` value from the client metadata
+   that the authorization server considers authoritative for the client making
+   the request. Client metadata is never the default for a protected resource
+   request.
 3. If neither is present, the effective set is empty.
 
 A request-level signal replaces the default rather than augmenting it, so that
