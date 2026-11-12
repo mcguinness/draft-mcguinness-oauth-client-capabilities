@@ -1360,8 +1360,8 @@ deferred only if its own effective set contains the value ({{signal-scope}}).
 Nor is it a security check, which CAP-1 bars. If the hint is stripped, the
 check goes with it, but the token request is still handled under its own
 effective set and the absent-signal behavior, so no protection is lost. Leaving
-the value out of the token request rules out deferral but does not guarantee
-success.
+the value out of the token request's effective capability set rules out
+deferral but does not guarantee success.
 
 ### Discovery and Registry
 
