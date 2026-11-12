@@ -256,12 +256,13 @@ does not, and the existing static field is the right answer.
   endpoint, so per-registration is correct here too.
 
 **The boundary case.** Variation matters when a single registered client has
-heterogeneous instances, which is precisely the retraction rationale in the
-draft's section on determining the effective capability set. If a deployment
-must retract a capability its published metadata declares, the request
-parameter exists for that. Whether any given tier 3 field crosses into tier 1
-is a deployment question, not a specification question, and the draft's
-replacement semantics answer it without moving the field.
+heterogeneous instances, which is precisely why a request-level signal
+overrides the default in the draft's section on determining the effective
+capability set. If a deployment must override a capability its published
+metadata declares, the request parameter exists for that. Whether any given
+tier 3 field crosses into tier 1 is a deployment question, not a specification
+question, and the draft's replacement semantics answer it without moving the
+field.
 
 ## CIMD: no capability values, but a carrier that needs care
 
@@ -418,12 +419,12 @@ signed carrier looks like the right shape.
 It is the right granularity and the wrong lifetime, and the signature buys
 nothing. An attestation is minted by an issuer at a point in time and reused
 across requests for its validity period, so a capability inside it is immutable
-for that window, which defeats retraction, the very thing instance-level
-signaling is for. And CAP-3 forbids a server relying on a capability signal
-being truthful, so the signature adds no license to trust it. The attestation
-issuer is also poorly placed to vouch for a runtime processing property of a
-particular invocation. The request parameter provides the same granularity, at
-the right lifetime, at lower cost.
+for that window, which defeats a per-request override, the very thing
+instance-level signaling is for. And CAP-3 forbids a server relying on a
+capability signal being truthful, so the signature adds no license to trust it.
+The attestation issuer is also poorly placed to vouch for a runtime processing
+property of a particular invocation. The request parameter provides the same
+granularity, at the right lifetime, at lower cost.
 
 ## Sweep of active working group drafts
 
