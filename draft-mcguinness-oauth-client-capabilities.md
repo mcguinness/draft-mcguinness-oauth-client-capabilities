@@ -1367,47 +1367,57 @@ Specification Document(s):
 This appendix is informative and describes how the two extensions that
 motivated this work would use the mechanism.
 
-Deferred Token Response:
-: `completion_mode=deferred` becomes `client_capabilities` containing
-  `accept-deferred-response`, and `deferred_interactive` would become a second
-  value that a client sends together with it. The authorization server still
-  defers only when `accept-deferred-response` is in the token request's
-  effective set ({{signal-scope}}). The pre-token hint of {{DTR}} becomes the
-  value in the preceding request's effective set when that set comes from its
-  `client_capabilities` parameter ({{precedence}}). A metadata default is not
-  a hint: the client did not send it, and counting it would subject a
-  less-capable instance that redeems the code to the consistency rule below for
-  a hint it never made. Where that request goes to an
-  endpoint other than the authorization or pushed authorization request
-  endpoint, such as the device authorization endpoint, {{DTR}} would define the
-  request parameter there ({{param}}). The authorization server can act on a
-  hint for the originating grant as Section 5.2 of {{DTR}} describes, provided
-  the assurance the grant requires is decided without the hint ({{selection}})
-  and no consent requirement is relaxed (CAP-2). The rule in Section 5.2 of
-  {{DTR}} that a token request omitting `deferred` after a hint is rejected
-  with `invalid_request` carries over, whether or not the server acted on the
-  hint: a token request whose effective set lacks the value after a hint,
-  including one that sends `none`, is rejected. That is an error the extension
-  defines ({{server-behavior}}), and a consequence of the earlier request rather
-  than a capability carried forward: the token request is deferred only if its
-  own effective set contains the value ({{signal-scope}}). Nor is it a security
-  check, which CAP-1 bars. If the hint is stripped, the check goes with it, but
-  the token request is still handled under its own effective set and the
-  absent-signal behavior, so no protection is lost. Retracting the value at the
-  token endpoint rules out deferral but does not guarantee success. The
-  proposed
-  single-purpose registry is subsumed by {{iana-registry}}, and the
-  `deferred_token_response_supported` authorization server metadata Boolean
-  by `client_capabilities_supported` containing the value. Either suffices to
-  show that a server recognizes the capability, and a disagreement between
-  them affects only which values a client chooses to send ({{discovery}}).
+## Deferred Token Response {#apply-dtr}
 
-Transaction Authorization Challenge:
-: `Accept-Txn-Challenge: ?1` becomes
-  `OAuth-Client-Capabilities: txn-challenge`. The Boolean becomes membership
-  of `txn-challenge` in the request's effective set ({{precedence}}).
-  Out-of-band knowledge of support applies only when the request carries no
-  valid field with at least one member.
+### Token Request Signal
+
+`completion_mode=deferred` becomes `client_capabilities` containing
+`accept-deferred-response`, and `deferred_interactive` would become a second
+value that a client sends together with it. The authorization server still
+defers only when `accept-deferred-response` is in the token request's effective
+set ({{signal-scope}}).
+
+### Pre-Token Hint
+
+The pre-token hint of {{DTR}} becomes the value in the preceding request's
+effective set when that set comes from its `client_capabilities` parameter
+({{precedence}}). A metadata default is not a hint: the client did not send it,
+and counting it would subject a less-capable instance that redeems the code to
+the consistency rule below for a hint it never made. Where that request goes to
+an endpoint other than the authorization or pushed authorization request
+endpoint, such as the device authorization endpoint, {{DTR}} would define the
+request parameter there ({{param}}). The authorization server can act on a hint
+for the originating grant as Section 5.2 of {{DTR}} describes, provided the
+assurance the grant requires is decided without the hint ({{selection}}) and no
+consent requirement is relaxed (CAP-2).
+
+The rule in Section 5.2 of {{DTR}} that a token request omitting `deferred`
+after a hint is rejected with `invalid_request` carries over, whether or not
+the server acted on the hint: a token request whose effective set lacks the
+value after a hint, including one that sends `none`, is rejected. That is an
+error the extension defines ({{server-behavior}}), and a consequence of the
+earlier request rather than a capability carried forward: the token request is
+deferred only if its own effective set contains the value ({{signal-scope}}).
+Nor is it a security check, which CAP-1 bars. If the hint is stripped, the
+check goes with it, but the token request is still handled under its own
+effective set and the absent-signal behavior, so no protection is lost.
+Retracting the value at the token endpoint rules out deferral but does not
+guarantee success.
+
+### Discovery and Registry
+
+The proposed single-purpose registry is subsumed by {{iana-registry}}, and the
+`deferred_token_response_supported` authorization server metadata Boolean by
+`client_capabilities_supported` containing the value. Either suffices to show
+that a server recognizes the capability, and a disagreement between them
+affects only which values a client chooses to send ({{discovery}}).
+
+## Transaction Authorization Challenge {#apply-txn}
+
+`Accept-Txn-Challenge: ?1` becomes `OAuth-Client-Capabilities: txn-challenge`.
+The Boolean becomes membership of `txn-challenge` in the request's effective
+set ({{precedence}}). Out-of-band knowledge of support applies only when the
+request carries no valid field with at least one member.
 
 # Design Rationale {#rationale}
 
