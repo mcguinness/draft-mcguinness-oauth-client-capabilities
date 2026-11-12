@@ -1509,6 +1509,7 @@ The current extension count is small. The registry anticipates continued growth
 and is easier to establish before more incompatible carriers ship.
 
 ## Open Issues {#open-issues}
+{: removeinrfc="true"}
 
 - Should a server report which capabilities it acted upon, as {{RFC7240}} does
   with `Preference-Applied`? The current answer is no because the response
