@@ -415,7 +415,7 @@ treated as omitted, as required by {{RFC6749}}. A non-empty value that does not
 match this production, including a value with leading, trailing, or repeated
 spaces, is invalid. A recipient MUST treat an invalid value as signaling the
 empty set and MUST NOT reject the request solely because the value is invalid,
-except as permitted by {{dos}}.
+except as permitted by {{limits}}.
 
 When an authorization request uses a Request Object, the authorization server
 uses only the parameters inside it ({{Section 6.3 of RFC9101}}). A
@@ -547,11 +547,11 @@ software, a deployed instance, or both; see {{precedence}}.
 The array MUST NOT contain `none`. An absent field and an empty array both
 denote the empty set. If the value is not an array, or any element is not a
 string or does not conform to the `capability` production, the field is
-invalid. A recipient MUST ignore an invalid field, deriving no
-capabilities from it, and MUST NOT reject an otherwise-valid metadata document
-or registration request solely because this field is invalid, except as
-permitted by {{dos}}. This rule concerns only the `client_capabilities` field;
-it does not change how the containing protocol handles invalid JSON, a failed
+invalid. A recipient MUST ignore an invalid field, deriving no capabilities
+from it, and MUST NOT reject an otherwise-valid metadata document or
+registration request solely because this field is invalid, except as permitted
+by {{limits}}. This rule concerns only the `client_capabilities` field; it does
+not change how the containing protocol handles invalid JSON, a failed
 signature, or its other required validation.
 
 A party publishing or registering this metadata MUST NOT declare a capability
@@ -603,7 +603,7 @@ set is determined as follows:
 
 1. If the request carries its request-level signal, the signal's value is the
    effective set. A request parameter that is invalid ({{param}}) or exceeds a
-   limit ({{dos}}) is still present, and the effective set is then empty. A
+   limit ({{limits}}) is still present, and the effective set is then empty. A
    field counts only if it is valid and has at least one member, even if the
    server recognizes no value in it; an absent field, an empty List, and an
    invalid field are treated alike, as no signal.
@@ -620,6 +620,46 @@ sends `none` ({{none-value}}).
 A capability set in a software statement is client metadata and remains subject
 to the request-level override above; signing the statement does not turn a
 default into a per-request declaration.
+
+## Limits {#limits}
+
+Servers MUST apply finite limits to the encoded length, number of members, and
+resources consumed while parsing a signal. Those limits MUST admit any
+otherwise-valid signal of at most 4096 octets and at most 64 members, counting
+members before duplicates or unrecognized values are removed; a recipient MAY
+accept larger signals. The octets counted are those of the carrier's value,
+excluding its name and the surrounding message:
+
+| Carrier | Octets counted |
+|---|---|
+| Request parameter | The form-encoded value, before percent-decoding |
+| Request parameter in a Request Object | The JSON string as serialized in the decoded JWT Claims Set, including its quotes and escapes |
+| HTTP field | The combined field value, including separators and parameters |
+| Client metadata | The serialized JSON array, including brackets, quotes, whitespace, and escapes |
+{: title="Octets counted toward a limit"}
+
+Decoding never lengthens a value, so a recipient that measures decoded octets
+admits at least every signal that this floor requires it to admit; it still
+applies a finite limit to the encoded length.
+
+A signal that exceeds a limit MUST be treated as invalid: a request parameter
+then signals the empty set ({{param}}), a field is treated as absent
+({{field}}), and a client metadata field is ignored ({{metadata}}). A server
+MAY instead reject the request that carries the signal, or a registration
+request whose metadata carries it, using an error response appropriate to the
+endpoint or application protocol. In particular, `invalid_request` is available
+at OAuth endpoints and `invalid_client_metadata` at a registration endpoint
+{{RFC7591}}, while a protected resource can use an application-specific
+response. This does not extend to a metadata document published at a Client
+Identifier URL {{CIMD}}: an otherwise acceptable document whose
+`client_capabilities` field exceeds a limit is accepted with the field ignored,
+as {{metadata}} requires. Rejecting such a document would be a terminal
+discovery failure ({{Section 6.1 of CIMD}}), failing the client's requests
+until the document changes, and may leave the client without an actionable
+diagnostic, particularly at the authorization endpoint. Limits on the whole
+document, such as the maximum response size in {{Section 10.11 of CIMD}}, still
+apply, even when the field accounts for most of its size; a client publishing
+its metadata this way keeps the field well within them.
 
 ## Scope of a Signal {#signal-scope}
 
@@ -644,8 +684,8 @@ originating request elicited ({{extension-guidance}}).
 A server MUST NOT reject a request solely because a capability value is
 unrecognized. This does not prevent an extension from refusing a request when
 the effective capability set provides no usable processing path
-({{selection}}), or a server from rejecting an oversized signal ({{dos}}) or a
-repeated request parameter ({{param}}).
+({{selection}}), or a server from rejecting an oversized signal ({{limits}}) or
+a repeated request parameter ({{param}}).
 
 Neither signaling a capability nor advertising it ({{discovery}}) entitles a
 client to the corresponding behavior. A server retains discretion over whether
@@ -829,45 +869,8 @@ an authenticated negotiation mechanism.
 
 ## Denial of Service {#dos}
 
-A capability list is attacker-controllable in size. Servers MUST apply finite
-limits to the encoded length, number of members, and resources consumed while
-parsing a signal. Those limits MUST admit any otherwise-valid signal of at most
-4096 octets and at most 64 members, counting members before duplicates or
-unrecognized values are removed; a recipient MAY accept larger signals. The
-octets counted are those of the carrier's value, excluding its name and the
-surrounding message:
-
-| Carrier | Octets counted |
-|---|---|
-| Request parameter | The form-encoded value, before percent-decoding |
-| Request parameter in a Request Object | The JSON string as serialized in the decoded JWT Claims Set, including its quotes and escapes |
-| HTTP field | The combined field value, including separators and parameters |
-| Client metadata | The serialized JSON array, including brackets, quotes, whitespace, and escapes |
-{: title="Octets counted toward a limit"}
-
-Decoding never lengthens a value, so a recipient that measures decoded octets
-admits at least every signal that this floor requires it to admit; it still
-applies a finite limit to the encoded length.
-
-
-A signal that exceeds a limit MUST be treated as invalid: a request parameter
-then signals the empty set ({{param}}), a field is treated as absent
-({{field}}), and a client metadata field is ignored ({{metadata}}). A server
-MAY instead reject the request that carries the signal, or a registration
-request whose metadata carries it, using an error response appropriate to the
-endpoint or application protocol. In particular, `invalid_request` is available
-at OAuth endpoints and `invalid_client_metadata` at a registration endpoint
-{{RFC7591}}, while a protected resource can use an application-specific
-response. This does not extend to a metadata document published at a Client
-Identifier URL {{CIMD}}: an otherwise acceptable document whose
-`client_capabilities` field exceeds a limit is accepted with the field ignored,
-as {{metadata}} requires. Rejecting such a document would be a terminal
-discovery failure ({{Section 6.1 of CIMD}}), failing the client's requests
-until the document changes, and may leave the client without an actionable
-diagnostic, particularly at the authorization endpoint. Limits on the whole
-document, such as the maximum response size in {{Section 10.11 of CIMD}}, still
-apply, even when the field accounts for most of its size; a client publishing
-its metadata this way keeps the field well within them.
+A capability list is attacker-controllable in size. {{limits}} bounds what a
+server parses, and sets the floor every server admits.
 
 Acting on a falsely asserted capability can also consume server, downstream,
 and human resources; each extension analyzes this cost ({{extension-guidance}}).
