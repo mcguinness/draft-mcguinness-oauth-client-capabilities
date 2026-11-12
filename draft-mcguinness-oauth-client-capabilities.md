@@ -73,21 +73,15 @@ informative:
 
 --- abstract
 
-OAuth 2.0 extensions increasingly require an authorization server or protected
-resource to know, before it acts, whether the client is able to process a
-particular protocol behavior. Extensions define this signal individually today,
-and the two carriers in use are not interchangeable: the OAuth front channel is
-mediated by a user agent and cannot carry a client-originated HTTP field, while
-a protected resource request has no OAuth request parameter surface.
-
-This document defines a single registry of client capability values and three
-carriers for them: a `client_capabilities` request parameter, an
-`OAuth-Client-Capabilities` HTTP field, and a `client_capabilities` client
-metadata field. Capability values are advisory and are constrained to enable
-only optional server behavior, so that adding or removing a value does not
-weaken security. Because each request can carry its own set, a client can roll
-out a capability one instance, release, or authorization server at a time,
-without changing metadata that every instance shares.
+This document defines a mechanism for OAuth 2.0 clients to indicate which
+optional protocol behaviors they can process. It defines a registry of
+capability values, a request parameter for authorization and token requests, an
+HTTP field for protected resource requests, a client metadata field for
+declaring defaults, and server metadata for advertising the values a server
+recognizes. A request can override the applicable default, including with a
+signal that contains no capability. Capability signals do not authorize access
+or reduce required security checks. Extensions define the behavior associated
+with each capability and the behavior when that capability is absent.
 
 --- middle
 
