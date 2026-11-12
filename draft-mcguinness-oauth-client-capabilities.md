@@ -271,55 +271,6 @@ Capability values MUST NOT carry parameters. An extension that needs structured
 detail alongside a capability defines a companion request parameter, or uses
 `authorization_details` {{RFC9396}}. The registry is a flat vocabulary.
 
-## Naming Guidance {#naming}
-
-A capability value names a specific client behavior that a server may exercise
-after receiving the value, not a document. `accept-deferred-response` is a
-capability; `draft-ietf-oauth-deferred-token-response` is not. A
-specification MAY register more than one value where a client can usefully
-implement part of it.
-
-A new revision of an extension whose client-side processing differs registers a
-new value rather than reusing the old one. Registering the new value does not
-retire the old one; its change controller can mark it obsolete in the registry
-({{iana-registry}}). A server that recognizes several
-revisions of a behavior serves clients built against each of them from a single
-deployment.
-
-Because client-side processing may change while an extension is being revised,
-an extension SHOULD register a value only once the processing it names is
-stable. Unregistered values are not a general substitute in the interim,
-because two implementations can give one value different meanings
-({{unregistered-values}}). Unregistered values therefore SHOULD be confined
-to deployments whose parties have agreed on their meaning out of band, and
-registration SHOULD be sought once deployment becomes interoperable. The
-registry's Specification Required policy ({{iana-registry}}) allows a value to
-be registered once a stable specification documents it; for an IETF-stream
-specification that will be published as an RFC, early allocation {{RFC7120}}
-is also available.
-
-A revision number is a document reference, so a value SHOULD NOT carry one: it
-means nothing once the draft is published, and a run of revisions with
-identical client processing would imply as many variants. Where the revised
-behavior can be named, name it. Where it cannot, because a format changed in
-many small ways at once, a bare sequence suffix indexes variants without
-pointing at a document.
-
-The following non-normative example shows the distinction. Suppose an
-extension defines a transaction authorization challenge, and a later revision
-changes the challenge from a set of form-encoded parameters to a JWT, so that a
-client built against the earlier revision cannot parse the later one:
-
-- `txn-challenge` names the original behavior.
-- `txn-challenge-jwt` names the revised behavior by what a client must now
-  parse, and is the preferred registration.
-- `txn-challenge-2` is acceptable where no behavioral name is available.
-- `txn-challenge-11` is not, because the suffix names a draft revision rather
-  than a behavior.
-
-A protocol version is not a capability under any name, such as `oauth-2.1`
-({{profiles}}).
-
 ## The `none` Sentinel {#none-value}
 
 The token `none` is reserved and is never a capability. A client sends it as
@@ -377,7 +328,7 @@ CAP-3: Servers do not rely on capability signals being true
 {: newline="true"}
 
 These invariants also serve as the admission criterion for the registry; see
-{{extension-guidance}}.
+{{eligibility}}.
 
 # Carriers {#carriers}
 
@@ -702,7 +653,7 @@ infer it from an earlier request in the grant. Each request in a sequence that
 an extension defines, such as a poll after a deferred response or a retry after
 a challenge, has its own effective set. The extension states whether a
 follow-on request has to carry the value or continues the behavior that the
-originating request elicited ({{extension-guidance}}).
+originating request elicited ({{extension-contents}}).
 
 # Server Behavior {#server-behavior}
 
@@ -733,7 +684,7 @@ A server MUST determine the assurance a request requires without reference to
 the capability set. It MAY use the set to choose among paths that meet that
 requirement. If no such path is available, it MUST refuse the request. Without
 this rule, removing a value could steer the server to a weaker path,
-reintroducing the downgrade CAP-1 prevents. {{extension-guidance}} states when
+reintroducing the downgrade CAP-1 prevents. {{eligibility}} states when
 such a choice justifies a capability value.
 
 # Discovery {#discovery}
@@ -763,11 +714,15 @@ fingerprinting exposure, following the pattern of Client Hints {{RFC8942}}.
 Absence of `client_capabilities_supported` does not indicate that the server
 fails to support this specification.
 
-# Guidance for Extension Specifications {#extension-guidance}
+# Requirements for Extension Specifications {#extension-guidance}
 
 An extension that needs a client to signal a processing capability SHOULD
 register a value in the registry established in {{iana-registry}} rather than
 define a dedicated request parameter, HTTP field, or client metadata field.
+This section states when a behavior qualifies, what an extension defines for
+it, and how to name the value.
+
+## Eligibility {#eligibility}
 
 The invariants in {{invariants}} are the admission criterion. A value may be
 justified on either of two grounds: that a server cannot safely exercise the
@@ -787,19 +742,35 @@ equivalent signed structure. A capability is an assertion, not an assurance; an
 extension that needs to bind it to a key or trust it in a policy decision has
 misclassified it.
 
-Additional points of discipline:
+Prefer server-side discovery where it works. If the client-side behavior can be
+specified as a requirement conditioned on something the server advertises in
+its own metadata ({{RFC8414}} or {{RFC9728}}), specify it that way and register
+no capability. A capability is for behavior that cannot be made mandatory
+because the server cannot learn whether the client implements it.
 
-- Register a behavior, not a specification. See {{naming}}.
-- Prefer server-side discovery where it works. If the client-side behavior can
-  be specified as a requirement conditioned on something the server advertises
-  in its own metadata ({{RFC8414}} or {{RFC9728}}), specify it that way and
-  register no capability. A capability is for behavior that cannot be made
-  mandatory because the server cannot learn whether the client implements it.
-- State, in the registration, the carriers and endpoints at which the value is
-  meaningful, and which follow-on requests, such as polls or retries, carry it
-  ({{signal-scope}}).
-- If the extension defines out-of-band knowledge, state how a client learns
-  that it applies, so that the client knows when to send `none`.
+Issuer-wide behavior is often the intended design, and coupling it to a
+per-issuer metadata flag is a legitimate choice. Where per-client or fractional
+rollout of a behavior that meets {{invariants}} is a requirement, however, an
+extension SHOULD NOT couple the behavior to such a flag, because it then
+becomes all-or-nothing for every client of the issuer; gate it on a capability
+instead. {{RFC9207}} illustrates the trade-off: coupling the advertisement to a
+server-wide delivery commitment allows a client to enforce that `iss` is
+present, but the feature cannot be rolled out per client. A capability could
+not carry that commitment; see the next paragraph.
+
+This specification provides no delivery guarantee, and an extension MUST NOT
+rely on a capability signal or on `client_capabilities_supported` to supply
+one; {{server-behavior}} leaves delivery to the server. An extension that needs
+a delivery commitment defines it itself, along with how a client learns the
+server will honor it.
+
+## What an Extension Defines {#extension-contents}
+
+An extension states, in the registration, the carriers and endpoints at which
+the value is meaningful, and which follow-on requests, such as polls or
+retries, carry it ({{signal-scope}}). If the extension defines out-of-band
+knowledge, it states how a client learns that it applies, so that the client
+knows when to send `none`.
 
 Because capability signals may be removed by an adversary, an extension MUST
 define a safe absent-signal fallback. If the enabled behavior is how a server
@@ -820,21 +791,54 @@ deployment environment MUST assess whether signaling them creates a useful
 fingerprint and SHOULD choose names that describe behavior without exposing
 implementation details.
 
-Issuer-wide behavior is often the intended design, and coupling it to a
-per-issuer metadata flag is a legitimate choice. Where per-client or fractional
-rollout of a behavior that meets {{invariants}} is a requirement, however, an
-extension SHOULD NOT couple the behavior to such a flag, because it then
-becomes all-or-nothing for every client of the issuer; gate it on a capability
-instead. {{RFC9207}} illustrates the trade-off: coupling the advertisement to a
-server-wide delivery commitment allows a client to enforce that `iss` is
-present, but the feature cannot be rolled out per client. A capability could
-not carry that commitment; see the next paragraph.
+## Naming Guidance {#naming}
 
-This specification provides no delivery guarantee, and an extension MUST NOT
-rely on a capability signal or on `client_capabilities_supported` to supply
-one; {{server-behavior}} leaves delivery to the server. An extension that needs
-a delivery commitment defines it itself, along with how a client learns the
-server will honor it.
+A capability value names a specific client behavior that a server may exercise
+after receiving the value, not a document. `accept-deferred-response` is a
+capability; `draft-ietf-oauth-deferred-token-response` is not. A
+specification MAY register more than one value where a client can usefully
+implement part of it.
+
+A new revision of an extension whose client-side processing differs registers a
+new value rather than reusing the old one. Registering the new value does not
+retire the old one; its change controller can mark it obsolete in the registry
+({{iana-registry}}). A server that recognizes several
+revisions of a behavior serves clients built against each of them from a single
+deployment.
+
+Because client-side processing may change while an extension is being revised,
+an extension SHOULD register a value only once the processing it names is
+stable. Unregistered values are not a general substitute in the interim,
+because two implementations can give one value different meanings
+({{unregistered-values}}). Unregistered values therefore SHOULD be confined
+to deployments whose parties have agreed on their meaning out of band, and
+registration SHOULD be sought once deployment becomes interoperable. The
+registry's Specification Required policy ({{iana-registry}}) allows a value to
+be registered once a stable specification documents it; for an IETF-stream
+specification that will be published as an RFC, early allocation {{RFC7120}}
+is also available.
+
+A revision number is a document reference, so a value SHOULD NOT carry one: it
+means nothing once the draft is published, and a run of revisions with
+identical client processing would imply as many variants. Where the revised
+behavior can be named, name it. Where it cannot, because a format changed in
+many small ways at once, a bare sequence suffix indexes variants without
+pointing at a document.
+
+The following non-normative example shows the distinction. Suppose an
+extension defines a transaction authorization challenge, and a later revision
+changes the challenge from a set of form-encoded parameters to a JWT, so that a
+client built against the earlier revision cannot parse the later one:
+
+- `txn-challenge` names the original behavior.
+- `txn-challenge-jwt` names the revised behavior by what a client must now
+  parse, and is the preferred registration.
+- `txn-challenge-2` is acceptable where no behavioral name is available.
+- `txn-challenge-11` is not, because the suffix names a draft revision rather
+  than a behavior.
+
+A protocol version is not a capability under any name, such as `oauth-2.1`
+({{profiles}}).
 
 # Security Considerations {#security-considerations}
 
@@ -873,7 +877,7 @@ third-party modification but does not prove implementation. See {{param}} and
 ## Downgrade {#downgrade}
 
 Because capability signals may be removed by an adversary, each extension
-defines a safe absent-signal fallback ({{extension-guidance}}). With such a
+defines a safe absent-signal fallback ({{extension-contents}}). With such a
 fallback, removal costs client functionality, never a server security property.
 Removing a signal that narrows a set widens it instead:
 stripping a request parameter that overrides a metadata default restores the
@@ -898,7 +902,7 @@ A capability list is attacker-controllable in size. {{limits}} bounds what a
 server parses, and sets the floor every server admits.
 
 Acting on a falsely asserted capability can also consume server, downstream,
-and human resources; each extension analyzes this cost ({{extension-guidance}}).
+and human resources; each extension analyzes this cost ({{extension-contents}}).
 A capability signal
 does not authorize the client to consume unbounded work.
 
@@ -933,7 +937,7 @@ but unencrypted Request Object provides integrity, not confidentiality.
 
 Capability values MUST NOT encode information about an end user or a specific
 device. Extensions assess the fingerprinting effect of capabilities whose
-availability depends on the deployment environment ({{extension-guidance}}).
+availability depends on the deployment environment ({{extension-contents}}).
 
 # IANA Considerations {#iana}
 
@@ -979,9 +983,9 @@ Specification Document(s):
 Designated experts evaluating a registration request should:
 
 - confirm that the value satisfies CAP-1 through CAP-3 in {{invariants}} and the
-  criterion in {{extension-guidance}}, that the specification meets the
+  criterion in {{eligibility}}, that the specification meets the
   requirements this document places on extensions, including those in
-  {{param}}, {{selection}}, and {{extension-guidance}}, and that its registered
+  {{param}}, {{selection}}, and {{extension-contents}}, and that its registered
   absent-signal behavior is at least as conservative as what the server would
   apply had the value never been defined;
 - confirm that the specification defines the optional behavior enabled and
@@ -1426,7 +1430,7 @@ and constrain which requests a registered client may make, so their absence can
 cause a request to fail; a capability describes optional response processing
 and has the safe-absence property in CAP-1. Client attestation {{ABCA}}
 addresses what can be proven about the client rather than what it can do
-({{extension-guidance}}).
+({{eligibility}}).
 
 Other protocols use shared vocabularies. SIP option tags {{RFC3261}} pair
 `Supported` with `Require`; HTTP `Prefer` {{RFC7240}} registers preferences
@@ -1505,7 +1509,7 @@ makes mandatory to implement.
 Path selection is the one exception. A behavior safe to issue unconditionally
 needs no gating signal, yet can still qualify where a server must choose among
 paths and the signal prevents it selecting one the client cannot complete;
-{{selection}} governs that case and {{extension-guidance}} bounds it.
+{{selection}} governs that case and {{eligibility}} bounds it.
 
 ## Absence of Mandatory-to-Understand Semantics {#no-require}
 
