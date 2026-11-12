@@ -1062,7 +1062,7 @@ svg {
 </tr></thead>
 <tfoot><tr>
 <td class="left">McGuinness</td>
-<td class="center">Expires 15 May 2027</td>
+<td class="center">Expires 16 May 2027</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1075,12 +1075,12 @@ svg {
 <dd class="internet-draft">draft-mcguinness-oauth-client-capabilities-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-11-11" class="published">11 November 2026</time>
+<time datetime="2026-11-12" class="published">12 November 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2027-05-15">15 May 2027</time></dd>
+<dd class="expires"><time datetime="2027-05-16">16 May 2027</time></dd>
 <dt class="label-authors">Author:</dt>
 <dd class="authors">
 <div class="author">
@@ -1127,7 +1127,7 @@ without changing metadata that every instance shares.<a href="#section-abstract-
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 15 May 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 16 May 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1888,8 +1888,9 @@ signature, or its other required validation.<a href="#section-6.3-3" class="pilc
 <p id="section-6.3-4">A party publishing or registering this metadata <span class="bcp14">MUST NOT</span> declare a capability
 unless every client instance covered by that metadata can process the enabled
 behavior, or every less-capable instance will override the default on its
-requests. Clients with heterogeneous instances <span class="bcp14">SHOULD</span> omit the metadata field
-and signal capabilities on each request.<a href="#section-6.3-4" class="pilcrow">¶</a></p>
+requests. A client whose instances differ can instead omit the field and signal
+capabilities on each request, which does not depend on every less-capable
+instance overriding the default.<a href="#section-6.3-4" class="pilcrow">¶</a></p>
 <p id="section-6.3-5">A client metadata document published at a Client Identifier URL <span>[<a href="#CIMD" class="cite xref">CIMD</a>]</span> is
 publicly retrievable, applies uniformly to every deployment using the URL, and
 may be cached. Clients identified this way <span class="bcp14">SHOULD</span> treat the request parameter
@@ -2249,11 +2250,21 @@ applies a finite limit to the encoded length.<a href="#section-10.3-3" class="pi
 <p id="section-10.3-4">A signal that exceeds a limit <span class="bcp14">MUST</span> be treated as invalid: a request parameter
 then signals the empty set (<a href="#param" class="auto internal xref">Section 6.1</a>), a field is treated as absent
 (<a href="#field" class="auto internal xref">Section 6.2</a>), and a client metadata field is ignored (<a href="#metadata" class="auto internal xref">Section 6.3</a>). A server
-<span class="bcp14">MAY</span> instead reject the request or metadata document using an error response
-appropriate to the endpoint or application protocol. In particular,
-<code>invalid_request</code> is available at OAuth endpoints and <code>invalid_client_metadata</code>
-at a registration endpoint <span>[<a href="#RFC7591" class="cite xref">RFC7591</a>]</span>, while a protected resource can use an
-application-specific response.<a href="#section-10.3-4" class="pilcrow">¶</a></p>
+<span class="bcp14">MAY</span> instead reject the request that carries the signal, or a registration
+request whose metadata carries it, using an error response appropriate to the
+endpoint or application protocol. In particular, <code>invalid_request</code> is available
+at OAuth endpoints and <code>invalid_client_metadata</code> at a registration endpoint
+<span>[<a href="#RFC7591" class="cite xref">RFC7591</a>]</span>, while a protected resource can use an application-specific
+response. This does not extend to a metadata document published at a Client
+Identifier URL <span>[<a href="#CIMD" class="cite xref">CIMD</a>]</span>: an otherwise acceptable document whose
+<code>client_capabilities</code> field exceeds a limit is accepted with the field ignored,
+as <a href="#metadata" class="auto internal xref">Section 6.3</a> requires. Rejecting such a document would be a terminal
+discovery failure (<span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-client-id-metadata-document-03#section-6.1" class="relref">Section 6.1</a> of [<a href="#CIMD" class="cite xref">CIMD</a>]</span>), failing the client's requests
+until the document changes, and may leave the client without an actionable
+diagnostic, particularly at the authorization endpoint. Limits on the whole
+document, such as the maximum response size in <span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-client-id-metadata-document-03#section-10.11" class="relref">Section 10.11</a> of [<a href="#CIMD" class="cite xref">CIMD</a>]</span>, still
+apply, even when the field accounts for most of its size; a client publishing
+its metadata this way keeps the field well within them.<a href="#section-10.3-4" class="pilcrow">¶</a></p>
 <p id="section-10.3-5">Acting on a falsely asserted capability can also consume server, downstream,
 and human resources; each extension analyzes this cost (<a href="#extension-guidance" class="auto internal xref">Section 9</a>).
 A capability signal
@@ -3056,8 +3067,10 @@ value that a client sends together with it. The authorization server still
 defers only when <code>accept-deferred-response</code> is in the token request's
 effective set (<a href="#signal-scope" class="auto internal xref">Section 6.5</a>). The pre-token hint of <span>[<a href="#DTR" class="cite xref">DTR</a>]</span> becomes the
 value in the preceding request's effective set when that set comes from its
-<code>client_capabilities</code> parameter (<a href="#precedence" class="auto internal xref">Section 6.4</a>); a metadata default is not a
-hint, because the client did not send it. Where that request goes to an
+<code>client_capabilities</code> parameter (<a href="#precedence" class="auto internal xref">Section 6.4</a>). A metadata default is not
+a hint: the client did not send it, and counting it would subject a
+less-capable instance that redeems the code to the consistency rule below for
+a hint it never made. Where that request goes to an
 endpoint other than the authorization or pushed authorization request
 endpoint, such as the device authorization endpoint, <span>[<a href="#DTR" class="cite xref">DTR</a>]</span> would define the
 request parameter there (<a href="#param" class="auto internal xref">Section 6.1</a>). The authorization server can act on a

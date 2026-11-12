@@ -4,8 +4,8 @@
 
 Web Authorization Protocol                                 K. McGuinness
 Internet-Draft                                               Independent
-Intended status: Standards Track                        11 November 2026
-Expires: 15 May 2027
+Intended status: Standards Track                        12 November 2026
+Expires: 16 May 2027
 
 
                      OAuth 2.0 Client Capabilities
@@ -46,7 +46,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 15 May 2027.
+   This Internet-Draft will expire on 16 May 2027.
 
 Copyright Notice
 
@@ -627,9 +627,10 @@ Table of Contents
    A party publishing or registering this metadata MUST NOT declare a
    capability unless every client instance covered by that metadata can
    process the enabled behavior, or every less-capable instance will
-   override the default on its requests.  Clients with heterogeneous
-   instances SHOULD omit the metadata field and signal capabilities on
-   each request.
+   override the default on its requests.  A client whose instances
+   differ can instead omit the field and signal capabilities on each
+   request, which does not depend on every less-capable instance
+   overriding the default.
 
    A client metadata document published at a Client Identifier URL
    [CIMD] is publicly retrievable, applies uniformly to every deployment
@@ -963,12 +964,24 @@ Table of Contents
    A signal that exceeds a limit MUST be treated as invalid: a request
    parameter then signals the empty set (Section 6.1), a field is
    treated as absent (Section 6.2), and a client metadata field is
-   ignored (Section 6.3).  A server MAY instead reject the request or
-   metadata document using an error response appropriate to the endpoint
-   or application protocol.  In particular, invalid_request is available
-   at OAuth endpoints and invalid_client_metadata at a registration
+   ignored (Section 6.3).  A server MAY instead reject the request that
+   carries the signal, or a registration request whose metadata carries
+   it, using an error response appropriate to the endpoint or
+   application protocol.  In particular, invalid_request is available at
+   OAuth endpoints and invalid_client_metadata at a registration
    endpoint [RFC7591], while a protected resource can use an
-   application-specific response.
+   application-specific response.  This does not extend to a metadata
+   document published at a Client Identifier URL [CIMD]: an otherwise
+   acceptable document whose client_capabilities field exceeds a limit
+   is accepted with the field ignored, as Section 6.3 requires.
+   Rejecting such a document would be a terminal discovery failure
+   (Section 6.1 of [CIMD]), failing the client's requests until the
+   document changes, and may leave the client without an actionable
+   diagnostic, particularly at the authorization endpoint.  Limits on
+   the whole document, such as the maximum response size in
+   Section 10.11 of [CIMD], still apply, even when the field accounts
+   for most of its size; a client publishing its metadata this way keeps
+   the field well within them.
 
    Acting on a falsely asserted capability can also consume server,
    downstream, and human resources; each extension analyzes this cost
@@ -1577,9 +1590,11 @@ Appendix B.  Applying This Specification to Existing Drafts
       only when accept-deferred-response is in the token request's
       effective set (Section 6.5).  The pre-token hint of [DTR] becomes
       the value in the preceding request's effective set when that set
-      comes from its client_capabilities parameter (Section 6.4); a
-      metadata default is not a hint, because the client did not send
-      it.  Where that request goes to an endpoint other than the
+      comes from its client_capabilities parameter (Section 6.4).  A
+      metadata default is not a hint: the client did not send it, and
+      counting it would subject a less-capable instance that redeems the
+      code to the consistency rule below for a hint it never made.
+      Where that request goes to an endpoint other than the
       authorization or pushed authorization request endpoint, such as
       the device authorization endpoint, [DTR] would define the request
       parameter there (Section 6.1).  The authorization server can act
