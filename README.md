@@ -2,7 +2,7 @@
 
 This is the working area for the individual Internet-Draft, "OAuth 2.0 Client Capabilities".
 
-OAuth extensions increasingly need the server to know, before it acts, whether the client can process a new protocol behavior. Extensions define that signal individually today, and the two carriers in use are not interchangeable: the front channel is browser-mediated and cannot carry a client-originated HTTP field, while a protected resource request has no OAuth parameter surface. This specification defines one registry of capability values and three carriers for them (a `client_capabilities` request parameter, an `OAuth-Client-Capabilities` HTTP field, and a `client_capabilities` client metadata field), constrained so that a capability may only enable optional server behavior and its absence is always safe.
+OAuth extensions increasingly need the server to know, before it acts, whether the client can process a new protocol behavior. Extensions define that signal individually today, and the two carriers in use are not interchangeable: the front channel is browser-mediated and cannot carry a client-originated HTTP field, while a protected resource request carries no OAuth request parameters. This specification defines one registry of capability values and three carriers for them (a `client_capabilities` request parameter, an `OAuth-Client-Capabilities` HTTP field, and a `client_capabilities` client metadata field), constrained so that a capability may only enable optional server behavior and its absence is always safe.
 
 * [Editor's Copy (HTML)](https://mcguinness.github.io/draft-mcguinness-oauth-client-capabilities/draft-mcguinness-oauth-client-capabilities.html)
 * [Editor's Copy (TXT)](https://mcguinness.github.io/draft-mcguinness-oauth-client-capabilities/draft-mcguinness-oauth-client-capabilities.txt)
@@ -23,7 +23,7 @@ Both define the same normative shape with different carriers. Either could adopt
 
 ## Related Drafts
 
-* [OAuth Client ID Metadata Document](https://datatracker.ietf.org/doc/draft-ietf-oauth-client-id-metadata-document/) (open-world client identification; the static declaration carrier)
+* [OAuth Client ID Metadata Document](https://datatracker.ietf.org/doc/draft-ietf-oauth-client-id-metadata-document/) (identifying clients without prior registration; the static declaration carrier)
 * [OAuth 2.0 Software Statement Issuance](https://datatracker.ietf.org/doc/draft-mcguinness-oauth-software-statement-issuance/) (signed client metadata carrier)
 * [OAuth 2.0 Client Instance Assertion](https://datatracker.ietf.org/doc/draft-mcguinness-oauth-client-instance-assertion/) (instance layer; see the open issue on software-vs-instance capability sets)
 
