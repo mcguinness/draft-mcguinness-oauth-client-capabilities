@@ -235,7 +235,7 @@ Capability values MUST NOT carry parameters. An extension that needs structured
 detail alongside a capability defines a companion request parameter, or uses
 `authorization_details` {{RFC9396}}. The registry is a flat vocabulary.
 
-## The `none` Sentinel {#none-value}
+## Signaling No Capability {#none-value}
 
 The token `none` is reserved and is never a capability. A client sends it as
 the complete value of the `client_capabilities` request parameter, or as the
@@ -306,7 +306,7 @@ that {{precedence}} defines:
 | Other authorization server request, such as introspection, revocation, registration, or client configuration, even when authorized with an access token | None | None: no effective set |
 {: title="Carrier and default by kind of request"}
 
-## The `client_capabilities` Request Parameter {#param}
+## Request Parameter {#param}
 
 client_capabilities:
 : OPTIONAL. A space-delimited list of capability values, as defined in
@@ -379,7 +379,7 @@ URI growth and keeps the list off the user agent; passing a Request Object
 {{RFC9101}} by value does not reduce URI size. {{privacy-considerations}}
 covers a client that considers its capability set sensitive.
 
-## The `OAuth-Client-Capabilities` HTTP Field {#field}
+## HTTP Field {#field}
 
 The `OAuth-Client-Capabilities` HTTP field allows a client to signal
 capabilities on a request that has no OAuth request parameters, such as a
@@ -1404,7 +1404,7 @@ client-to-server capabilities per feature. Before this specification, the IANA
 "OAuth Parameters" registry group contained no generic client capability
 parameter, field, or registry {{IANA-OAUTH}}.
 
-## Comparison with HTTP Prefer {#why-not-prefer}
+## Comparison with HTTP Preferences {#why-not-prefer}
 
 `Prefer` {{RFC7240}} is the closest existing mechanism. A server may ignore a
 preference, as it may decline to exercise a capability, and `respond-async`
